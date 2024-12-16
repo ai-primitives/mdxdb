@@ -39,6 +39,9 @@
   "devDependencies": {
     "@types/node": "^22.10.2",
     "@workspace/eslint-config": "workspace:*",
+    "@eslint/js": "^8.57.0",
+    "@typescript-eslint/eslint-plugin": "^8.18.1",
+    "@typescript-eslint/parser": "^8.18.1",
     "vitest": "^2.1.8"
   }
 }
