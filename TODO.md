@@ -17,10 +17,98 @@
 - [x] CLI functionality
   - [x] Basic command-line interface
   - [x] Version and help commands
-- [ ] Advanced features
-  - [ ] Additional CLI commands
-  - [ ] Extended test coverage
-  - [ ] Documentation examples
+
+## Packages Implementation
+- [ ] @mdxdb/types
+  - [ ] Document interface with JSON-LD support
+  - [ ] Collection and Database types
+  - [ ] Vector search types and options
+- [ ] @mdxdb/fetch
+  - [ ] HTTP/API provider implementation
+  - [ ] RESTful endpoints integration
+  - [ ] Error handling
+- [ ] @mdxdb/fs
+  - [ ] Filesystem storage implementation
+  - [ ] AI embeddings integration
+  - [ ] Cosine similarity using ai package
+- [ ] @mdxdb/clickhouse
+  - [ ] Client setup with @clickhouse/client-web
+  - [ ] MergeTree oplog table
+  - [ ] VersionedCollapsingMergeTree data table
+  - [ ] Environment variables configuration
+  - [ ] Cosine distance implementation
+- [ ] @mdxdb/server
+  - [ ] Hono REST API setup
+  - [ ] OpenAI embeddings integration
+  - [ ] CRUD endpoints
+  - [ ] Vector search endpoints
+
+## AI Integration
+- [ ] OpenAI embeddings setup
+  - [ ] text-embedding-3-large model configuration (256 dimensions)
+  - [ ] Integration with ai and @ai-sdk/openai packages
+  - [ ] Error handling and retries for API calls
+  - [ ] Rate limiting and batch processing
+- [ ] Vector similarity implementations
+  - [ ] fs provider using ai.cosineSimilarity
+  - [ ] clickhouse provider using cosineDistance function
+  - [ ] Threshold configuration and tuning
+  - [ ] Performance optimization strategies
+
+## Clickhouse Configuration
+- [ ] Environment variables setup
+  - [ ] CLICKHOUSE_URL configuration (default: http://localhost:8123)
+  - [ ] CLICKHOUSE_USERNAME and PASSWORD setup (default: default/'')
+  - [ ] CLICKHOUSE_DATABASE configuration (default: default)
+  - [ ] CLICKHOUSE_OPLOG_TABLE setup (default: oplog)
+  - [ ] CLICKHOUSE_DATA_TABLE setup (default: data)
+- [ ] Database and table initialization
+  - [ ] Auto-creation of database if not exists
+  - [ ] oplog table with MergeTree engine
+    - [ ] Implement camelCase column naming
+    - [ ] Define sorting and partitioning keys
+  - [ ] data table with VersionedCollapsingMergeTree engine
+    - [ ] Implement camelCase column naming
+    - [ ] Define version and sign columns
+    - [ ] Configure sorting and partitioning
+- [ ] Query optimization
+  - [ ] Implement efficient cosineDistance calculations
+  - [ ] Optimize table schemas for vector operations
+  - [ ] Configure proper indices for performance
+
+## Testing and Quality Assurance
+- [ ] Unit tests
+  - [ ] @mdxdb/types type definitions
+  - [ ] @mdxdb/fetch HTTP operations
+  - [ ] @mdxdb/fs filesystem operations
+  - [ ] @mdxdb/clickhouse database operations
+  - [ ] @mdxdb/server API endpoints
+- [ ] Integration tests
+  - [ ] AI embeddings verification
+    - [ ] OpenAI API integration
+    - [ ] Embedding dimensions validation
+    - [ ] Error handling scenarios
+  - [ ] Vector search accuracy
+    - [ ] Cosine similarity calculations
+    - [ ] Search result relevance
+    - [ ] Performance benchmarks
+  - [ ] Clickhouse operations
+    - [ ] Table creation and schema validation
+    - [ ] CRUD operations
+    - [ ] Vector search queries
+- [ ] Documentation
+  - [ ] API documentation
+    - [ ] Type definitions and interfaces
+    - [ ] Provider implementations
+    - [ ] Server endpoints
+  - [ ] Setup guides
+    - [ ] Environment configuration
+    - [ ] Clickhouse setup
+    - [ ] OpenAI integration
+  - [ ] Usage examples
+    - [ ] Basic CRUD operations
+    - [ ] Vector search implementations
+    - [ ] AI feature demonstrations
 
 ## Documentation
 
