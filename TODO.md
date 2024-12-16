@@ -130,3 +130,21 @@
 - [ ] Add changelog generation
 - [ ] Add pull request template
 - [ ] Add issue templates
+
+## Blockers
+
+### ESLint Configuration Issues
+- [ ] @mdxdb/types package
+  - Error: parserOptions.project configuration issue
+  - Files affected: src/index.d.ts, src/index.js, src/types.d.ts, src/types.js
+  - Reproduction: Run `pnpm run lint` in the types package
+  - Issue: TypeScript parser cannot find files in provided project(s)
+
+- [ ] @workspace/example-package
+  - Error: TypeError in @typescript-eslint/no-unused-expressions rule
+  - File affected: src/index.test.ts
+  - Reproduction: Run `pnpm run lint` in the example-package
+  - Issue: Cannot read properties of undefined (reading 'allowShortCircuit')
+
+Note: These issues are unrelated to the AI embeddings implementation in @mdxdb/fs package.
+All tests are passing, only linting is affected.
