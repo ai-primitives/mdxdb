@@ -8,11 +8,12 @@ import { EmbeddingsStorageService } from './storage'
 class FSDatabase implements DatabaseProvider<Document> {
   readonly namespace: string
   private collections: Set<string>
-  [key: string]: any
+  private basePath: string
 
-  constructor(private basePath: string) {
+  constructor(basePath: string) {
     this.namespace = `file://${path.resolve(basePath)}`
     this.collections = new Set()
+    this.basePath = basePath
   }
 
   async connect(): Promise<void> {
@@ -42,7 +43,16 @@ class FSDatabase implements DatabaseProvider<Document> {
   }
 
   get docs(): DatabaseProvider<Document> {
-    return this
+    return {
+      namespace: this.namespace,
+      connect: () => this.connect(),
+      disconnect: () => this.disconnect(),
+      list: () => this.list(),
+      collection: (name: string) => this.collection(name),
+      get docs() {
+        return this
+      }
+    } as DatabaseProvider<Document>
   }
 }
 
