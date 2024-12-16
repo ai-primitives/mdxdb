@@ -7,7 +7,7 @@
     "build": "tsc",
     "test": "vitest run --reporter=verbose",
     "test:watch": "vitest --reporter=verbose",
-    "lint": "eslint src"
+    "lint": "eslint 'src/**/*.{js,ts}'"
   },
   "dependencies": {
     "@ai-sdk/openai": "^1.0.0",
@@ -18,6 +18,8 @@
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
+    "@typescript-eslint/eslint-plugin": "^8.18.0",
+    "@typescript-eslint/parser": "^8.18.0",
     "eslint": "^8.0.0",
     "typescript": "^5.0.0",
     "vitest": "^1.0.0"
