@@ -19,7 +19,7 @@ A powerful MDX-based database that treats MDX documents as collections, with bui
 ## Installation
 
 ```bash
-npm install mdxdb
+npm install @mdxdb/fetch
 ```
 
 ## Quick Start
