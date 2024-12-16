@@ -1,0 +1,44 @@
+{
+  "name": "@workspace/example-package",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A modern TypeScript package template with Vitest, Prettier, ESLint, and semantic versioning",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "package-template": "bin/cli.js"
+  },
+  "files": [
+    "dist",
+    "bin"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint src"
+  },
+  "keywords": [
+    "typescript",
+    "template",
+    "package",
+    "cli"
+  ],
+  "author": "AI Primitives",
+  "license": "MIT",
+  "homepage": "https://mdx.org.ai",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ai-primitives/workspace-template.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ai-primitives/workspace-template/issues"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@workspace/eslint-config": "workspace:*",
+    "vitest": "^2.1.8"
+  }
+}
