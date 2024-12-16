@@ -13,9 +13,17 @@ export interface VectorSearchOptions {
   threshold?: number
 }
 
+export interface NamespaceOptions {
+  defaultNamespace?: string
+  enforceHttps?: boolean
+  maxPathDepth?: number
+  allowSubdomains?: boolean
+}
+
 export interface DatabaseOptions {
   namespace: string
   baseUrl?: string
+  options?: NamespaceOptions
 }
 
 export interface CollectionOptions {
@@ -23,16 +31,37 @@ export interface CollectionOptions {
   database: DatabaseProvider
 }
 
-export interface DatabaseProvider {
-  name: string
-  connect: () => Promise<void>
-  disconnect: () => Promise<void>
-  collections: () => Promise<CollectionProvider[]>
+export interface DatabaseProvider<T = any> {
+  namespace: string
+  connect(): Promise<void>
+  disconnect(): Promise<void>
+  list(): Promise<string[]>
+  collection(name: string): CollectionProvider<T>
+  [key: string]: DatabaseProvider<T> | any
 }
 
-export interface CollectionProvider {
+export interface FilterQuery<T> {
+  [key: string]: any
+  $eq?: any
+  $gt?: any
+  $gte?: any
+  $lt?: any
+  $lte?: any
+  $in?: any[]
+  $nin?: any[]
+}
+
+export interface SearchOptions<T = any> {
+  filter?: FilterQuery<T>
+  threshold?: number
+  limit?: number
+  offset?: number
+  includeVectors?: boolean
+}
+
+export interface CollectionProvider<T = any> {
   path: string
-  find(filter: Record<string, unknown>): Promise<Document[]>
-  search(query: string, filter?: Record<string, unknown>): Promise<Document[]>
-  vectorSearch(options: VectorSearchOptions): Promise<Document[]>
+  find(filter: FilterQuery<T>, options?: SearchOptions<T>): Promise<T[]>
+  search(query: string, options?: SearchOptions<T>): Promise<T[]>
+  vectorSearch(options: VectorSearchOptions & SearchOptions<T>): Promise<T[]>
 }
