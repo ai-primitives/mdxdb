@@ -1,7 +1,8 @@
 import type { MDXLD } from 'mdxld'
+import type { EmbeddingResult } from './embedding'
 
 export interface Document extends MDXLD {
-  embeddings?: number[]
+  embedding?: EmbeddingResult
   collections?: string[]
 }
 
@@ -23,45 +24,14 @@ export interface CollectionOptions {
   database: Database
 }
 
-export class Database {
-  private options: DatabaseOptions
-
-  constructor(options: DatabaseOptions) {
-    this.options = options
-  }
-
-  collection(path: string): Collection {
-    return new Collection({ path, database: this })
-  }
-
-  get namespace(): string {
-    return this.options.namespace
-  }
+export interface Database {
+  namespace: string
+  collection(path: string): Collection
 }
 
-export class Collection {
-  private options: CollectionOptions
-
-  constructor(options: CollectionOptions) {
-    this.options = options
-  }
-
-  get path(): string {
-    return this.options.path
-  }
-
-  async find(filter: Record<string, unknown>): Promise<Document[]> {
-    console.log(`Finding documents with filter: ${JSON.stringify(filter)}`)
-    throw new Error('Method not implemented')
-  }
-
-  async search(query: string, filter?: Record<string, unknown>): Promise<Document[]> {
-    console.log(`Searching for "${query}" with filter: ${JSON.stringify(filter)}`)
-    throw new Error('Method not implemented')
-  }
-
-  async vectorSearch(options: VectorSearchOptions): Promise<Document[]> {
-    console.log(`Vector search with options: ${JSON.stringify(options)}`)
-    throw new Error('Method not implemented')
-  }
+export interface Collection {
+  path: string
+  find(filter: Record<string, unknown>): Promise<Document[]>
+  search(query: string, filter?: Record<string, unknown>): Promise<Document[]>
+  vectorSearch(options: VectorSearchOptions): Promise<Document[]>
 }
