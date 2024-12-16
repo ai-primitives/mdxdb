@@ -1,14 +1,8 @@
-export interface EmbeddingModel<T = unknown> {
-  embed(input: string): Promise<number[]>
+export interface EmbeddingOptions {
   dimensions?: number
-  metadata?: T
+  model?: string
 }
 
-export interface EmbeddingOptions<T = unknown> {
-  model: EmbeddingModel<T>
-}
-
-export interface EmbeddingResult {
-  vector: number[]
-  text: string
+export interface EmbeddingProvider {
+  embed(text: string, options?: EmbeddingOptions): Promise<number[]>
 }

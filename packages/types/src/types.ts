@@ -1,8 +1,7 @@
 import type { MDXLD } from 'mdxld'
-import type { EmbeddingResult } from './embedding'
 
 export interface Document extends MDXLD {
-  embedding?: EmbeddingResult
+  embeddings?: number[]
   collections?: string[]
 }
 
@@ -14,9 +13,17 @@ export interface VectorSearchOptions {
   threshold?: number
 }
 
+export interface NamespaceOptions {
+  defaultNamespace?: string
+  enforceHttps?: boolean
+  maxPathDepth?: number
+  allowSubdomains?: boolean
+}
+
 export interface DatabaseOptions {
   namespace: string
   baseUrl?: string
+  options?: NamespaceOptions
 }
 
 export interface CollectionOptions {
@@ -24,14 +31,38 @@ export interface CollectionOptions {
   database: DatabaseProvider
 }
 
-export interface DatabaseProvider {
+export interface DatabaseProvider<T extends Document = Document> {
   namespace: string
-  collection(path: string): CollectionProvider
+  connect(): Promise<void>
+  disconnect(): Promise<void>
+  list(): Promise<string[]>
+  collection(name: string): CollectionProvider<T>
+  [key: string]: DatabaseProvider<T> | CollectionProvider<T> | string | (() => Promise<void>) | (() => Promise<string[]>) | ((name: string) => CollectionProvider<T>)
 }
 
-export interface CollectionProvider {
+export type FilterQuery<T> = {
+  [K in keyof T]?: T[K] | {
+    $eq?: T[K],
+    $gt?: T[K],
+    $gte?: T[K],
+    $lt?: T[K],
+    $lte?: T[K],
+    $in?: T[K][],
+    $nin?: T[K][]
+  }
+}
+
+export interface SearchOptions<T extends Document = Document> {
+  filter?: FilterQuery<T>
+  threshold?: number
+  limit?: number
+  offset?: number
+  includeVectors?: boolean
+}
+
+export interface CollectionProvider<T extends Document = Document> {
   path: string
-  find(filter: Record<string, unknown>): Promise<Document[]>
-  search(query: string, filter?: Record<string, unknown>): Promise<Document[]>
-  vectorSearch(options: VectorSearchOptions): Promise<Document[]>
+  find(filter: FilterQuery<T>, options?: SearchOptions<T>): Promise<T[]>
+  search(query: string, options?: SearchOptions<T>): Promise<T[]>
+  vectorSearch(options: VectorSearchOptions & SearchOptions<T>): Promise<T[]>
 }

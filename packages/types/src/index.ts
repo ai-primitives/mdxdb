@@ -1,2 +1,12 @@
-export * from './types'
-export * from './embedding'
+export type { MDXLD } from 'mdxld'
+export type {
+  Document,
+  DatabaseProvider,
+  CollectionProvider,
+  NamespaceOptions,
+  DatabaseOptions,
+  CollectionOptions,
+  FilterQuery,
+  SearchOptions,
+  VectorSearchOptions
+} from './types'
