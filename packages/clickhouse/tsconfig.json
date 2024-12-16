@@ -5,6 +5,7 @@
     "rootDir": "src",
     "baseUrl": ".",
     "composite": true,
+    "moduleResolution": "node",
     "noUnusedParameters": false,
     "noUnusedLocals": false,
     "paths": {

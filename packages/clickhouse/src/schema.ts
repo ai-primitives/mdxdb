@@ -53,3 +53,11 @@ AS SELECT
     1 as sign
 FROM ${databaseName}.oplog;
 `;
+
+export interface HashMap {
+  id: number;
+  ns: number;
+  path: number[];
+  data: number;
+  content: number;
+}
