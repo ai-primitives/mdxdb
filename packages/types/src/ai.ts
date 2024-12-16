@@ -17,8 +17,14 @@ export const defaultEmbeddingOptions: EmbeddingOptions = {
 }
 
 export async function createEmbedding(text: string, options: EmbeddingOptions = defaultEmbeddingOptions): Promise<EmbeddingResult> {
+  // Ensure model is always defined by using defaultEmbeddingOptions.model as fallback
+  const model = options.model ?? defaultEmbeddingOptions.model
+  if (!model) {
+    throw new Error('Embedding model must be defined')
+  }
+
   const { embedding: vector } = await embed({
-    model: options.model ?? defaultEmbeddingOptions.model,
+    model,
     value: text
   })
 
