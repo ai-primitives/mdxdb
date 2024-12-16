@@ -31,27 +31,28 @@ export interface CollectionOptions {
   database: DatabaseProvider
 }
 
-export interface DatabaseProvider<T = any> {
+export interface DatabaseProvider<T extends Document = Document> {
   namespace: string
   connect(): Promise<void>
   disconnect(): Promise<void>
   list(): Promise<string[]>
   collection(name: string): CollectionProvider<T>
-  [key: string]: DatabaseProvider<T> | any
+  [key: string]: DatabaseProvider<T> | CollectionProvider<T> | string | (() => Promise<void>) | (() => Promise<string[]>) | ((name: string) => CollectionProvider<T>)
 }
 
-export interface FilterQuery<T> {
-  [key: string]: any
-  $eq?: any
-  $gt?: any
-  $gte?: any
-  $lt?: any
-  $lte?: any
-  $in?: any[]
-  $nin?: any[]
+export type FilterQuery<T> = {
+  [K in keyof T]?: T[K] | {
+    $eq?: T[K],
+    $gt?: T[K],
+    $gte?: T[K],
+    $lt?: T[K],
+    $lte?: T[K],
+    $in?: T[K][],
+    $nin?: T[K][]
+  }
 }
 
-export interface SearchOptions<T = any> {
+export interface SearchOptions<T extends Document = Document> {
   filter?: FilterQuery<T>
   threshold?: number
   limit?: number
@@ -59,7 +60,7 @@ export interface SearchOptions<T = any> {
   includeVectors?: boolean
 }
 
-export interface CollectionProvider<T = any> {
+export interface CollectionProvider<T extends Document = Document> {
   path: string
   find(filter: FilterQuery<T>, options?: SearchOptions<T>): Promise<T[]>
   search(query: string, options?: SearchOptions<T>): Promise<T[]>
