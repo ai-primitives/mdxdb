@@ -2,8 +2,10 @@ import { DatabaseProvider, CollectionProvider, Document } from '@mdxdb/types'
 import { promises as fs } from 'fs'
 import path from 'path'
 import { FSCollection } from './collection'
+import { EmbeddingsService } from './embeddings'
+import { EmbeddingsStorageService } from './storage'
 
-export class FSDatabase implements DatabaseProvider<Document> {
+class FSDatabase implements DatabaseProvider<Document> {
   readonly namespace: string
   private collections: Set<string>
   [key: string]: any
@@ -44,6 +46,8 @@ export class FSDatabase implements DatabaseProvider<Document> {
   }
 }
 
-export function createDatabase(options: { basePath: string }): DatabaseProvider<Document> {
+function createDatabase(options: { basePath: string }): DatabaseProvider<Document> {
   return new FSDatabase(options.basePath)
 }
+
+export { FSDatabase, createDatabase, EmbeddingsService, EmbeddingsStorageService }

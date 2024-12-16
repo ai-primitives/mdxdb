@@ -27,10 +27,10 @@
   - [ ] HTTP/API provider implementation
   - [ ] RESTful endpoints integration
   - [ ] Error handling
-- [ ] @mdxdb/fs
-  - [ ] Filesystem storage implementation
-  - [ ] AI embeddings integration
-  - [ ] Cosine similarity using ai package
+- [x] @mdxdb/fs
+  - [x] Filesystem storage implementation
+  - [x] AI embeddings integration
+  - [x] Cosine similarity using ai package
 - [ ] @mdxdb/clickhouse
   - [ ] Client setup with @clickhouse/client-web
   - [ ] MergeTree oplog table
@@ -44,16 +44,16 @@
   - [ ] Vector search endpoints
 
 ## AI Integration
-- [ ] OpenAI embeddings setup
-  - [ ] text-embedding-3-large model configuration (256 dimensions)
-  - [ ] Integration with ai and @ai-sdk/openai packages
-  - [ ] Error handling and retries for API calls
+- [x] OpenAI embeddings setup
+  - [x] text-embedding-3-large model configuration (256 dimensions)
+  - [x] Integration with ai and @ai-sdk/openai packages
+  - [x] Error handling and retries for API calls
   - [ ] Rate limiting and batch processing
-- [ ] Vector similarity implementations
-  - [ ] fs provider using ai.cosineSimilarity
+- [x] Vector similarity implementations
+  - [x] fs provider using ai.cosineSimilarity
   - [ ] clickhouse provider using cosineDistance function
-  - [ ] Threshold configuration and tuning
-  - [ ] Performance optimization strategies
+  - [x] Threshold configuration and tuning
+  - [x] Performance optimization strategies
 
 ## Clickhouse Configuration
 - [ ] Environment variables setup
@@ -80,18 +80,18 @@
 - [ ] Unit tests
   - [ ] @mdxdb/types type definitions
   - [ ] @mdxdb/fetch HTTP operations
-  - [ ] @mdxdb/fs filesystem operations
+  - [x] @mdxdb/fs filesystem operations
   - [ ] @mdxdb/clickhouse database operations
   - [ ] @mdxdb/server API endpoints
 - [ ] Integration tests
-  - [ ] AI embeddings verification
-    - [ ] OpenAI API integration
-    - [ ] Embedding dimensions validation
-    - [ ] Error handling scenarios
-  - [ ] Vector search accuracy
-    - [ ] Cosine similarity calculations
-    - [ ] Search result relevance
-    - [ ] Performance benchmarks
+  - [x] AI embeddings verification
+    - [x] OpenAI API integration
+    - [x] Embedding dimensions validation
+    - [x] Error handling scenarios
+  - [x] Vector search accuracy
+    - [x] Cosine similarity calculations
+    - [x] Search result relevance
+    - [x] Performance benchmarks
   - [ ] Clickhouse operations
     - [ ] Table creation and schema validation
     - [ ] CRUD operations

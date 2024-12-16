@@ -1,0 +1,121 @@
+# CI Investigation Notes
+
+## Build Failure Analysis
+- CI failure in @mdxdb/fs package due to missing test files
+- Error: "No test files found, exiting with code 1"
+- Other packages (types, example-package) have passing tests
+
+## Test File Structure
+- Tests are written using Vitest
+- Test files follow *.test.ts naming pattern
+- Tests are located either in:
+  - /test directory (types package)
+  - /src directory alongside source files (example-package)
+
+## Required Actions
+1. Need to create test files for:
+   - FSDatabase implementation
+   - FSCollection implementation (even with placeholder methods)
+2. Follow existing test patterns from types and example packages
+3. Ensure test coverage for all implemented methods
+
+## Test Requirements (from notes)
+- Test coverage required for all components and integrations
+- Tests must be added in same PR as implementation
+- Must use Vitest as testing framework
+- Should cover:
+  - Core functionality
+  - Integration between components
+  - Error handling and edge cases
+
+## ESLint Configuration Analysis
+1. ESLint Errors in @mdxdb/types:
+   - parserOptions.project configuration issue
+   - Files not found in TypeScript project
+   - Affects both .ts and .js files
+   - Need to verify project references in tsconfig.json
+
+2. ESLint Errors in example-package:
+   - TypeError in @typescript-eslint/no-unused-expressions rule
+   - Configuration mismatch between ESLint and TypeScript
+   - Possible version incompatibility in dependencies
+
+3. Configuration Files Found:
+   - /packages/types/.eslintrc.cjs
+   - /packages/example-package/eslint.config.js
+   - Multiple tsconfig.json files in packages
+
+4. Impact Assessment:
+   - Linting errors do not affect functionality
+   - Test and build steps pass successfully
+   - Issues appear to be configuration-related
+   - No immediate impact on @mdxdb/fs implementation
+
+5. Next Steps:
+   - Continue with @mdxdb/fs implementation
+   - Track ESLint configuration issues separately
+   - Focus on core functionality and tests
+   - Consider configuration fixes in follow-up PR
+
+# AI Embeddings and Search Implementation Investigation
+
+## Current State
+1. Types Package:
+   - Document interface includes embeddings field (number[])
+   - VectorSearchOptions interface defined with vector, query, filter, k, threshold
+   - SearchOptions interface supports filtering and pagination
+   - CollectionProvider interface includes vectorSearch method
+
+2. Missing Dependencies:
+   - ai package (required for cosineSimilarity)
+   - @ai-sdk/openai package (required for embeddings)
+
+3. Required Implementations:
+   - FSCollection needs vectorSearch implementation
+   - Embedding generation using text-embedding-3-large model (256 dimensions)
+   - Cosine similarity calculations using ai.cosineSimilarity
+   - Full-text search functionality
+   - Error handling for OpenAI API calls
+
+## Implementation Requirements
+1. AI Integration:
+   - Use text-embedding-3-large model
+   - 256-dimensional embeddings
+   - Implement with ai and @ai-sdk/openai packages
+   - Add proper error handling and retries
+
+2. Vector Search:
+   - Use cosineSimilarity from ai package
+   - Store embeddings alongside documents
+   - Implement efficient vector comparison
+   - Support filtering and pagination
+
+3. File Structure:
+   - Need to determine optimal storage format for embeddings
+   - Consider separate files vs. combined storage
+   - Plan for efficient retrieval and updates
+
+4. Performance Considerations:
+   - Batch processing for embeddings
+   - Caching strategy
+   - Optimization of vector comparisons
+   - Rate limiting for API calls
+
+## TODO Updates Required
+1. Mark completed tasks:
+   - Basic filesystem storage implementation
+   - CRUD operations
+
+2. Add detailed subtasks for:
+   - AI embeddings integration
+   - Vector search implementation
+   - Performance optimizations
+   - Testing requirements
+
+## Next Steps
+1. Add required dependencies
+2. Implement embedding generation
+3. Add vector storage support
+4. Implement vector search
+5. Add full text search
+6. Update tests and documentation

@@ -5,12 +5,15 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "test": "vitest run",
-    "test:watch": "vitest",
+    "test": "vitest run --reporter=verbose",
+    "test:watch": "vitest --reporter=verbose",
     "lint": "eslint src"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^1.0.0",
+    "@ai-sdk/provider": "^1.0.2",
     "@mdxdb/types": "workspace:*",
+    "ai": "^2.2.0",
     "mdxld": "^0.1.0"
   },
   "devDependencies": {
