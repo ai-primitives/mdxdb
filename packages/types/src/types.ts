@@ -21,15 +21,15 @@ export interface DatabaseOptions {
 
 export interface CollectionOptions {
   path: string
-  database: Database
+  database: DatabaseProvider
 }
 
-export interface Database {
+export interface DatabaseProvider {
   namespace: string
-  collection(path: string): Collection
+  collection(path: string): CollectionProvider
 }
 
-export interface Collection {
+export interface CollectionProvider {
   path: string
   find(filter: Record<string, unknown>): Promise<Document[]>
   search(query: string, filter?: Record<string, unknown>): Promise<Document[]>
