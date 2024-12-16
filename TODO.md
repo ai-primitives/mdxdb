@@ -119,10 +119,26 @@
 
 ## CI/CD
 
-- [ ] Set up GitHub Actions workflow
-- [ ] Configure semantic-release
+- [ ] Fix GitHub Actions configuration
+  - [ ] Investigate empty ci.yml file in .github/workflows
+  - [ ] Document inconsistent check behavior (PR #1 passed, #2/#3 failed, #5 no checks)
+  - [ ] Implement consistent CI workflow
+    - [ ] Add build steps for all packages
+    - [ ] Configure test execution
+    - [ ] Set up ESLint checks
+    - [ ] Add TypeScript type checking
+- [ ] Set up semantic-release
+  - [ ] Configure version bumping
+  - [ ] Set up changelog generation
+  - [ ] Configure npm publishing
 - [ ] Add test coverage reporting
+  - [ ] Configure coverage collection
+  - [ ] Set up coverage reporting to CI
+  - [ ] Add coverage badges to README
 - [ ] Set up automated npm publishing
+  - [ ] Configure npm authentication
+  - [ ] Set up publish workflow
+  - [ ] Add version tagging
 
 ## Future Enhancements
 
