@@ -1,8 +1,7 @@
 import type { MDXLD } from 'mdxld'
-import type { EmbeddingResult } from './embedding'
 
 export interface Document extends MDXLD {
-  embedding?: EmbeddingResult
+  embeddings?: number[]
   collections?: string[]
 }
 
@@ -25,8 +24,10 @@ export interface CollectionOptions {
 }
 
 export interface DatabaseProvider {
-  namespace: string
-  collection(path: string): CollectionProvider
+  name: string
+  connect: () => Promise<void>
+  disconnect: () => Promise<void>
+  collections: () => Promise<CollectionProvider[]>
 }
 
 export interface CollectionProvider {
