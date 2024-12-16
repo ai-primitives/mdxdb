@@ -17,7 +17,7 @@
   },
   "devDependencies": {
     "@clickhouse/client": "^1.9.1",
-    "typescript": "^5.3.3"
+    "typescript": "^5.7.2"
   },
   "engines": {
     "node": ">=18"
