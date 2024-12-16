@@ -9,7 +9,6 @@ class FSDatabase implements DatabaseProvider<Document> {
   readonly namespace: string
   private collections: Set<string>
   private basePath: string
-  [key: string]: DatabaseProvider<Document> | CollectionProvider<Document> | string | Set<string> | (() => Promise<void>) | (() => Promise<string[]>) | ((name: string) => CollectionProvider<Document>) | undefined
 
   constructor(basePath: string) {
     this.namespace = `file://${path.resolve(basePath)}`
@@ -52,6 +51,21 @@ class FSDatabase implements DatabaseProvider<Document> {
       collection: (name: string) => this.collection(name),
       get docs() {
         return this
+      },
+      [Symbol.iterator]: () => {
+        let index = 0
+        const collections = Array.from(this.collections)
+        return {
+          next: () => {
+            if (index < collections.length) {
+              return {
+                value: this.collection(collections[index++]),
+                done: false
+              }
+            }
+            return { value: undefined, done: true }
+          }
+        }
       }
     }
     return provider

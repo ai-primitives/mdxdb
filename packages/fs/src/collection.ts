@@ -105,12 +105,13 @@ export class FSCollection implements CollectionProvider<Document> {
     const docs = await this.getAllDocuments()
     const results = docs.map(doc => doc.content)
 
-    if (Object.keys(filter).length === 0) {
+    if (!filter || Object.keys(filter).length === 0) {
       return results
     }
 
-    return results.filter(doc => {
-      return Object.entries(filter).every(([key, value]) => {
+    const filterEntries = Object.entries(filter)
+    const filteredResults = results.filter(doc => {
+      return filterEntries.every(([key, value]) => {
         if (key === 'content' && typeof value === 'string') {
           return doc.content.includes(value)
         }
@@ -122,9 +123,11 @@ export class FSCollection implements CollectionProvider<Document> {
             ([dataKey, dataValue]) => doc.data[dataKey] === dataValue
           )
         }
-        return true
+        return false
       })
     })
+
+    return filteredResults
   }
 
   async search(query: string, options?: SearchOptions<Document>): Promise<Document[]> {
