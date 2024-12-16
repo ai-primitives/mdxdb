@@ -1,82 +1,248 @@
-# @ai-primitives/workspace-template
+# mdxdb
 
+A powerful MDX-based database that treats MDX documents as collections, with built-in support for JSON-LD, vector search, and multiple storage backends.
+
+[![npm version](https://badge.fury.io/js/@mdxdb%2Ftypes.svg)](https://www.npmjs.com/package/@mdxdb/types)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
-A modern TypeScript monorepo template with pnpm workspaces, Turborepo, and shared configurations.
 
 ## Features
 
-- 🏗️ pnpm workspaces for package management
-- 🚀 Turborepo for build orchestration
-- 📦 Example package with TypeScript and Vitest
-- 🔧 Shared ESLint and TypeScript configurations
-- 🎨 Prettier for consistent code formatting
-- 🔄 GitHub Actions for CI/CD
+- 📝 **MDX-Native**: Built with first-class MDX support
+- 🔍 **Vector Search**: Built-in support for semantic search using embeddings
+- 🌐 **JSON-LD**: Native support for linked data through JSON-LD conventions
+- 🔄 **Multiple Backends**: Support for both filesystem and HTTP/API backends
+- 🎯 **Type-Safe**: Written in TypeScript with comprehensive type definitions
+- ⚡ **Async/Await**: Modern Promise-based API
+- 🔒 **Error Handling**: Comprehensive error handling with detailed error types
+- 📊 **Debugging**: Built-in logging and debugging support
 
-## Getting Started
+## Installation
 
 ```bash
-# Clone the template
-gh repo clone ai-primitives/workspace-template my-workspace
+npm install mdxdb
+```
 
+## Quick Start
+
+```typescript
+import { db } from '@mdxdb/fetch'
+
+// Create a collection
+const posts = db('https://example.com/posts')
+
+// Create a document
+const post = await posts.create({
+  mdx: '# Hello World\nThis is my first post!',
+  data: {
+    title: 'Hello World',
+    published: true
+  }
+})
+
+// Search documents
+const results = await posts.search('hello')
+
+// Query with filters
+const published = await posts.find({ published: true })
+
+// Vector search
+const similar = await posts.semanticSearch('concept', {
+  k: 5,
+  threshold: 0.7
+})
+```
+
+## Configuration
+
+### Environment Variables
+
+- `MDXDB_URL`: Default base URL for collections
+- `MDXDB_TOKEN`: API authentication token
+
+### Custom Configuration
+
+```typescript
+import { createDatabase } from '@mdxdb/fs'
+
+const db = createDatabase({
+  base: 'https://example.com',
+  apiKey: 'your-api-key',
+  // For filesystem provider
+  basePath: '/path/to/data'
+})
+```
+
+## API Reference
+
+### Database
+
+The main database function creates and manages collections:
+
+```typescript
+// Using URL
+const posts = db('https://example.com/posts')
+
+// Using proxy syntax
+const posts = db.posts
+
+// Custom configuration
+const posts = db('https://example.com/posts', {
+  apiKey: 'custom-key'
+})
+```
+
+### Collection
+
+Collections provide CRUD operations and querying capabilities:
+
+#### Basic Operations
+
+```typescript
+// Get a document
+const doc = await collection.get('doc-id')
+
+// Create a document
+const doc = await collection.create({
+  mdx: '# New Document',
+  data: { title: 'New' }
+})
+
+// Update a document
+const updated = await collection.update('doc-id', {
+  data: { published: true }
+})
+
+// Delete a document
+await collection.delete('doc-id')
+```
+
+#### Querying
+
+```typescript
+// List all documents
+const docs = await collection.list()
+
+// Search by text
+const results = await collection.search('query')
+
+// Filter documents
+const published = await collection.find({ published: true })
+
+// Namespace search
+const allDocs = await collection.namespace()
+```
+
+### Vector Search
+
+Built-in support for semantic search using embeddings:
+
+```typescript
+// Search using vector
+const results = await collection.vectorSearch({
+  vector: [0.1, 0.2, ...],
+  k: 10,
+  threshold: 0.8
+})
+
+// Semantic search using text
+const similar = await collection.semanticSearch('concept', {
+  k: 5,
+  threshold: 0.7
+})
+```
+
+### Document Interface
+
+Documents follow JSON-LD conventions and include MDX capabilities:
+
+```typescript
+interface Document {
+  // JSON-LD metadata
+  id: string
+  context: string | Record<string, any>
+  type?: string
+  
+  // MDX content
+  mdx: string
+  data: Record<string, any>
+  
+  // React components
+  default: ComponentType<any>
+  markdown: ComponentType<any>
+  
+  // Operations
+  merge(update: Record<string, any>): Promise<Document>
+  append(content: string): Promise<Document>
+}
+```
+
+## Providers
+
+### Filesystem Provider
+
+```typescript
+import { db } from '@mdxdb/fs'
+
+const posts = db('file:///posts', {
+  basePath: '/path/to/data'
+})
+```
+
+### HTTP/API Provider
+
+```typescript
+import { db } from '@mdxdb/fetch'
+
+const posts = db('https://example.com/posts', {
+  apiKey: 'your-api-key',
+  apiURI: uri => `${uri}.json` // Custom API endpoint
+})
+```
+
+## Error Handling
+
+The library provides detailed error types for better error handling:
+
+```typescript
+try {
+  await collection.get('non-existent')
+} catch (error) {
+  if (error instanceof DocumentNotFoundError) {
+    console.log('Document not found:', error.message)
+  } else if (error instanceof ValidationError) {
+    console.log('Validation failed:', error.message)
+  }
+}
+```
+
+## Debugging
+
+Enable debug logging by setting the DEBUG environment variable:
+
+```bash
+# Enable all debug logs
+DEBUG=mdxdb:* npm test
+
+# Enable specific components
+DEBUG=mdxdb:fs:*,mdxdb:vector:* npm test
+```
+
+## Development
+
+```bash
 # Install dependencies
-cd my-workspace
-pnpm install
-
-# Build all packages
-pnpm build
+npm install
 
 # Run tests
-pnpm test
+npm test
 
-# Lint code
-pnpm lint
+# Run tests with debug output
+npm run debug
+
+# Run tests with coverage
+npm run test:coverage
 ```
-
-## Workspace Structure
-
-```
-.
-├── packages/           # Package implementations
-│   └── example-package/
-├── sites/             # Frontend applications
-├── utilities/         # Shared configurations
-│   ├── eslint-config/
-│   ├── prettier-config/
-│   └── tsconfig/
-├── pnpm-workspace.yaml
-└── turbo.json
-```
-
-## Development Workflow
-
-```bash
-# Create a new package
-mkdir packages/my-package
-cd packages/my-package
-
-# Start development
-pnpm dev
-
-# Run tests in watch mode
-pnpm test:watch
-```
-
-## Contributing
-
-Please read our [Contributing Guide](./CONTRIBUTING.md) to learn about our development process and how to propose bugfixes and improvements.
 
 ## License
 
-MIT © [AI Primitives](https://mdx.org.ai)
-
-## Dependencies
-
-This workspace uses the following key dependencies:
-
-- pnpm for package management
-- Turborepo for build orchestration
-- TypeScript for static typing
-- Vitest for testing
-- ESLint for linting
-- Prettier for code formatting
+MIT © [mdxdb](https://npmjs.com/@mdxdb/types)
