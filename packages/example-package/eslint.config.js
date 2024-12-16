@@ -1,3 +1,3 @@
-import baseConfig from '@workspace/eslint-config'
+import baseConfig from '../../utilities/eslint-config/index.js'
 
 export default [...baseConfig]

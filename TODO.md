@@ -120,13 +120,28 @@
 ## CI/CD
 
 - [ ] Fix GitHub Actions configuration
-  - [ ] Investigate empty ci.yml file in .github/workflows
   - [ ] Document inconsistent check behavior (PR #1 passed, #2/#3 failed, #5 no checks)
   - [ ] Implement consistent CI workflow
     - [ ] Add build steps for all packages
     - [ ] Configure test execution
     - [ ] Set up ESLint checks
     - [ ] Add TypeScript type checking
+- [ ] ESLint Configuration
+  - [ ] Use shared eslint-config from utilities
+  - [ ] Ensure TypeScript rule compatibility
+  - [ ] Maintain ESM support across packages
+- [ ] Package Dependencies
+  - [ ] Standardize TypeScript version (5.5.4)
+  - [ ] Use Vitest 2.1.8 with MSW integration
+  - [ ] Consistent ESLint package versions
+- [ ] Testing Requirements
+  - [ ] Run tests with Vitest
+  - [ ] Include MSW for API mocking
+  - [ ] Maintain >80% coverage
+- [ ] Release Process
+  - [ ] Semantic versioning
+  - [ ] Automated npm publishing
+  - [ ] GitHub Actions integration
 - [ ] Set up semantic-release
   - [ ] Configure version bumping
   - [ ] Set up changelog generation
