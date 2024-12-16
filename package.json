@@ -1,6 +1,10 @@
 {
   "name": "workspace-template",
   "private": true,
+  "workspaces": [
+    "packages/types",
+    "packages/example-package"
+  ],
   "scripts": {
     "build": "turbo build",
     "dev": "turbo dev",
