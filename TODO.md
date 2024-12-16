@@ -126,6 +126,13 @@
 
 ## Future Enhancements
 
+### @mdxdb/fetch
+- [ ] Add WebSocket support for real-time updates
+  - [ ] Implement WebSocket connection management
+  - [ ] Add real-time collection updates
+  - [ ] Support bidirectional communication
+
+### General Enhancements
 - [ ] Add more comprehensive examples
 - [ ] Add changelog generation
 - [ ] Add pull request template
