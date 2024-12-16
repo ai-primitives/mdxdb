@@ -6,11 +6,14 @@ export default [
   js.configs.recommended,
   {
     files: ['src/**/*.ts'],
+    ignores: ['**/*.d.ts', '**/dist/**'],
     languageOptions: {
       parser: tsParser,
       parserOptions: {
-        project: './tsconfig.json',
-        tsconfigRootDir: '.'
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+        project: null,
+        tsconfigRootDir: null
       },
       globals: {
         console: 'readonly',
@@ -21,7 +24,11 @@ export default [
       '@typescript-eslint': tsPlugin
     },
     rules: {
-      ...tsPlugin.configs.recommended.rules
+      ...tsPlugin.configs['eslint-recommended'].rules,
+      '@typescript-eslint/no-unused-expressions': ['error', {
+        allowShortCircuit: true,
+        allowTernary: true
+      }]
     }
   }
 ]

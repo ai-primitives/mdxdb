@@ -1,6 +1,7 @@
 {
   "name": "workspace-template",
   "private": true,
+  "type": "module",
   "workspaces": [
     "packages/types",
     "packages/example-package"
@@ -13,6 +14,10 @@
     "format": "prettier --write \"**/*.{ts,tsx,md}\""
   },
   "devDependencies": {
+    "@eslint/js": "^8.57.0",
+    "@typescript-eslint/eslint-plugin": "^8.18.1",
+    "@typescript-eslint/parser": "^8.18.1",
+    "eslint": "^8.57.1",
     "prettier": "^3.4.2",
     "turbo": "^2.3.3",
     "typescript": "5.5.4"

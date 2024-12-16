@@ -14,7 +14,7 @@
     "dev": "tsc --watch",
     "test": "vitest run",
     "test:watch": "vitest watch",
-    "lint": "eslint src/**/*.ts"
+    "lint": "eslint 'src/**/*.ts' --ignore-pattern '*.d.ts'"
   },
   "dependencies": {
     "@mdxdb/types": "workspace:*"
