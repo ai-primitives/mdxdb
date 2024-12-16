@@ -1,5 +1,5 @@
--- Versions table with ReplacingMergeTree
-CREATE TABLE IF NOT EXISTS mdxdb.versions (
+-- Operation log table with MergeTree
+CREATE TABLE IF NOT EXISTS mdxdb.oplog (
     id String,
     data String CODEC(ZSTD(1)), -- JSON frontmatter
     content String CODEC(ZSTD(1)),
@@ -8,13 +8,12 @@ CREATE TABLE IF NOT EXISTS mdxdb.versions (
     createdBy String,
     updatedAt Int32,
     updatedBy String,
-    visibility String,
-    version UInt64
-) ENGINE = ReplacingMergeTree(version)
+    visibility String
+) ENGINE = MergeTree()
 PRIMARY KEY (id);
 
--- Content table as target for materialized view
-CREATE TABLE IF NOT EXISTS mdxdb.content (
+-- Data table with versioning and delete support
+CREATE TABLE IF NOT EXISTS mdxdb.data (
     id String,
     data String CODEC(ZSTD(1)),
     content String CODEC(ZSTD(1)),
@@ -23,6 +22,8 @@ CREATE TABLE IF NOT EXISTS mdxdb.content (
     createdBy String,
     updatedAt Int32,
     updatedBy String,
-    visibility String
-) ENGINE = ReplacingMergeTree()
+    visibility String,
+    sign Int8, -- Required for VersionedCollapsingMergeTree: 1 for state, -1 for cancel
+    version UInt64 -- Required for versioning
+) ENGINE = VersionedCollapsingMergeTree(sign, version)
 PRIMARY KEY (id);
