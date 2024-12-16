@@ -16,26 +16,15 @@ export default [
         tsconfigRootDir: '.'
       },
       globals: {
-        console: 'readonly',
-        process: 'readonly'
+        console: true,
+        process: true
       }
     },
     plugins: {
       '@typescript-eslint': tsPlugin
     },
     rules: {
-      ...tsPlugin.configs.recommended.rules,
-      'no-unused-expressions': 'off',
-      '@typescript-eslint/no-unused-vars': ['error', {
-        argsIgnorePattern: '^_',
-        varsIgnorePattern: '^_',
-        caughtErrorsIgnorePattern: '^_'
-      }],
-      '@typescript-eslint/no-unused-expressions': ['error', {
-        allowShortCircuit: true,
-        allowTernary: true,
-        allowTaggedTemplates: true
-      }]
+      ...tsPlugin.configs.recommended.rules
     }
   }
 ]

@@ -1,0 +1,42 @@
+{
+  "name": "@mdxdb/fetch",
+  "version": "0.0.1",
+  "description": "HTTP/API provider for mdxdb",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "lint": "eslint 'src/**/*.ts' --ignore-pattern '*.d.ts'"
+  },
+  "dependencies": {
+    "@mdxdb/types": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.18.1",
+    "@typescript-eslint/parser": "^8.18.1",
+    "@vitest/coverage-v8": "^2.1.8",
+    "@workspace/eslint-config": "workspace:*",
+    "eslint": "^8.57.1",
+    "msw": "^2.6.9",
+    "node-fetch": "^3.3.2",
+    "typescript": "^5.5.4",
+    "vitest": "^2.1.8"
+  },
+  "keywords": [
+    "mdxdb",
+    "fetch",
+    "http",
+    "api"
+  ],
+  "author": "",
+  "license": "MIT"
+}
