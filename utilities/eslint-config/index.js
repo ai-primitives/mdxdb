@@ -12,8 +12,8 @@ export default [
       parserOptions: {
         ecmaVersion: 'latest',
         sourceType: 'module',
-        project: null,
-        tsconfigRootDir: null
+        project: './tsconfig.json',
+        tsconfigRootDir: '.'
       },
       globals: {
         console: 'readonly',
@@ -24,7 +24,13 @@ export default [
       '@typescript-eslint': tsPlugin
     },
     rules: {
-      ...tsPlugin.configs['eslint-recommended'].rules,
+      ...tsPlugin.configs.recommended.rules,
+      'no-unused-expressions': 'off',
+      '@typescript-eslint/no-unused-vars': ['error', {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+        caughtErrorsIgnorePattern: '^_'
+      }],
       '@typescript-eslint/no-unused-expressions': ['error', {
         allowShortCircuit: true,
         allowTernary: true

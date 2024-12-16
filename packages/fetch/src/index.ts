@@ -12,53 +12,60 @@ export interface FetchProviderOptions {
 export class FetchError extends Error {
   constructor(
     message: string,
-    public readonly status?: number,
-    public readonly statusText?: string
+    private readonly _status?: number,
+    private readonly _statusText?: string
   ) {
     super(message)
     this.name = 'FetchError'
+  }
+
+  get status(): number | undefined {
+    return this._status
+  }
+
+  get statusText(): string | undefined {
+    return this._statusText
   }
 }
 
 class FetchCollectionProvider<T extends Document = Document> implements CollectionProvider<T> {
   constructor(
     public readonly path: string,
-    private readonly baseUrl: string,
-    private readonly headers: Record<string, string>,
-    private readonly fetchWithRetry: (path: string, init?: RequestInit) => Promise<Response>
+    private readonly _headers: Record<string, string>,
+    private readonly _fetchWithRetry: (_path: string, _init?: RequestInit) => Promise<Response>
   ) {}
 
   async find(filter: FilterQuery<T>, options?: SearchOptions<T>): Promise<T[]> {
-    const response = await this.fetchWithRetry(`collections/${this.path}/find`, {
+    const response = await this._fetchWithRetry(`collections/${this.path}/find`, {
       method: 'POST',
-      headers: this.headers,
+      headers: this._headers,
       body: JSON.stringify({ filter, ...options })
     })
     return response.json()
   }
 
   async search(query: string, options?: SearchOptions<T>): Promise<T[]> {
-    const response = await this.fetchWithRetry(`collections/${this.path}/search`, {
+    const response = await this._fetchWithRetry(`collections/${this.path}/search`, {
       method: 'POST',
-      headers: this.headers,
+      headers: this._headers,
       body: JSON.stringify({ query, ...options })
     })
     return response.json()
   }
 
   async vectorSearch(options: VectorSearchOptions & SearchOptions<T>): Promise<T[]> {
-    const response = await this.fetchWithRetry(`collections/${this.path}/vector-search`, {
+    const response = await this._fetchWithRetry(`collections/${this.path}/vector-search`, {
       method: 'POST',
-      headers: this.headers,
+      headers: this._headers,
       body: JSON.stringify(options)
     })
     return response.json()
   }
 }
 
-const providerState = new WeakMap<FetchProvider<any>, {
+const providerState = new WeakMap<FetchProvider<Document>, {
   options: Required<Omit<FetchProviderOptions, 'namespace'>>
-  fetchWithRetry: (path: string, init?: RequestInit, retryCount?: number) => Promise<Response>
+  fetchWithRetry: (_path: string, _init?: RequestInit, _retryCount?: number) => Promise<Response>
 }>()
 
 export class FetchProvider<T extends Document = Document> implements DatabaseProvider<T> {
@@ -66,7 +73,7 @@ export class FetchProvider<T extends Document = Document> implements DatabasePro
 
   constructor(options: FetchProviderOptions) {
     this.namespace = options.namespace
-    const { namespace, ...rest } = options
+    const { namespace: _namespace, ...rest } = options
     const state = {
       options: {
         headers: { 'Content-Type': 'application/json' },
@@ -76,14 +83,14 @@ export class FetchProvider<T extends Document = Document> implements DatabasePro
         ...rest,
         baseUrl: rest.baseUrl.endsWith('/') ? rest.baseUrl.slice(0, -1) : rest.baseUrl
       },
-      fetchWithRetry: async (path: string, init?: RequestInit, retryCount = 0): Promise<Response> => {
+      fetchWithRetry: async (_path: string, _init?: RequestInit, _retryCount = 0): Promise<Response> => {
         const controller = new AbortController()
         const timeout = setTimeout(() => controller.abort(), state.options.timeout)
 
         try {
-          const response = await fetch(`${state.options.baseUrl}/${path}`, {
-            ...init,
-            headers: { ...state.options.headers, ...(init?.headers || {}) },
+          const response = await fetch(`${state.options.baseUrl}/${_path}`, {
+            ..._init,
+            headers: { ...state.options.headers, ...(_init?.headers || {}) },
             signal: controller.signal
           })
 
@@ -97,9 +104,9 @@ export class FetchProvider<T extends Document = Document> implements DatabasePro
 
           return response
         } catch (error) {
-          if (retryCount < state.options.retries) {
+          if (_retryCount < state.options.retries) {
             await new Promise(resolve => setTimeout(resolve, state.options.retryDelay))
-            return state.fetchWithRetry(path, init, retryCount + 1)
+            return state.fetchWithRetry(_path, _init, _retryCount + 1)
           }
           if (error instanceof Error) {
             throw new FetchError(error.message)
@@ -131,7 +138,6 @@ export class FetchProvider<T extends Document = Document> implements DatabasePro
     const state = providerState.get(this)!
     return new FetchCollectionProvider<T>(
       name,
-      state.options.baseUrl,
       state.options.headers,
       state.fetchWithRetry
     )
