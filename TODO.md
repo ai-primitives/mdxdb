@@ -124,6 +124,19 @@
 - [ ] Add test coverage reporting
 - [ ] Set up automated npm publishing
 
+## Known Issues
+
+- [ ] ESLint configuration issues in @mdxdb/types package
+  - TypeScript parser configuration needs review
+  - Files not found in project configuration: src/index.d.ts, src/index.js, src/types.d.ts, src/types.js
+  - parserOptions.project configuration needs to be updated
+- [ ] ESLint rule errors in @workspace/example-package
+  - @typescript-eslint/no-unused-expressions rule configuration issue
+  - Error in rule loading: Cannot read properties of undefined (reading 'allowShortCircuit')
+
+## Blockers
+No blockers for current ClickHouse schema implementation. ESLint issues will be tracked separately and do not affect schema functionality.
+
 ## Future Enhancements
 
 - [ ] Add more comprehensive examples
