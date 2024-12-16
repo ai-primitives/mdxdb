@@ -6,8 +6,8 @@ module.exports = {
   ],
   parser: '@typescript-eslint/parser',
   parserOptions: {
-    project: '/home/ubuntu/repos/mdxdb/packages/types/tsconfig.json',
-    tsconfigRootDir: '/home/ubuntu/repos/mdxdb/packages/types',
+    project: './tsconfig.json',
+    tsconfigRootDir: __dirname,
     sourceType: 'module'
   },
   plugins: ['@typescript-eslint'],
