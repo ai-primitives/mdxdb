@@ -103,25 +103,28 @@ export class FSCollection implements CollectionProvider<Document> {
 
   async find(filter: FilterQuery<Document>): Promise<Document[]> {
     const docs = await this.getAllDocuments()
-    return docs
-      .map(doc => doc.content)
-      .filter(doc => {
-        // Check each property in the filter
-        return Object.entries(filter).every(([key, value]) => {
-          if (key === 'content' && typeof value === 'string') {
-            return doc.content.includes(value)
-          }
-          if (key === 'id' && typeof value === 'string') {
-            return doc.id === value
-          }
-          if (key === 'data' && typeof value === 'object') {
-            return Object.entries(value as Record<string, unknown>).every(
-              ([dataKey, dataValue]) => doc.data[dataKey] === dataValue
-            )
-          }
-          return true
-        })
+    const results = docs.map(doc => doc.content)
+
+    if (Object.keys(filter).length === 0) {
+      return results
+    }
+
+    return results.filter(doc => {
+      return Object.entries(filter).every(([key, value]) => {
+        if (key === 'content' && typeof value === 'string') {
+          return doc.content.includes(value)
+        }
+        if (key === 'id' && typeof value === 'string') {
+          return doc.id === value
+        }
+        if (key === 'data' && typeof value === 'object') {
+          return Object.entries(value as Record<string, unknown>).every(
+            ([dataKey, dataValue]) => doc.data[dataKey] === dataValue
+          )
+        }
+        return true
       })
+    })
   }
 
   async search(query: string, options?: SearchOptions<Document>): Promise<Document[]> {
