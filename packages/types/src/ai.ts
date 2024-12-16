@@ -1,8 +1,8 @@
 import { openai } from '@ai-sdk/openai'
-import { embed } from 'ai'
+import { embed, type EmbeddingModel } from 'ai'
 
 export interface EmbeddingOptions {
-  model?: typeof openai.embedding
+  model?: EmbeddingModel<string>
   dimensions?: number
 }
 
@@ -17,14 +17,13 @@ export const defaultEmbeddingOptions: EmbeddingOptions = {
 }
 
 export async function createEmbedding(text: string, options: EmbeddingOptions = defaultEmbeddingOptions): Promise<EmbeddingResult> {
-  const { embedding } = await embed({
+  const { embedding: vector } = await embed({
     model: options.model ?? defaultEmbeddingOptions.model,
-    value: text,
-    dimensions: options.dimensions ?? defaultEmbeddingOptions.dimensions
+    value: text
   })
 
   return {
-    vector: embedding,
+    vector,
     text
   }
 }

@@ -33,6 +33,10 @@ export class Database {
   collection(path: string): Collection {
     return new Collection({ path, database: this })
   }
+
+  get namespace(): string {
+    return this.options.namespace
+  }
 }
 
 export class Collection {
@@ -42,18 +46,22 @@ export class Collection {
     this.options = options
   }
 
+  get path(): string {
+    return this.options.path
+  }
+
   async find(filter: Record<string, unknown>): Promise<Document[]> {
-    // Implementation will be provided by specific providers
+    console.log(`Finding documents with filter: ${JSON.stringify(filter)}`)
     throw new Error('Method not implemented')
   }
 
   async search(query: string, filter?: Record<string, unknown>): Promise<Document[]> {
-    // Implementation will be provided by specific providers
+    console.log(`Searching for "${query}" with filter: ${JSON.stringify(filter)}`)
     throw new Error('Method not implemented')
   }
 
   async vectorSearch(options: VectorSearchOptions): Promise<Document[]> {
-    // Implementation will be provided by specific providers
+    console.log(`Vector search with options: ${JSON.stringify(options)}`)
     throw new Error('Method not implemented')
   }
 }
