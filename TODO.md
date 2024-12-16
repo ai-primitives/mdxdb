@@ -124,6 +124,13 @@
 - [ ] Add test coverage reporting
 - [ ] Set up automated npm publishing
 
+## Blockers
+
+- ESLint issues in @mdxdb/fs package:
+  - Unused variable 'filter' in collection.ts:104
+  - Explicit 'any' type used in index.ts:11
+  These issues were surfaced after fixing ESLint configuration and should be addressed in a separate PR.
+
 ## Future Enhancements
 
 - [ ] Add more comprehensive examples
