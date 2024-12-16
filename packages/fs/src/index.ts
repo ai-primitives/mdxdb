@@ -2,40 +2,39 @@ import { DatabaseProvider, CollectionProvider, Document } from '@mdxdb/types'
 import { promises as fs } from 'fs'
 import path from 'path'
 import { FSCollection } from './collection'
+import { EmbeddingsService } from './embeddings'
+import { EmbeddingsStorageService } from './storage'
 
-export class FSDatabase implements DatabaseProvider<Document> {
+const collectionsSymbol = Symbol('collections')
+
+class FSDatabase implements DatabaseProvider<Document> {
   readonly namespace: string
-  private collections: Set<string>
-  [key: string]: any
+  protected [collectionsSymbol]: Set<string>
+  [key: string]: DatabaseProvider<Document> | CollectionProvider<Document> | string | (() => Promise<void>) | (() => Promise<string[]>) | ((name: string) => CollectionProvider<Document>)
 
   constructor(private basePath: string) {
     this.namespace = `file://${path.resolve(basePath)}`
-    this.collections = new Set()
+    this[collectionsSymbol] = new Set()
   }
 
   async connect(): Promise<void> {
-    // Ensure base directory exists
     await fs.mkdir(this.basePath, { recursive: true })
-
-    // Load existing collections
     const entries = await fs.readdir(this.basePath, { withFileTypes: true })
     for (const entry of entries) {
       if (entry.isDirectory()) {
-        this.collections.add(entry.name)
+        this[collectionsSymbol].add(entry.name)
       }
     }
   }
 
-  async disconnect(): Promise<void> {
-    // No cleanup needed for filesystem
-  }
+  async disconnect(): Promise<void> {}
 
   async list(): Promise<string[]> {
-    return Array.from(this.collections)
+    return Array.from(this[collectionsSymbol])
   }
 
   collection(name: string): CollectionProvider<Document> {
-    this.collections.add(name)
+    this[collectionsSymbol].add(name)
     return new FSCollection(this.basePath, name)
   }
 
@@ -44,6 +43,8 @@ export class FSDatabase implements DatabaseProvider<Document> {
   }
 }
 
-export function createDatabase(options: { basePath: string }): DatabaseProvider<Document> {
+function createDatabase(options: { basePath: string }): DatabaseProvider<Document> {
   return new FSDatabase(options.basePath)
 }
+
+export { FSDatabase, createDatabase, EmbeddingsService, EmbeddingsStorageService }
