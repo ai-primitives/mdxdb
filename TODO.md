@@ -46,7 +46,7 @@
 ## AI Integration
 - [ ] OpenAI embeddings setup
   - [ ] text-embedding-3-large model configuration (256 dimensions)
-  - [ ] Integration with @ai-sdk/openai package
+  - [ ] Integration with ai and @ai-sdk/openai packages
   - [ ] Error handling and retries for API calls
   - [ ] Rate limiting and batch processing
 - [ ] Vector similarity implementations
