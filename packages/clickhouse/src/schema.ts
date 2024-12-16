@@ -15,11 +15,7 @@ CREATE TABLE IF NOT EXISTS ${databaseName}.oplog (
     data JSON,
     content String,
     ts UInt32,
-    hashId UInt32,
-    hashNs UInt32,
-    hashPath Array(UInt32),
-    hashData UInt32,
-    hashContent UInt32,
+    hash JSON, -- Map containing id, ns, path, data, and content hashes
     version UInt64
 ) ENGINE = MergeTree
 ORDER BY (id, version);
@@ -33,11 +29,7 @@ CREATE TABLE IF NOT EXISTS ${databaseName}.data (
     data JSON,
     content String,
     ts UInt32,
-    hashId UInt32,
-    hashNs UInt32,
-    hashPath Array(UInt32),
-    hashData UInt32,
-    hashContent UInt32,
+    hash JSON, -- Map containing id, ns, path, data, and content hashes
     version UInt64,
     sign Int8
 ) ENGINE = VersionedCollapsingMergeTree(sign, version)
@@ -56,11 +48,7 @@ AS SELECT
     data,
     content,
     ts,
-    hashId,
-    hashNs,
-    hashPath,
-    hashData,
-    hashContent,
+    hash,
     version,
     1 as sign
 FROM ${databaseName}.oplog;

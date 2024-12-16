@@ -14,11 +14,7 @@ AS SELECT
     data,
     content,
     ts,
-    hashId,
-    hashNs,
-    hashPath,
-    hashData,
-    hashContent,
+    hash,
     version,
     1 as sign
 FROM ${databaseName}.oplog;
