@@ -26,5 +26,8 @@
     "semi": false,
     "singleQuote": true,
     "jsxSingleQuote": true
+  },
+  "dependencies": {
+    "mdxld": "^0.1.0"
   }
 }
