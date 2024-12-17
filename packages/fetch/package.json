@@ -11,7 +11,7 @@
   ],
   "scripts": {
     "build": "tsc",
-    "build:types": "echo \"Skipping build:types for fetch package\"",
+    "build:types": "exit 0",
     "build:packages": "tsc",
     "dev": "tsc --watch",
     "test": "vitest run",
