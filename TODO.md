@@ -164,6 +164,12 @@
   - Explicit 'any' type used in index.ts:11
   These issues were surfaced after fixing ESLint configuration and should be addressed in a separate PR.
 
+- CI workflow failures in @mdxdb/clickhouse package:
+  - No test files found in the package
+  - Causing CI workflow to fail with exit code 1
+  - Needs test files to be added or CI configuration updated
+  This is blocking PR #12 and needs to be addressed before merging the CI permissions configuration.
+
 ## Known Issues
 
 - [ ] ESLint configuration issues in @mdxdb/types package
@@ -173,9 +179,6 @@
 - [ ] ESLint rule errors in @workspace/example-package
   - @typescript-eslint/no-unused-expressions rule configuration issue
   - Error in rule loading: Cannot read properties of undefined (reading 'allowShortCircuit')
-
-## Blockers
-No blockers for current ClickHouse schema implementation. ESLint issues will be tracked separately and do not affect schema functionality.
 
 ## Future Enhancements
 
