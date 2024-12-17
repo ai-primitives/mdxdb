@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createDeploymentRouter, deployToCloudflare } from '../src/deployment'
 import { Hono } from 'hono'
+import type { DeploymentResponse } from '../src/types/deployment'
 
 // Mock fetch globally
 const mockFetch = vi.fn()
@@ -93,7 +94,7 @@ describe('Deployment Service', () => {
         })
       })
 
-      const body = await res.json()
+      const body = await res.json() as DeploymentResponse
       expect(res.status).toBe(200)
       expect(body.success).toBe(true)
       expect(body.result).toBeDefined()
@@ -111,7 +112,7 @@ describe('Deployment Service', () => {
         })
       })
 
-      const body = await res.json()
+      const body = await res.json() as DeploymentResponse
       expect(res.status).toBe(400)
       expect(body.success).toBe(false)
       expect(body.errors).toBeDefined()

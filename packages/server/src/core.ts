@@ -3,9 +3,11 @@ import { cors } from 'hono/cors'
 import { zValidator } from '@hono/zod-validator'
 import { z } from 'zod'
 import type { Context, Env, MiddlewareHandler } from 'hono'
+import type { JwtVariables } from 'hono/jwt'
 import type { DatabaseProvider, Document, SearchOptions, VectorSearchOptions } from '@mdxdb/types'
 import { compileToESM } from './compiler'
 import { deployToCloudflare, type DeploymentOptions } from './deployment'
+import { authMiddleware } from './middleware/auth'
 
 // Request validation schemas
 const searchSchema = z.object({
@@ -52,17 +54,20 @@ export interface ServerConfig {
 }
 
 export interface ServerContext {
-  provider: DatabaseProvider<Document>
+  Variables: {
+    provider: DatabaseProvider<Document>
+  }
 }
 
 export interface ServerBindings {
   MDXDB_KV: KVNamespace
+  JWT_SECRET: string
   CLICKHOUSE_URL?: string
 }
 
 export type AppEnv = {
   Bindings: ServerBindings
-  Variables: ServerContext
+  Variables: JwtVariables & ServerContext['Variables']
 } & Env
 
 export const createApp = (config: ServerConfig) => {
@@ -78,11 +83,12 @@ export const createApp = (config: ServerConfig) => {
       return c.json({ error: 'Provider not configured' }, 500)
     }
 
-    c.set('provider', provider)
+    c.set('provider', provider as DatabaseProvider<Document>)
     await next()
   }
 
   app.use('*', providerMiddleware)
+  app.use('*', authMiddleware)
   app.use('*', cors())
 
   // Collection operations
