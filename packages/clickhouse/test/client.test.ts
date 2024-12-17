@@ -6,7 +6,12 @@ import { createClient } from '@clickhouse/client-web'
 vi.mock('@clickhouse/client-web', () => ({
   createClient: vi.fn().mockReturnValue({
     ping: vi.fn().mockResolvedValue({ success: true }),
-    exec: vi.fn().mockResolvedValue({ success: true })
+    exec: vi.fn().mockResolvedValue({ success: true }),
+    query: vi.fn().mockImplementation(() => {
+      return Promise.resolve({
+        json: () => Promise.resolve([{ version: '24.11.0' }])
+      })
+    })
   })
 }))
 
