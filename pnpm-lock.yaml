@@ -39,10 +39,16 @@ importers:
       '@mdxdb/types':
         specifier: workspace:*
         version: link:../types
+      zod:
+        specifier: ^3.24.1
+        version: 3.24.1
     devDependencies:
       '@clickhouse/client':
         specifier: ^1.9.1
         version: 1.9.1
+      '@types/node':
+        specifier: ^22.10.2
+        version: 22.10.2
       '@typescript-eslint/eslint-plugin':
         specifier: ^6.21.0
         version: 6.21.0(@typescript-eslint/parser@6.21.0(eslint@8.57.1)(typescript@5.5.4))(eslint@8.57.1)(typescript@5.5.4)
