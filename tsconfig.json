@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "declaration": true,
+    "declarationMap": true,
+    "composite": true,
+    "incremental": true
+  },
+  "references": [
+    { "path": "packages/types" },
+    { "path": "packages/fs" },
+    { "path": "packages/fetch" }
+  ]
+}

@@ -5,13 +5,13 @@
     "rootDir": "src",
     "baseUrl": ".",
     "composite": true,
-    "declaration": true,
-    "declarationMap": true,
-    "moduleResolution": "Bundler",
     "paths": {
-      "@mdxdb/*": ["../*/dist"]
+      "@mdxdb/*": ["../*"]
     }
   },
   "include": ["src/**/*"],
-  "references": [{ "path": "../types/tsconfig.build.json" }]
+  "exclude": ["node_modules", "dist", "test"],
+  "references": [
+    { "path": "../types" }
+  ]
 }
