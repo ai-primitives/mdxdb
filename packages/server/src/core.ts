@@ -60,7 +60,6 @@ export interface ServerContext {
 }
 
 export interface ServerBindings {
-  MDXDB_KV: KVNamespace
   JWT_SECRET: string
   CLICKHOUSE_URL?: string
 }

@@ -33,7 +33,7 @@ export default {
       const config = await createServerConfig(env.Bindings)
       const app = createApp(config)
       return app.fetch(request, env, ctx)
-    } catch (error) {
+    } catch {
       return new Response(JSON.stringify({ error: 'Server configuration failed' }), {
         status: 500,
         headers: { 'Content-Type': 'application/json' }

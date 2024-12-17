@@ -1,5 +1,4 @@
 import type { Context, Next } from 'hono'
-import type { MiddlewareHandler } from 'hono'
 import { jwt } from 'hono/jwt'
 import type { AppEnv } from '../core'
 

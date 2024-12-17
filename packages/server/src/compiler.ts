@@ -1,6 +1,6 @@
-import { type BuildOptions, type BuildResult, initialize } from 'esbuild'
+import { type BuildOptions, type BuildResult } from 'esbuild'
 import { compile } from '@mdx-js/mdx'
-import type { ImportDeclaration, ImportSpecifier, Identifier, ExportDefaultDeclaration, Node, FunctionDeclaration } from 'estree'
+import type { Node } from 'estree'
 import type { VFile } from 'vfile'
 
 interface Program {
