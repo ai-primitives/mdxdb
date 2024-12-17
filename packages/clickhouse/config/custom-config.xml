@@ -1,6 +1,12 @@
 <?xml version="1.0"?>
 <clickhouse>
-    <allow_experimental_json_type>1</allow_experimental_json_type>
+    <profiles>
+        <default>
+            <allow_experimental_json_type>1</allow_experimental_json_type>
+            <allow_experimental_full_text_index>1</allow_experimental_full_text_index>
+            <allow_experimental_vector_similarity_index>1</allow_experimental_vector_similarity_index>
+        </default>
+    </profiles>
     <logger>
         <level>trace</level>
         <console>1</console>

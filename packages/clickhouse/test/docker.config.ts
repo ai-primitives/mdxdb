@@ -1,7 +1,7 @@
 export const dockerTestConfig = {
   host: 'localhost',
   port: 8123,
-  database: 'mdxdb',
+  database: 'default',
   username: 'default',
   password: '',
   protocol: 'http',
