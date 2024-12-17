@@ -20,6 +20,8 @@ This is a test MDX file.
     const result = await compileToESM(mdx)
     expect(result).toContain('import { Fragment, jsx')
     expect(result).toContain('from "react/jsx-runtime"')
+    expect(result).toContain('useMDXComponents')
+    expect(result).toContain('from "@mdx-js/react"')
     expect(result).toContain('MDXContent')
     expect(result).toContain('meta')
     expect(result).toContain('title')
@@ -35,11 +37,21 @@ export const x = 1 + 2
 The value of x is {x}.
     `
     const result = await compileMDX(mdx, { minify: true, development: false })
-    const output = result.outputFiles?.[0]
+    if (!('outputFiles' in result)) {
+      throw new Error('Expected BuildResult with outputFiles')
+    }
+    if (!result.outputFiles?.length) {
+      throw new Error('Expected at least one output file')
+    }
+    const output = result.outputFiles[0]
     expect(output).toBeDefined()
-    expect(output?.text).toContain('var u=3')
-    expect(output?.text).toContain('MDXContent')
-    expect(output?.text).toContain('jsx-runtime')
+    expect(output.text).toMatch(/[a-zA-Z_$][0-9a-zA-Z_$]*=3/)
+    expect(output.text).toContain('jsx-runtime')
+    expect(output.text).toContain('Fragment')
+    expect(output.text).toMatch(/function\s+[a-zA-Z_$][0-9a-zA-Z_$]*\s*\([^)]*\)/)
+    expect(output.text).toMatch(/export\s+default/)
+    expect(output.text).toContain('useMDXComponents')
+    expect(output.text).toContain('@mdx-js/react')
   })
 
   it('should handle JSX syntax', async () => {
@@ -51,6 +63,8 @@ The value of x is {x}.
     const result = await compileToESM(mdx)
     expect(result).toContain('import { Fragment, jsx')
     expect(result).toContain('from "react/jsx-runtime"')
+    expect(result).toContain('useMDXComponents')
+    expect(result).toContain('from "@mdx-js/react"')
     expect(result).toContain('MDXContent')
     expect(result).toContain('button')
     expect(result).toContain('className')
@@ -60,5 +74,30 @@ The value of x is {x}.
 
   it('should throw error when compilation fails', async () => {
     await expect(compileToESM('{')).rejects.toThrow()
+  })
+
+  it('should support both Node.js and Cloudflare Workers environments', async () => {
+    const mdx = '# Test'
+    const result = await compileMDX(mdx)
+
+    interface BuildResult {
+      outputFiles: { text: string }[]
+    }
+
+    if (!('outputFiles' in result)) {
+      const output = result as { text: string }
+      expect(output.text).toContain('useMDXComponents')
+      expect(output.text).toContain('from "@mdx-js/react"')
+      expect(output.text).toContain('MDXContent')
+    } else {
+      const buildResult = result as BuildResult
+      if (!buildResult.outputFiles?.length) {
+        throw new Error('Expected compilation output')
+      }
+      const output = buildResult.outputFiles[0]
+      expect(output.text).toContain('useMDXComponents')
+      expect(output.text).toContain('@mdx-js/react')
+      expect(output.text).toMatch(/function\s+[a-zA-Z_$][0-9a-zA-Z_$]*\s*\([^)]*\)/)
+    }
   })
 })

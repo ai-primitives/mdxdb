@@ -218,6 +218,9 @@ importers:
       '@mdx-js/react':
         specifier: ^3.1.0
         version: 3.1.0(@types/react@18.3.17)(react@18.3.1)
+      '@types/estree':
+        specifier: ^1.0.6
+        version: 1.0.6
       '@types/mdx':
         specifier: ^2.0.13
         version: 2.0.13
@@ -236,6 +239,9 @@ importers:
       typescript:
         specifier: ^5.3.3
         version: 5.5.4
+      vfile:
+        specifier: ^6.0.3
+        version: 6.0.3
       vitest:
         specifier: ^1.1.0
         version: 1.6.0(@types/node@22.10.2)

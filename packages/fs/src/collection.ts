@@ -28,8 +28,9 @@ export class FSCollection implements CollectionProvider<Document> {
     try {
       const filePath = nodePath.join(this.collectionPath, `${id}.mdx`)
       const content = await fs.readFile(filePath, 'utf-8')
+      const docId = id.split('/').pop() || id
       return {
-        id,
+        id: docId,
         content,
         data: {}
       }
@@ -43,6 +44,10 @@ export class FSCollection implements CollectionProvider<Document> {
 
   private async writeDocument(id: string, document: Document): Promise<void> {
     const filePath = nodePath.join(this.collectionPath, `${id}.mdx`)
+    const exists = await fs.access(filePath).then(() => true).catch(() => false)
+    if (exists) {
+      throw new Error(`Document with id ${id} already exists`)
+    }
     await fs.mkdir(nodePath.dirname(filePath), { recursive: true })
     await fs.writeFile(filePath, document.content, 'utf-8')
 
@@ -74,16 +79,27 @@ export class FSCollection implements CollectionProvider<Document> {
     await fs.mkdir(nodePath.join(this.collectionPath, collection), { recursive: true })
   }
 
-  async get(collection: string): Promise<Document[]> {
-    await fs.mkdir(nodePath.join(this.collectionPath, collection), { recursive: true })
-    const docs = await this.getAllDocuments()
-    return docs.map(doc => doc.content)
-  }
-
   async add(collection: string, document: Document): Promise<void> {
     const id = document.id || webcrypto.randomUUID()
     document.id = id
-    await this.writeDocument(nodePath.join(collection, id), document)
+    const fullPath = nodePath.join(collection, id)
+    await this.writeDocument(fullPath, document)
+  }
+
+  async get(collection: string): Promise<Document[]> {
+    const collectionPath = nodePath.join(this.collectionPath, collection)
+    await fs.mkdir(collectionPath, { recursive: true })
+    const files = await fs.readdir(collectionPath)
+    const mdxFiles = files.filter(file => file.endsWith('.mdx'))
+
+    const documents = await Promise.all(
+      mdxFiles.map(async file => {
+        const id = nodePath.basename(file, '.mdx')
+        return this.readDocument(nodePath.join(collection, id))
+      })
+    )
+
+    return documents.filter((doc): doc is Document => doc !== null)
   }
 
   async update(collection: string, id: string, document: Document): Promise<void> {
@@ -91,7 +107,10 @@ export class FSCollection implements CollectionProvider<Document> {
     if (!existingDoc) {
       throw new Error(`Document with id ${id} not found in collection ${collection}`)
     }
-    await this.writeDocument(nodePath.join(collection, id), document)
+    const fullPath = nodePath.join(collection, id)
+    const filePath = nodePath.join(this.collectionPath, `${fullPath}.mdx`)
+    await fs.unlink(filePath)
+    await this.writeDocument(fullPath, document)
   }
 
   async delete(collection: string, id: string): Promise<void> {
@@ -156,7 +175,14 @@ export class FSCollection implements CollectionProvider<Document> {
         const storedEmbedding = await this.storageService.getEmbedding(id)
         if (!storedEmbedding?.embedding) {
           console.debug(`No embedding found for document ${id}`)
-          return { document: content, score: 0 }
+          return {
+            document: {
+              id,
+              content: content.content,
+              data: content.data || {}
+            },
+            score: 0
+          }
         }
 
         const similarity = this.embeddingsService.calculateSimilarity(
@@ -164,7 +190,14 @@ export class FSCollection implements CollectionProvider<Document> {
           storedEmbedding.embedding
         )
         console.debug(`Document ${id} similarity: ${similarity}`)
-        return { document: content, score: similarity }
+        return {
+          document: {
+            id,
+            content: content.content,
+            data: content.data || {}
+          },
+          score: similarity
+        }
       })
     )
 
