@@ -4,6 +4,6 @@ export const dockerTestConfig = {
   database: 'mdxdb',
   username: 'default',
   password: '',
-  protocol: 'http:',
+  protocol: 'http',
   tls: false
 };
