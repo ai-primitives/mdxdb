@@ -192,10 +192,10 @@ importers:
     dependencies:
       '@hono/node-server':
         specifier: ^1.4.0
-        version: 1.13.7(hono@3.12.12)
+        version: 1.13.7(hono@4.6.14)
       '@hono/zod-validator':
         specifier: ^0.1.11
-        version: 0.1.11(hono@3.12.12)(zod@3.24.1)
+        version: 0.1.11(hono@4.6.14)(zod@3.24.1)
       '@mdxdb/clickhouse':
         specifier: workspace:*
         version: link:../clickhouse
@@ -209,8 +209,8 @@ importers:
         specifier: ^0.19.0
         version: 0.19.12
       hono:
-        specifier: ^3.0.0
-        version: 3.12.12
+        specifier: ^4.6.14
+        version: 4.6.14
       zod:
         specifier: ^3.22.0
         version: 3.24.1
@@ -233,9 +233,18 @@ importers:
       '@types/react':
         specifier: ^18.3.17
         version: 18.3.17
+      '@typescript-eslint/eslint-plugin':
+        specifier: ^8.18.1
+        version: 8.18.1(@typescript-eslint/parser@8.18.1(eslint@9.17.0)(typescript@5.5.4))(eslint@9.17.0)(typescript@5.5.4)
+      '@typescript-eslint/parser':
+        specifier: ^8.18.1
+        version: 8.18.1(eslint@9.17.0)(typescript@5.5.4)
       esbuild:
         specifier: ^0.19.12
         version: 0.19.12
+      eslint:
+        specifier: ^9.17.0
+        version: 9.17.0
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -2093,9 +2102,9 @@ packages:
   headers-polyfill@4.0.3:
     resolution: {integrity: sha512-IScLbePpkvO846sIwOtOTDjutRMWdXdJmXdMvk6gCBHxFO8d+QKOQedyZSxFTTFYRSmlgSTDtXqqq4pcenBXLQ==}
 
-  hono@3.12.12:
-    resolution: {integrity: sha512-5IAMJOXfpA5nT+K0MNjClchzz0IhBHs2Szl7WFAhrFOsbtQsYmNynFyJRg/a3IPsmCfxcrf8txUGiNShXpK5Rg==}
-    engines: {node: '>=16.0.0'}
+  hono@4.6.14:
+    resolution: {integrity: sha512-j4VkyUp2xazGJ8eCCLN1Vm/bxdvm/j5ZuU9AIjLu9vapn2M44p9L3Ktr9Vnb2RN2QtcR/wVjZVMlT5k7GJQgPw==}
+    engines: {node: '>=16.9.0'}
 
   html-escaper@2.0.2:
     resolution: {integrity: sha512-H2iMtd0I4Mt5eYiapRdIDjp+XzelXQ0tFE4JS7YFwFevXXMmOp9myNrUvCg0D6ws8iqkRPBfKHgbwig1SmlLfg==}
@@ -3716,13 +3725,13 @@ snapshots:
 
   '@fastify/busboy@2.1.1': {}
 
-  '@hono/node-server@1.13.7(hono@3.12.12)':
+  '@hono/node-server@1.13.7(hono@4.6.14)':
     dependencies:
-      hono: 3.12.12
+      hono: 4.6.14
 
-  '@hono/zod-validator@0.1.11(hono@3.12.12)(zod@3.24.1)':
+  '@hono/zod-validator@0.1.11(hono@4.6.14)(zod@3.24.1)':
     dependencies:
-      hono: 3.12.12
+      hono: 4.6.14
       zod: 3.24.1
 
   '@humanfs/core@0.19.1': {}
@@ -5153,7 +5162,7 @@ snapshots:
 
   headers-polyfill@4.0.3: {}
 
-  hono@3.12.12: {}
+  hono@4.6.14: {}
 
   html-escaper@2.0.2: {}
 
