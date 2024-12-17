@@ -6,6 +6,8 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
+    "build:types": "tsc --emitDeclarationOnly",
+    "build:packages": "tsc",
     "test": "vitest run --reporter=verbose",
     "test:watch": "vitest --reporter=verbose",
     "lint": "eslint 'src/**/*.{js,ts}' --ignore-pattern '*.d.ts'"
