@@ -1,6 +1,7 @@
 import { createApp } from './core'
 import type { ServerConfig, AppEnv } from './core'
 import { createClickHouseClient } from '@mdxdb/clickhouse'
+import type { ExecutionContext } from '@cloudflare/workers-types'
 
 // Initialize ClickHouse client with worker-specific configuration
 const initializeClickHouseClient = async (env: AppEnv['Bindings']) => {

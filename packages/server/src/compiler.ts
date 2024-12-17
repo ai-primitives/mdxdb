@@ -1,6 +1,6 @@
 import { type BuildOptions, type BuildResult } from 'esbuild'
 import { compile } from '@mdx-js/mdx'
-import type { VFile } from 'vfile'
+
 
 export interface CompileOptions {
   format?: 'esm' | 'cjs'
