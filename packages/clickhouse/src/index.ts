@@ -10,3 +10,8 @@ export type { Document, DatabaseProvider, CollectionProvider, SearchOptions, Fil
 // Export local types and functions
 export { createClickHouseClient, checkClickHouseVersion }
 export type { Config, ClickHouseClient, TableSchema }
+
+// Export additional functionality
+export * from './schema'
+export * from './utils'
+export * from './client'
