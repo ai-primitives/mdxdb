@@ -11,13 +11,15 @@
   ],
   "scripts": {
     "build": "tsc",
+    "build:types": "exit 0",
+    "build:packages": "tsc",
     "dev": "tsc --watch",
     "test": "vitest run",
     "test:watch": "vitest watch",
     "lint": "eslint 'src/**/*.ts' --ignore-pattern '*.d.ts'"
   },
   "dependencies": {
-    "@mdxdb/types": "workspace:*"
+    "@mdxdb/types": "^0.0.1"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

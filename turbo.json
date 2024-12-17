@@ -8,7 +8,8 @@
         "dist/**/*",
         "*.tsbuildinfo",
         ".wrangler/**/*"
-      ]
+      ],
+      "inputs": ["src/**/*", "tsconfig.json", "package.json"]
     },
     "lint": {
       "dependsOn": ["^lint", "build"],
@@ -21,6 +22,16 @@
     "dev": {
       "cache": false,
       "persistent": true
+    },
+    "build:types": {
+      "dependsOn": ["^build:types"],
+      "cache": true,
+      "outputs": ["dist/**/*", "*.tsbuildinfo"]
+    },
+    "build:packages": {
+      "dependsOn": ["^build:packages", "^build:types"],
+      "cache": true,
+      "outputs": ["dist/**/*", "*.tsbuildinfo"]
     }
   }
 }

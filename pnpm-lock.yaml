@@ -46,8 +46,8 @@ importers:
   packages/ai:
     dependencies:
       '@mdxdb/types':
-        specifier: workspace:*
-        version: link:../types
+        specifier: ^0.0.1
+        version: 0.0.1
       openai:
         specifier: ^4.28.0
         version: 4.76.3(zod@3.24.1)
@@ -68,8 +68,8 @@ importers:
         specifier: ^1.9.1
         version: 1.9.1
       '@mdxdb/types':
-        specifier: workspace:*
-        version: link:../types
+        specifier: ^0.0.1
+        version: 0.0.1
       zod:
         specifier: ^3.24.1
         version: 3.24.1
@@ -123,8 +123,8 @@ importers:
   packages/fetch:
     dependencies:
       '@mdxdb/types':
-        specifier: workspace:*
-        version: link:../types
+        specifier: ^0.0.1
+        version: 0.0.1
     devDependencies:
       '@types/node':
         specifier: ^20.0.0
@@ -166,8 +166,8 @@ importers:
         specifier: ^1.0.2
         version: 1.0.2
       '@mdxdb/types':
-        specifier: workspace:*
-        version: link:../types
+        specifier: ^0.0.1
+        version: 0.0.1
       ai:
         specifier: ^2.2.0
         version: 2.2.37(react@18.3.1)(solid-js@1.9.3)(svelte@4.2.19)(vue@3.5.13(typescript@5.5.4))
@@ -206,14 +206,14 @@ importers:
         specifier: ^0.1.11
         version: 0.1.11(hono@4.6.14)(zod@3.24.1)
       '@mdxdb/clickhouse':
-        specifier: workspace:*
-        version: link:../clickhouse
+        specifier: ^0.0.1
+        version: 0.0.1(@clickhouse/client-web@1.9.1)
       '@mdxdb/fs':
-        specifier: workspace:*
-        version: link:../fs
+        specifier: ^0.1.0
+        version: 0.1.0(react@18.3.1)(solid-js@1.9.3)(svelte@4.2.19)(vue@3.5.13(typescript@5.5.4))(zod@3.24.1)
       '@mdxdb/types':
-        specifier: workspace:*
-        version: link:../types
+        specifier: ^0.0.1
+        version: 0.0.1
       esbuild-wasm:
         specifier: ^0.19.0
         version: 0.19.12
@@ -1146,6 +1146,18 @@ packages:
     peerDependencies:
       '@types/react': '>=16'
       react: '>=16'
+
+  '@mdxdb/clickhouse@0.0.1':
+    resolution: {integrity: sha512-AllzJ42cHP9ELJ/tNzp9XkKMVoN6n31Y9PYyyfho0xGZI2+PIYtAVeXlRnSRrULYdIdKGZ6NaJremjlbb1C3/A==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      '@clickhouse/client-web': ^1.9.1
+
+  '@mdxdb/fs@0.1.0':
+    resolution: {integrity: sha512-lSTEa6nWExCqxKDYqg/XzvKxzpu/TyEAPcHDhpuLqCjl0nyrwdafZkmF/S7lMx/OPkxXOfYFR1WtQdF4tru8EA==}
+
+  '@mdxdb/types@0.0.1':
+    resolution: {integrity: sha512-XoG2gFY5XzVKZOjSWmDCDOx3NVdUFjeRJXzOvTM/DCSL5Vt7k5Dl4zGBxOnoLhsyFB32/2GJ4lmokDjrIVGGUg==}
 
   '@mswjs/interceptors@0.37.3':
     resolution: {integrity: sha512-USvgCL/uOGFtVa6SVyRrC8kIAedzRohxIXN5LISlg5C5vLZCn7dgMFVSNhSF9cuBEFrm/O2spDWEZeMnw4ZXYg==}
@@ -4939,6 +4951,30 @@ snapshots:
       '@types/mdx': 2.0.13
       '@types/react': 18.3.17
       react: 18.3.1
+
+  '@mdxdb/clickhouse@0.0.1(@clickhouse/client-web@1.9.1)':
+    dependencies:
+      '@clickhouse/client-web': 1.9.1
+      '@mdxdb/types': link:packages/types
+      zod: 3.24.1
+
+  '@mdxdb/fs@0.1.0(react@18.3.1)(solid-js@1.9.3)(svelte@4.2.19)(vue@3.5.13(typescript@5.5.4))(zod@3.24.1)':
+    dependencies:
+      '@ai-sdk/openai': 1.0.8(zod@3.24.1)
+      '@ai-sdk/provider': 1.0.2
+      '@mdxdb/types': link:packages/types
+      ai: 2.2.37(react@18.3.1)(solid-js@1.9.3)(svelte@4.2.19)(vue@3.5.13(typescript@5.5.4))
+      mdxld: 0.1.1
+    transitivePeerDependencies:
+      - react
+      - solid-js
+      - svelte
+      - vue
+      - zod
+
+  '@mdxdb/types@0.0.1':
+    dependencies:
+      mdxld: 0.1.1
 
   '@mswjs/interceptors@0.37.3':
     dependencies:

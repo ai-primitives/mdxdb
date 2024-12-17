@@ -6,6 +6,8 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
+    "build:types": "tsc --emitDeclarationOnly",
+    "build:packages": "tsc",
     "test": "vitest run --reporter=verbose",
     "test:watch": "vitest --reporter=verbose",
     "lint": "eslint 'src/**/*.{js,ts}' --ignore-pattern '*.d.ts'"
@@ -13,7 +15,7 @@
   "dependencies": {
     "@ai-sdk/openai": "^1.0.0",
     "@ai-sdk/provider": "^1.0.2",
-    "@mdxdb/types": "workspace:*",
+    "@mdxdb/types": "^0.0.1",
     "ai": "^2.2.0",
     "mdxld": "^0.1.0"
   },

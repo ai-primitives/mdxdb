@@ -7,7 +7,9 @@
     "packages/example-package"
   ],
   "scripts": {
-    "build": "turbo build",
+    "build": "turbo run build",
+    "build:types": "turbo run build:types",
+    "build:packages": "turbo run build:packages",
     "dev": "turbo dev",
     "lint": "turbo lint",
     "test": "turbo test",
