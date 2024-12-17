@@ -6,7 +6,8 @@
     "baseUrl": ".",
     "composite": true,
     "paths": {
-      "@mdxdb/*": ["../*"]
+      "@mdxdb/types": ["../types/src"],
+      "@mdxdb/types/*": ["../types/src/*"]
     }
   },
   "include": ["src/**/*"],
