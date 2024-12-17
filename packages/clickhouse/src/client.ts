@@ -8,7 +8,9 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
     public readonly path: string,
     private readonly client: ClickHouseClient,
     private readonly config: Config
-  ) {}
+  ) {
+    void this.config.database
+  }
 
   async create(collection: string): Promise<void> {
     void this.client
@@ -61,11 +63,13 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
 class ClickHouseDatabaseProvider implements DatabaseProvider<Document> {
   readonly namespace: string
   public collections: CollectionProvider<Document>
-  private client: ClickHouseClient
+  private readonly client: ClickHouseClient
+  private readonly config: Config
 
   constructor(client: ClickHouseClient, config: Config) {
     this.namespace = `clickhouse://${config.url}`
     this.client = client
+    this.config = config
     this.collections = new ClickHouseCollectionProvider('', client, config)
   }
 
