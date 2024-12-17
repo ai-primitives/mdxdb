@@ -29,7 +29,7 @@
       "outputs": ["dist/**/*", "*.tsbuildinfo"]
     },
     "build:packages": {
-      "dependsOn": ["^build:packages", "^build:types"],
+      "dependsOn": ["build:types"],
       "cache": true,
       "outputs": ["dist/**/*", "*.tsbuildinfo"]
     }
