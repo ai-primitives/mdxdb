@@ -13,6 +13,7 @@ AS SELECT
     path,
     data,
     content,
+    embedding,
     ts,
     hash,
     version,

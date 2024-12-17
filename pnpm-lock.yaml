@@ -55,13 +55,19 @@ importers:
 
   packages/clickhouse:
     dependencies:
-      '@clickhouse/client':
-        specifier: ^0.2.10
-        version: 0.2.10
+      '@clickhouse/client-web':
+        specifier: ^1.9.1
+        version: 1.9.1
       '@mdxdb/types':
         specifier: workspace:*
         version: link:../types
+      zod:
+        specifier: ^3.24.1
+        version: 3.24.1
     devDependencies:
+      '@types/node':
+        specifier: ^22.10.2
+        version: 22.10.2
       '@typescript-eslint/eslint-plugin':
         specifier: ^6.21.0
         version: 6.21.0(@typescript-eslint/parser@6.21.0(eslint@8.57.1)(typescript@5.5.4))(eslint@8.57.1)(typescript@5.5.4)
@@ -354,12 +360,11 @@ packages:
   '@bundled-es-modules/tough-cookie@0.1.6':
     resolution: {integrity: sha512-dvMHbL464C0zI+Yqxbz6kZ5TOEp7GLW+pry/RWndAR8MJQAXZ2rPmIs8tziTZjeIyhSNZgZbCePtfSbdWqStJw==}
 
-  '@clickhouse/client-common@0.2.10':
-    resolution: {integrity: sha512-BvTY0IXS96y9RUeNCpKL4HUzHmY80L0lDcGN0lmUD6zjOqYMn78+xyHYJ/AIAX7JQsc+/KwFt2soZutQTKxoGQ==}
+  '@clickhouse/client-common@1.9.1':
+    resolution: {integrity: sha512-67iJoiwolWxfTgfWqBZMc3c+Lj9yxfWvNSVAP6KoANB10eZFnUvr8tAi+rdzQUZrrh3+xBVk/YhZ4NTuyCDHZg==}
 
-  '@clickhouse/client@0.2.10':
-    resolution: {integrity: sha512-ZwBgzjEAFN/ogS0ym5KHVbR7Hx/oYCX01qGp2baEyfN2HM73kf/7Vp3GvMHWRy+zUXISONEtFv7UTViOXnmFrg==}
-    engines: {node: '>=16'}
+  '@clickhouse/client-web@1.9.1':
+    resolution: {integrity: sha512-p4JZhTdCr1hvtOPI/EVYyzz/tpjElJ/BZd6eOPn0yg4pCAXe1Iei2U+y/XKP2vxsVSyTTdrwVc6lqO2NA1UiMw==}
 
   '@cloudflare/kv-asset-handler@0.3.4':
     resolution: {integrity: sha512-YLPHc8yASwjNkmcDMQMY35yiWjoKAKnhUbPRszBRS0YgH+IXtsMp61j+yTcnCE3oO2DgP0U3iejLC8FTtKDC8Q==}
@@ -3330,11 +3335,11 @@ snapshots:
       '@types/tough-cookie': 4.0.5
       tough-cookie: 4.1.4
 
-  '@clickhouse/client-common@0.2.10': {}
+  '@clickhouse/client-common@1.9.1': {}
 
-  '@clickhouse/client@0.2.10':
+  '@clickhouse/client-web@1.9.1':
     dependencies:
-      '@clickhouse/client-common': 0.2.10
+      '@clickhouse/client-common': 1.9.1
 
   '@cloudflare/kv-asset-handler@0.3.4':
     dependencies:
