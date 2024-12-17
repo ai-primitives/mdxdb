@@ -1,4 +1,4 @@
-import type { ClickHouseClient } from '@clickhouse/client';
+import type { ClickHouseClient } from '@clickhouse/client-web';
 
 /**
  * Checks if the connected ClickHouse instance meets the minimum version requirements
