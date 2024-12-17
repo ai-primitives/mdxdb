@@ -5,6 +5,7 @@
     "rootDir": "src",
     "baseUrl": ".",
     "composite": true,
+    "moduleResolution": "Bundler",
     "paths": {
       "@mdxdb/types": ["../types/src"],
       "@mdxdb/types/*": ["../types/src/*"]

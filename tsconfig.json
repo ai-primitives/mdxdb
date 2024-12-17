@@ -8,11 +8,14 @@
     "declaration": true,
     "declarationMap": true,
     "composite": true,
-    "incremental": true
+    "incremental": true,
+    "esModuleInterop": true
   },
   "references": [
     { "path": "packages/types" },
     { "path": "packages/fs" },
-    { "path": "packages/fetch" }
+    { "path": "packages/fetch" },
+    { "path": "packages/server" },
+    { "path": "packages/ai" }
   ]
 }
