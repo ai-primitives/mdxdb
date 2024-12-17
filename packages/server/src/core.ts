@@ -1,8 +1,10 @@
 import { Hono } from 'hono'
+import { cors } from 'hono/cors'
 import type { Context, MiddlewareHandler } from 'hono'
 import type { DatabaseProvider, Document } from '@mdxdb/types'
 import type { FSDatabase } from '@mdxdb/fs'
 import type { MDXDBClickHouseClient } from '@mdxdb/clickhouse'
+import { compileToESM } from './compiler'
 
 export interface ServerConfig {
   provider: 'fs' | 'clickhouse'
@@ -31,8 +33,8 @@ export const createApp = (config: ServerConfig) => {
     Variables: ServerContext
   }> = async (c, next) => {
     const provider = config.provider === 'fs'
-      ? config.fs as DatabaseProvider<Document>
-      : config.clickhouse as DatabaseProvider<Document>
+      ? (config.fs as unknown as DatabaseProvider<Document>)
+      : (config.clickhouse as unknown as DatabaseProvider<Document>)
 
     if (!provider) {
       return c.json({ error: 'Provider not configured' }, 500)
@@ -43,6 +45,7 @@ export const createApp = (config: ServerConfig) => {
   }
 
   app.use('*', providerMiddleware)
+  app.use('*', cors())
 
   // Collection operations
   app.post('/collections/:name', async (c: AppContext) => {
@@ -99,10 +102,19 @@ export const createApp = (config: ServerConfig) => {
     }
   })
 
-  // MDX compilation endpoint (placeholder)
+  // MDX compilation endpoint
   app.post('/compile', async (c: AppContext) => {
-    // TODO: Implement MDX compilation using esbuild
-    return c.json({ compiled: '' })
+    const { content } = await c.req.json()
+    if (!content || typeof content !== 'string') {
+      return c.json({ error: 'Invalid content' }, 400)
+    }
+
+    try {
+      const compiled = await compileToESM(content)
+      return c.json({ compiled })
+    } catch (error) {
+      return c.json({ error: String(error) }, 500)
+    }
   })
 
   return app
