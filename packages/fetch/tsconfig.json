@@ -1,12 +1,17 @@
 {
-  "extends": "../../utilities/tsconfig/base.json",
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
     "outDir": "dist",
-    "lib": ["ES2022", "DOM"],
-    "types": ["node"],
-    "moduleResolution": "node",
-    "esModuleInterop": true
+    "rootDir": "src",
+    "baseUrl": ".",
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "moduleResolution": "Bundler",
+    "paths": {
+      "@mdxdb/*": ["../*/dist"]
+    }
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "references": [{ "path": "../types/tsconfig.build.json" }]
 }
