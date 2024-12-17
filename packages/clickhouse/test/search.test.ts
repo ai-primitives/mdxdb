@@ -1,7 +1,17 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { searchSimilar } from '../src/search';
-import type { ClickHouseClient } from '@clickhouse/client-web';
+import type { ClickHouseClient, QueryParams } from '@clickhouse/client-web';
 import type { Config } from '../src/config';
+
+interface MockResult {
+  id: string;
+  distance: number;
+  content: string;
+}
+
+interface SearchQueryParams extends QueryParams {
+  embedding: number[];
+}
 
 describe('Vector Search', () => {
   let mockClient: ClickHouseClient;
@@ -20,11 +30,11 @@ describe('Vector Search', () => {
 
     // Mock client with query implementation
     mockClient = {
-      query: async ({ query, query_params }) => ({
-        json: async () => {
+      query: async ({ query, query_params }: { query: string, query_params?: SearchQueryParams }) => ({
+        json: async (): Promise<MockResult[]> => {
           // Return mock results based on the query
-          if (query.includes('cosineDistance')) {
-            let results = [
+          if (query.includes('cosineDistance') && query_params?.embedding) {
+            let results: MockResult[] = [
               { id: 'test1', distance: 0.05, content: 'test content 1' },
               { id: 'test2', distance: 0.08, content: 'test content 2' }
             ];
@@ -55,9 +65,10 @@ describe('Vector Search', () => {
     const results = await searchSimilar(mockClient, mockConfig, embedding);
 
     expect(Array.isArray(results)).toBe(true);
-    expect(results.length).toBe(2);
-    expect(results[0]).toHaveProperty('distance');
-    expect(results[0].distance).toBeLessThanOrEqual(1);
+    const typedResults = results as MockResult[];
+    expect(typedResults.length).toBe(2);
+    expect(typedResults[0]).toHaveProperty('distance');
+    expect(typedResults[0].distance).toBeLessThanOrEqual(1);
   });
 
   it('should respect the limit parameter', async () => {
@@ -66,7 +77,8 @@ describe('Vector Search', () => {
     const results = await searchSimilar(mockClient, mockConfig, embedding, { limit });
 
     expect(Array.isArray(results)).toBe(true);
-    expect(results.length).toBe(1);
+    const typedResults = results as MockResult[];
+    expect(typedResults.length).toBe(1);
   });
 
   it('should respect the threshold parameter', async () => {
@@ -75,7 +87,7 @@ describe('Vector Search', () => {
     const results = await searchSimilar(mockClient, mockConfig, embedding, { threshold });
 
     expect(Array.isArray(results)).toBe(true);
-    results.forEach(result => {
+    (results as MockResult[]).forEach(result => {
       expect(result.distance).toBeLessThanOrEqual(1 - threshold);
     });
   });
