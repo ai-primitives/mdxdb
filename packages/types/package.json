@@ -7,7 +7,7 @@
   "scripts": {
     "build": "tsc",
     "build:types": "tsc --emitDeclarationOnly",
-    "build:packages": "tsc --declaration false",
+    "build:packages": "tsc",
     "test": "vitest run",
     "lint": "eslint 'src/**/*.ts' --ignore-pattern '*.d.ts'"
   },
