@@ -44,10 +44,14 @@ interface MDXOutput {
 export const compileMDX = async (
   content: string,
   options: CompileOptions = {}
-): Promise<BuildResult | MDXOutput> => {
+): Promise<BuildResult> => {
   if (!initialized) {
     await initializeCompiler()
   }
+
+  // Extract original exports before compilation
+  const exportMatches = content.match(/export\s+const\s+[^;]+;/g) || []
+  const originalExports = exportMatches.join('\n')
 
   const compiled = await compile(content, {
     jsx: true,
@@ -64,7 +68,8 @@ export const compileMDX = async (
   const imports = [
     'import { Fragment, jsx, jsxs } from "react/jsx-runtime"',
     'import { useMDXComponents } from "@mdx-js/react"',
-    'const _provideComponents = () => ({ useMDXComponents })'
+    'const _provideComponents = () => ({ useMDXComponents })',
+    originalExports  // Add original exports back
   ].join('\n') + '\n'
 
   // Remove any duplicate imports that might have been added by the compiler
@@ -81,123 +86,127 @@ export const compileMDX = async (
     }
   }
 
-  if (options.minify || (options.format && options.format !== 'esm')) {
-    if (!esbuild) {
-      throw new Error('Compiler not initialized')
+  if (!esbuild) {
+    throw new Error('Compiler not initialized')
+  }
+
+  // First pass: compile without minification to preserve export default
+  const preTransform = await esbuild.build({
+    stdin: {
+      contents: output,
+      loader: 'jsx',
+      sourcefile: 'mdx.jsx'
+    },
+    format: 'esm',
+    minify: false,
+    bundle: true,
+    write: false,
+    jsx: 'automatic',
+    jsxImportSource: options.jsxImportSource || 'react',
+    external: [
+      'react',
+      'react/jsx-runtime',
+      'react/jsx-dev-runtime',
+      '@mdx-js/react'
+    ],
+    keepNames: true,
+    treeShaking: false,
+    define: {
+      'process.env.NODE_ENV': options.development ? '"development"' : '"production"'
     }
+  })
 
-    const preTransform = await esbuild.build({
-      stdin: {
-        contents: output,
-        loader: 'jsx',
-        sourcefile: 'mdx.jsx'
-      },
-      format: 'esm',
-      minify: false,
-      bundle: true,
-      write: false,
-      jsx: 'automatic',
-      jsxImportSource: options.jsxImportSource || 'react',
-      external: [
-        'react',
-        'react/jsx-runtime',
-        'react/jsx-dev-runtime',
-        '@mdx-js/react'
-      ],
-      keepNames: true,
-      treeShaking: false,
-      define: {
-        'process.env.NODE_ENV': options.development ? '"development"' : '"production"'
-      }
-    })
+  if (!preTransform.outputFiles?.length) {
+    throw new Error('Compilation failed: No output generated')
+  }
 
-    const exportMatch = preTransform.outputFiles[0].text.match(/export\s+default\s+([a-zA-Z_$][0-9a-zA-Z_$]*)/m)
-    const exportedName = exportMatch ? exportMatch[1] : '_createMdxContent'
+  // Extract the default export name
+  const exportMatch = preTransform.outputFiles[0].text.match(/export\s+default\s+([a-zA-Z_$][0-9a-zA-Z_$]*)/m)
+  const exportedName = exportMatch ? exportMatch[1] : '_createMdxContent'
 
-    output = preTransform.outputFiles[0].text
-
-    const buildOptions: BuildOptions = {
-      stdin: {
-        contents: output,
-        loader: 'jsx',
-        sourcefile: 'mdx.jsx'
-      },
-      format: 'esm',
-      platform: 'neutral',
-      minify: options.minify ?? false,
-      minifyWhitespace: options.minify ?? false,
-      minifyIdentifiers: false,
-      minifySyntax: false,
-      sourcemap: options.sourcemap,
-      target: options.target || 'es2020',
-      bundle: true,
-      write: false,
-      jsx: 'automatic',
-      jsxImportSource: options.jsxImportSource || 'react',
-      external: [
-        'react',
-        'react/jsx-runtime',
-        'react/jsx-dev-runtime',
-        '@mdx-js/react'
-      ],
-      keepNames: true,
-      metafile: true,
-      treeShaking: false,
-      legalComments: 'none',
-      mainFields: ['module', 'main'],
-      outExtension: { '.js': '.mjs' },
-      define: {
-        'process.env.NODE_ENV': options.development ? '"development"' : '"production"'
-      }
+  // Second pass: apply minification if needed
+  const buildOptions: BuildOptions = {
+    stdin: {
+      contents: preTransform.outputFiles[0].text,
+      loader: 'jsx',
+      sourcefile: 'mdx.jsx'
+    },
+    format: 'esm',
+    platform: 'neutral',
+    minify: options.minify ?? false,
+    minifyWhitespace: options.minify ?? false,
+    minifyIdentifiers: false,  // Prevent mangling of identifiers
+    minifySyntax: false,      // Preserve original syntax including exports
+    sourcemap: options.sourcemap,
+    target: options.target || 'es2020',
+    bundle: true,
+    write: false,
+    jsx: 'automatic',
+    jsxImportSource: options.jsxImportSource || 'react',
+    external: [
+      'react',
+      'react/jsx-runtime',
+      'react/jsx-dev-runtime',
+      '@mdx-js/react'
+    ],
+    keepNames: true,
+    metafile: true,
+    treeShaking: false,
+    legalComments: 'none',
+    mainFields: ['module', 'main'],
+    outExtension: { '.js': '.mjs' },
+    define: {
+      'process.env.NODE_ENV': options.development ? '"development"' : '"production"'
     }
+  }
 
-    const result = await esbuild.build(buildOptions)
+  const result = await esbuild.build(buildOptions)
 
-    if (!result.outputFiles?.length) {
-      throw new Error('Compilation failed: No output generated')
-    }
+  if (!result.outputFiles?.length) {
+    throw new Error('Compilation failed: No output generated')
+  }
 
-    let minified = result.outputFiles[0].text
+  let finalOutput = result.outputFiles[0].text
 
-    // Ensure proper export default statement
-    if (!minified.includes('export default')) {
-      const exportPattern = new RegExp(`export\\s*{[^}]*${exportedName}[^}]*}`)
-      const match = minified.match(exportPattern)
+  // Ensure proper export default statement
+  if (!finalOutput.includes('export default')) {
+    // Handle both named exports and direct exports, including minified format
+    const exportPattern = /export\s*{([^}]+)}/
+    const match = finalOutput.match(exportPattern)
 
-      if (match) {
-        minified = minified.replace(
-          match[0],
-          `export default ${exportedName}`
-        )
-      } else {
-        minified = `${minified}\nexport default ${exportedName};`
-      }
-    }
+    if (match) {
+      // For ultra-minified output, look for any identifier followed by "as default"
+      const defaultExportMatch = match[1].match(/([a-zA-Z_$][0-9a-zA-Z_$]*)\s*as\s*default/)
+      const nameToExport = defaultExportMatch ? defaultExportMatch[1] : exportedName
 
-    return {
-      ...result,
-      outputFiles: [
-        {
-          ...result.outputFiles[0],
-          text: minified
-        }
-      ]
+      // Replace the entire export statement, handling both named and default exports
+      const exportStatements = match[1].split(',').filter(exp => !exp.includes('as default'))
+      const namedExports = exportStatements.length > 0 ? `export{${exportStatements.join(',')}};` : ''
+
+      finalOutput = finalOutput.replace(
+        match[0],
+        `${namedExports}\nexport default ${nameToExport}`
+      )
+    } else {
+      finalOutput = `${finalOutput}\nexport default ${exportedName};`
     }
   }
 
   return {
-    text: output,
-    map: compiled.map
+    ...result,
+    outputFiles: [
+      {
+        ...result.outputFiles[0],
+        text: finalOutput
+      }
+    ]
   }
 }
 
 export const compileToESM = async (content: string, options: CompileOptions = {}): Promise<string> => {
   const result = await compileMDX(content, { ...options, format: 'esm' })
-  if ('outputFiles' in result) {
-    if (!result.outputFiles?.length) {
-      throw new Error('Compilation failed: No output generated')
-    }
-    return result.outputFiles[0].text
+  if (!result.outputFiles?.length) {
+    throw new Error('Compilation failed: No output generated')
   }
-  return result.text
+  return result.outputFiles[0].text
 }

@@ -36,7 +36,26 @@ export const x = 1 + 2
 
 The value of x is {x}.
     `
-    const result = await compileMDX(mdx, { minify: true, development: false })
+    // Test minified output
+    const minifiedResult = await compileMDX(mdx, { minify: true, development: false })
+    if (!('outputFiles' in minifiedResult)) {
+      throw new Error('Expected BuildResult with outputFiles')
+    }
+    if (!minifiedResult.outputFiles?.length) {
+      throw new Error('Expected at least one output file')
+    }
+    const minified = minifiedResult.outputFiles[0]
+    expect(minified).toBeDefined()
+    expect(minified.text).toMatch(/[a-zA-Z_$][0-9a-zA-Z_$]*=3/)
+    expect(minified.text).toContain('jsx-runtime')
+    expect(minified.text).toContain('Fragment')
+    expect(minified.text).toMatch(/function\s+[a-zA-Z_$][0-9a-zA-Z_$]*\s*\([^)]*\)/)
+    expect(minified.text).toMatch(/export\s+default/)
+    expect(minified.text).toContain('useMDXComponents')
+    expect(minified.text).toContain('@mdx-js/react')
+
+    // Test non-minified output
+    const result = await compileMDX(mdx, { minify: false, development: true })
     if (!('outputFiles' in result)) {
       throw new Error('Expected BuildResult with outputFiles')
     }
@@ -45,11 +64,17 @@ The value of x is {x}.
     }
     const output = result.outputFiles[0]
     expect(output).toBeDefined()
-    expect(output.text).toMatch(/[a-zA-Z_$][0-9a-zA-Z_$]*=3/)
+
+    // Verify the export and value computation is preserved
+    const hasOriginalExport = output.text.includes('export const x = 1 + 2')
+    const hasSplitExport = output.text.includes('var x = 1 + 2') && /export\s*{\s*x\s*}/.test(output.text)
+    const hasValueComputation = /(?:var|const)\s+x\s*=\s*1\s*\+\s*2/.test(output.text)
+
+    expect(hasOriginalExport || (hasSplitExport && hasValueComputation)).toBe(true)
     expect(output.text).toContain('jsx-runtime')
     expect(output.text).toContain('Fragment')
-    expect(output.text).toMatch(/function\s+[a-zA-Z_$][0-9a-zA-Z_$]*\s*\([^)]*\)/)
-    expect(output.text).toMatch(/export\s+default/)
+    expect(output.text).toContain('function MDXContent')
+    expect(output.text).toContain('export default MDXContent')
     expect(output.text).toContain('useMDXComponents')
     expect(output.text).toContain('@mdx-js/react')
   })
