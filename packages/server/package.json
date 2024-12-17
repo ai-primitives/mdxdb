@@ -16,6 +16,8 @@
   "scripts": {
     "dev": "tsx watch src/node.ts",
     "build": "tsc -p tsconfig.build.json",
+    "build:types": "tsc -p tsconfig.build.json --emitDeclarationOnly",
+    "build:packages": "tsc -p tsconfig.build.json",
     "start": "node dist/node.js",
     "test": "vitest run",
     "test:watch": "vitest watch",
