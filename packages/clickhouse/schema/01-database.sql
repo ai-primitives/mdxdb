@@ -2,4 +2,5 @@
 -- Created: 2024-03-16
 -- Updated: 2024-03-16
 
-CREATE DATABASE IF NOT EXISTS ${databaseName}
+SET allow_experimental_json_type = 1;
+CREATE DATABASE IF NOT EXISTS mdxdb;

@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<clickhouse>
+    <allow_experimental_json_type>1</allow_experimental_json_type>
+    <logger>
+        <level>trace</level>
+        <console>1</console>
+    </logger>
+    <listen_host>::</listen_host>
+    <listen_host>0.0.0.0</listen_host>
+</clickhouse>
