@@ -36,6 +36,9 @@ importers:
 
   packages/clickhouse:
     dependencies:
+      '@clickhouse/client-web':
+        specifier: ^1.9.1
+        version: 1.9.1
       '@mdxdb/types':
         specifier: workspace:*
         version: link:../types
@@ -276,6 +279,9 @@ packages:
 
   '@clickhouse/client-common@1.9.1':
     resolution: {integrity: sha512-67iJoiwolWxfTgfWqBZMc3c+Lj9yxfWvNSVAP6KoANB10eZFnUvr8tAi+rdzQUZrrh3+xBVk/YhZ4NTuyCDHZg==}
+
+  '@clickhouse/client-web@1.9.1':
+    resolution: {integrity: sha512-p4JZhTdCr1hvtOPI/EVYyzz/tpjElJ/BZd6eOPn0yg4pCAXe1Iei2U+y/XKP2vxsVSyTTdrwVc6lqO2NA1UiMw==}
 
   '@clickhouse/client@1.9.1':
     resolution: {integrity: sha512-czLcIHUyPI7gRB/8oS4LJRq1Pjm5C+H6fHPBhH7pnjKELnt4CykfEsZGUY5GMIbHDUcfLOZR4lf/J/FeHquzZg==}
@@ -2012,6 +2018,10 @@ snapshots:
       tough-cookie: 4.1.4
 
   '@clickhouse/client-common@1.9.1': {}
+
+  '@clickhouse/client-web@1.9.1':
+    dependencies:
+      '@clickhouse/client-common': 1.9.1
 
   '@clickhouse/client@1.9.1':
     dependencies:
