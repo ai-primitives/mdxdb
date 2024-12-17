@@ -6,8 +6,8 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "build:types": "tsc",
-    "build:packages": "echo \"Skipping build:packages for types package\"",
+    "build:types": "tsc --emitDeclarationOnly",
+    "build:packages": "tsc --declaration false",
     "test": "vitest run",
     "lint": "eslint 'src/**/*.ts' --ignore-pattern '*.d.ts'"
   },
