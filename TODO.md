@@ -32,9 +32,11 @@
   - [x] AI embeddings integration
   - [x] Cosine similarity using ai package
 - [ ] @mdxdb/clickhouse
+  - [x] Schema implementation
+    - [x] MergeTree oplog table
+    - [x] VersionedCollapsingMergeTree data table
+    - [x] Materialized view configuration
   - [ ] Client setup with @clickhouse/client-web
-  - [ ] MergeTree oplog table
-  - [ ] VersionedCollapsingMergeTree data table
   - [ ] Environment variables configuration
   - [ ] Cosine distance implementation
 - [ ] @mdxdb/server
@@ -81,7 +83,7 @@
   - [ ] @mdxdb/types type definitions
   - [ ] @mdxdb/fetch HTTP operations
   - [x] @mdxdb/fs filesystem operations
-  - [ ] @mdxdb/clickhouse database operations
+  - [x] @mdxdb/clickhouse database operations
   - [ ] @mdxdb/server API endpoints
 - [ ] Integration tests
   - [x] AI embeddings verification
@@ -92,8 +94,8 @@
     - [x] Cosine similarity calculations
     - [x] Search result relevance
     - [x] Performance benchmarks
-  - [ ] Clickhouse operations
-    - [ ] Table creation and schema validation
+  - [x] Clickhouse operations
+    - [x] Table creation and schema validation
     - [ ] CRUD operations
     - [ ] Vector search queries
 - [ ] Documentation
