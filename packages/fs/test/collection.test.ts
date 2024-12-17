@@ -35,10 +35,11 @@ describe('FSCollection', () => {
       const collection = new FSCollection(TEST_DIR, 'test')
       const doc: Document = { id: 'test1', content: 'test content', data: {} }
 
-      await collection.create('test1', doc)
-      const retrieved = await collection.read('test1')
+      await collection.add('test1', doc)
+      const docs = await collection.get('test1')
 
-      expect(retrieved).toMatchObject(doc)
+      expect(docs).toHaveLength(1)
+      expect(docs[0]).toMatchObject(doc)
       expect(EmbeddingsService.prototype.generateEmbedding).toHaveBeenCalledWith('test content')
       expect(EmbeddingsStorageService.prototype.storeEmbedding).toHaveBeenCalled()
     })
@@ -48,11 +49,12 @@ describe('FSCollection', () => {
       const doc: Document = { id: 'test1', content: 'test content', data: {} }
       const updatedDoc: Document = { id: 'test1', content: 'updated content', data: {} }
 
-      await collection.create('test1', doc)
-      await collection.update('test1', updatedDoc)
-      const retrieved = await collection.read('test1')
+      await collection.add('test1', doc)
+      await collection.update('test1', 'test1', updatedDoc)
+      const docs = await collection.get('test1')
 
-      expect(retrieved).toMatchObject(updatedDoc)
+      expect(docs).toHaveLength(1)
+      expect(docs[0]).toMatchObject(updatedDoc)
       expect(EmbeddingsService.prototype.generateEmbedding).toHaveBeenCalledWith('updated content')
       expect(EmbeddingsStorageService.prototype.storeEmbedding).toHaveBeenCalled()
     })
@@ -61,27 +63,27 @@ describe('FSCollection', () => {
       const collection = new FSCollection(TEST_DIR, 'test')
       const doc: Document = { id: 'test1', content: 'test content', data: {} }
 
-      await collection.create('test1', doc)
-      await collection.delete('test1')
-      const retrieved = await collection.read('test1')
+      await collection.add('test1', doc)
+      await collection.delete('test1', 'test1')
+      const docs = await collection.get('test1')
 
-      expect(retrieved).toBeNull()
-      expect(EmbeddingsStorageService.prototype.deleteEmbedding).toHaveBeenCalledWith('test1')
+      expect(docs).toHaveLength(0)
+      expect(EmbeddingsStorageService.prototype.deleteEmbedding).toHaveBeenCalledWith('test1/test1')
     })
 
     it('should throw error when creating existing document', async () => {
       const collection = new FSCollection(TEST_DIR, 'test')
       const doc: Document = { id: 'test1', content: 'test content', data: {} }
 
-      await collection.create('test1', doc)
-      await expect(collection.create('test1', doc)).rejects.toThrow('already exists')
+      await collection.add('test1', doc)
+      await expect(collection.add('test1', doc)).rejects.toThrow('already exists')
     })
 
     it('should throw error when updating non-existent document', async () => {
       const collection = new FSCollection(TEST_DIR, 'test')
       const doc: Document = { id: 'test1', content: 'test content', data: {} }
 
-      await expect(collection.update('test1', doc)).rejects.toThrow('not found')
+      await expect(collection.update('test1', 'test1', doc)).rejects.toThrow('not found')
     })
   })
 
@@ -130,7 +132,14 @@ describe('FSCollection', () => {
       })
 
       expect(results).toHaveLength(1)
-      expect(results[0]).toMatchObject({ content: 'test content 1', data: {} })
+      expect(results[0]).toMatchObject({
+        document: {
+          id: 'doc1',
+          content: 'test content 1',
+          data: {}
+        },
+        score: 0.9
+      })
     })
 
     it('should limit number of results', async () => {
@@ -142,6 +151,22 @@ describe('FSCollection', () => {
       })
 
       expect(results).toHaveLength(2)
+      expect(results[0]).toMatchObject({
+        document: {
+          id: 'doc1',
+          content: 'test content 1',
+          data: {}
+        },
+        score: 0.9
+      })
+      expect(results[1]).toMatchObject({
+        document: {
+          id: expect.any(String),
+          content: expect.any(String),
+          data: {}
+        },
+        score: 0.5
+      })
     })
 
     it('should sort results by similarity score', async () => {
@@ -155,7 +180,14 @@ describe('FSCollection', () => {
         threshold: 0.4
       })
 
-      expect(results[0]).toMatchObject({ content: 'test content 1', data: {} })
+      expect(results[0]).toMatchObject({
+        document: {
+          id: 'doc1',
+          content: 'test content 1',
+          data: {}
+        },
+        score: 0.9
+      })
     })
   })
 

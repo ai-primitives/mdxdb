@@ -3,6 +3,7 @@ import type { MDXLD } from 'mdxld'
 export interface Document extends MDXLD {
   embeddings?: number[]
   collections?: string[]
+  metadata?: Record<string, unknown>
 }
 
 export interface VectorSearchOptions {
@@ -33,11 +34,11 @@ export interface CollectionOptions {
 
 export interface DatabaseProvider<T extends Document = Document> {
   namespace: string
+  collections: CollectionProvider<T>
   connect(): Promise<void>
   disconnect(): Promise<void>
   list(): Promise<string[]>
   collection(name: string): CollectionProvider<T>
-  [key: string]: DatabaseProvider<T> | CollectionProvider<T> | string | (() => Promise<void>) | (() => Promise<string[]>) | ((name: string) => CollectionProvider<T>)
 }
 
 export type FilterQuery<T> = {
@@ -58,11 +59,23 @@ export interface SearchOptions<T extends Document = Document> {
   limit?: number
   offset?: number
   includeVectors?: boolean
+  collection?: string
+}
+
+export interface SearchResult<T extends Document = Document> {
+  document: T
+  score: number
+  vector?: number[]
 }
 
 export interface CollectionProvider<T extends Document = Document> {
   path: string
+  create(collection: string): Promise<void>
+  get(collection: string): Promise<T[]>
+  add(collection: string, document: T): Promise<void>
+  update(collection: string, id: string, document: T): Promise<void>
+  delete(collection: string, id: string): Promise<void>
   find(filter: FilterQuery<T>, options?: SearchOptions<T>): Promise<T[]>
-  search(query: string, options?: SearchOptions<T>): Promise<T[]>
-  vectorSearch(options: VectorSearchOptions & SearchOptions<T>): Promise<T[]>
+  search(query: string, options?: SearchOptions<T>): Promise<SearchResult<T>[]>
+  vectorSearch(options: VectorSearchOptions & SearchOptions<T>): Promise<SearchResult<T>[]>
 }

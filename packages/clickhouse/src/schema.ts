@@ -1,6 +1,3 @@
-// Schema definitions for ClickHouse database and tables
-// Requires ClickHouse v24.10+ for JSON field support
-
 export const getDatabaseSchema = (databaseName: string): string => `
 CREATE DATABASE IF NOT EXISTS ${databaseName}
 `;
@@ -55,6 +52,16 @@ AS SELECT
     1 as sign
 FROM ${databaseName}.oplog;
 `;
+
+export interface TableSchema {
+  name: string
+  engine: string
+  columns: {
+    name: string
+    type: string
+    description?: string
+  }[]
+}
 
 export interface HashMap {
   id: number;

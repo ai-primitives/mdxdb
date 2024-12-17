@@ -1,4 +1,4 @@
-import type { DatabaseProvider, Document, CollectionProvider, VectorSearchOptions, FilterQuery, SearchOptions } from '@mdxdb/types'
+import type { DatabaseProvider, Document, CollectionProvider, VectorSearchOptions, FilterQuery, SearchOptions, SearchResult } from '@mdxdb/types'
 
 export interface FetchProviderOptions {
   namespace: string
@@ -35,6 +35,44 @@ class FetchCollectionProvider<T extends Document = Document> implements Collecti
     private readonly _fetchWithRetry: (_path: string, _init?: RequestInit) => Promise<Response>
   ) {}
 
+  async create(collection: string): Promise<void> {
+    await this._fetchWithRetry(`collections/${this.path}/${collection}`, {
+      method: 'PUT',
+      headers: this._headers
+    })
+  }
+
+  async get(collection: string): Promise<T[]> {
+    const response = await this._fetchWithRetry(`collections/${this.path}/${collection}`, {
+      method: 'GET',
+      headers: this._headers
+    })
+    return response.json()
+  }
+
+  async add(collection: string, document: T): Promise<void> {
+    await this._fetchWithRetry(`collections/${this.path}/${collection}`, {
+      method: 'POST',
+      headers: this._headers,
+      body: JSON.stringify(document)
+    })
+  }
+
+  async update(collection: string, id: string, document: T): Promise<void> {
+    await this._fetchWithRetry(`collections/${this.path}/${collection}/${id}`, {
+      method: 'PUT',
+      headers: this._headers,
+      body: JSON.stringify(document)
+    })
+  }
+
+  async delete(collection: string, id: string): Promise<void> {
+    await this._fetchWithRetry(`collections/${this.path}/${collection}/${id}`, {
+      method: 'DELETE',
+      headers: this._headers
+    })
+  }
+
   async find(filter: FilterQuery<T>, options?: SearchOptions<T>): Promise<T[]> {
     const response = await this._fetchWithRetry(`collections/${this.path}/find`, {
       method: 'POST',
@@ -44,7 +82,7 @@ class FetchCollectionProvider<T extends Document = Document> implements Collecti
     return response.json()
   }
 
-  async search(query: string, options?: SearchOptions<T>): Promise<T[]> {
+  async search(query: string, options?: SearchOptions<T>): Promise<SearchResult<T>[]> {
     const response = await this._fetchWithRetry(`collections/${this.path}/search`, {
       method: 'POST',
       headers: this._headers,
@@ -53,7 +91,7 @@ class FetchCollectionProvider<T extends Document = Document> implements Collecti
     return response.json()
   }
 
-  async vectorSearch(options: VectorSearchOptions & SearchOptions<T>): Promise<T[]> {
+  async vectorSearch(options: VectorSearchOptions & SearchOptions<T>): Promise<SearchResult<T>[]> {
     const response = await this._fetchWithRetry(`collections/${this.path}/vector-search`, {
       method: 'POST',
       headers: this._headers,
@@ -70,6 +108,7 @@ const providerState = new WeakMap<FetchProvider<Document>, {
 
 export class FetchProvider<T extends Document = Document> implements DatabaseProvider<T> {
   readonly namespace: string
+  public collections: CollectionProvider<T>
 
   constructor(options: FetchProviderOptions) {
     this.namespace = options.namespace
@@ -118,6 +157,11 @@ export class FetchProvider<T extends Document = Document> implements DatabasePro
       }
     }
     providerState.set(this, state)
+    this.collections = new FetchCollectionProvider<T>(
+      '',
+      state.options.headers,
+      state.fetchWithRetry
+    )
   }
 
   async connect(): Promise<void> {

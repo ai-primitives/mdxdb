@@ -2,14 +2,14 @@
   "extends": "../../utilities/tsconfig/base.json",
   "compilerOptions": {
     "outDir": "dist",
-    "rootDir": ".",
+    "rootDir": "src",
     "baseUrl": ".",
     "composite": true,
     "paths": {
       "@mdxdb/types": ["../types/src"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.d.ts", "test/**/*.ts"],
+  "include": ["src/**/*.ts"],
   "exclude": ["dist", "node_modules"],
   "references": [{ "path": "../types" }]
 }

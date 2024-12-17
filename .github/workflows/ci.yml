@@ -26,7 +26,19 @@ jobs:
           cache: 'pnpm'
       - run: pnpm install
       - run: pnpm run build
-      - run: pnpm run test
+      - name: Run Tests
+        run: |
+          set +e  # Don't exit on error
+          TEST_EXIT_CODE=0
+          for pkg in packages/*; do
+            if [ -d "$pkg/test" ] && [ -n "$(find "$pkg/test" -name '*.test.ts' -type f 2>/dev/null)" ]; then
+              echo "Testing $(basename $pkg)..."
+              (cd "$pkg" && pnpm test) || TEST_EXIT_CODE=1
+            else
+              echo "No tests found for $(basename $pkg), skipping..."
+            fi
+          done
+          exit $TEST_EXIT_CODE
       - run: pnpm run lint
 
   release:

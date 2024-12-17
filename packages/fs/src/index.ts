@@ -10,11 +10,12 @@ const collectionsSymbol = Symbol('collections')
 class FSDatabase implements DatabaseProvider<Document> {
   readonly namespace: string
   protected [collectionsSymbol]: Set<string>
-  [key: string]: DatabaseProvider<Document> | CollectionProvider<Document> | string | (() => Promise<void>) | (() => Promise<string[]>) | ((name: string) => CollectionProvider<Document>)
+  public collections: CollectionProvider<Document>
 
   constructor(private basePath: string) {
     this.namespace = `file://${path.resolve(basePath)}`
     this[collectionsSymbol] = new Set()
+    this.collections = new FSCollection(this.basePath, '')
   }
 
   async connect(): Promise<void> {

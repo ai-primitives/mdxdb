@@ -1,6 +1,29 @@
 /**
  * Type definitions for ClickHouse provider
  */
+import type { Document } from '@mdxdb/types'
+
+/**
+ * Configuration options for ClickHouse client
+ */
+export interface ClickHouseConfig {
+  url?: string
+  username?: string
+  password?: string
+  database?: string
+  oplogTable?: string
+  dataTable?: string
+}
+
+/**
+ * ClickHouse client interface
+ */
+export interface ClickHouseClient {
+  config: ClickHouseConfig
+  connect(): Promise<void>
+  disconnect(): Promise<void>
+  query<T = Document>(sql: string, params?: Record<string, unknown>): Promise<T[]>
+}
 
 /**
  * Hash map structure for document identifiers
@@ -8,24 +31,13 @@
  */
 export interface HashMap {
   /** Hash of the document ID */
-  id: number;
+  id: number
   /** Hash of the namespace */
-  ns: number;
+  ns: number
   /** Array of path segment hashes */
-  path: number[];
+  path: number[]
   /** Hash of the document data */
-  data: number;
+  data: number
   /** Hash of the document content */
-  content: number;
+  content: number
 }
-
-/**
- * Example hash map structure:
- * {
- *   "id": 123456,
- *   "ns": 789012,
- *   "path": [345678, 901234],
- *   "data": 567890,
- *   "content": 234567
- * }
- */

@@ -164,6 +164,13 @@
   - Explicit 'any' type used in index.ts:11
   These issues were surfaced after fixing ESLint configuration and should be addressed in a separate PR.
 
+- Type definition and workspace dependency issues:
+  - Missing type definitions for CollectionProvider methods (create, get)
+  - Missing @mdxdb/clickhouse module and type declarations
+  - DatabaseProvider<Document> type incompatibility with FSDatabase
+  - Build failures in @mdxdb/server package due to type errors
+  These issues block the server package implementation and need to be resolved.
+
 - CI workflow failures in @mdxdb/clickhouse package:
   - No test files found in the package
   - Causing CI workflow to fail with exit code 1

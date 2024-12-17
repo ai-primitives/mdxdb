@@ -8,5 +8,6 @@ export type {
   CollectionOptions,
   FilterQuery,
   SearchOptions,
+  SearchResult,
   VectorSearchOptions
 } from './types'
