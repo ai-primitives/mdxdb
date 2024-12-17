@@ -99,6 +99,7 @@ export const createApp = (config: ServerConfig) => {
       await provider.collections.create(name)
       return c.json({ name, status: 'created' })
     } catch (error) {
+      console.error('Failed to create collection:', error)
       return c.json({ error: 'Failed to create collection' }, 500)
     }
   })
@@ -110,6 +111,7 @@ export const createApp = (config: ServerConfig) => {
       const collections = await provider.list()
       return c.json({ collections })
     } catch (error) {
+      console.error('Failed to list collections:', error)
       return c.json({ error: 'Failed to list collections' }, 500)
     }
   })
@@ -124,6 +126,7 @@ export const createApp = (config: ServerConfig) => {
       await provider.collections.add(name, body)
       return c.json({ status: 'created' })
     } catch (error) {
+      console.error('Failed to create document:', error)
       return c.json({ error: 'Failed to create document' }, 500)
     }
   })
@@ -140,6 +143,7 @@ export const createApp = (config: ServerConfig) => {
       }
       return c.json(doc)
     } catch (error) {
+      console.error('Failed to get document:', error)
       return c.json({ error: 'Failed to get document' }, 500)
     }
   })
@@ -157,6 +161,7 @@ export const createApp = (config: ServerConfig) => {
       })
       return c.json({ results })
     } catch (error) {
+      console.error('Failed to search documents:', error)
       return c.json({ error: 'Failed to search documents' }, 500)
     }
   })
@@ -174,6 +179,7 @@ export const createApp = (config: ServerConfig) => {
       })
       return c.json({ results })
     } catch (error) {
+      console.error('Failed to perform vector search:', error)
       return c.json({ error: 'Failed to perform vector search' }, 500)
     }
   })

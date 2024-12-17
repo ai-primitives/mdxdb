@@ -2,8 +2,10 @@
 
 // Declare any additional globals not covered by @cloudflare/workers-types
 declare global {
-  // Add any custom global types here that aren't in @cloudflare/workers-types
-  const global: typeof globalThis
+  const process: {
+    env: Record<string, string | undefined>
+  }
+  const FormData: typeof globalThis.FormData
 }
 
 export {}
