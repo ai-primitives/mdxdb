@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS ${databaseName}.oplog (
     path Array(String),
     data JSON,
     content String,
+    embedding Array(Float32),
     ts UInt32,
     hash JSON, -- Map containing id, ns, path, data, and content hashes
     version UInt64
@@ -28,6 +29,7 @@ CREATE TABLE IF NOT EXISTS ${databaseName}.data (
     path Array(String),
     data JSON,
     content String,
+    embedding Array(Float32),
     ts UInt32,
     hash JSON, -- Map containing id, ns, path, data, and content hashes
     version UInt64,
