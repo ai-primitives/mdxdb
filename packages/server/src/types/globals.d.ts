@@ -4,6 +4,12 @@
 declare global {
   const process: {
     env: Record<string, string | undefined>
+    versions: {
+      node: string
+      [key: string]: string | undefined
+    }
+    platform: string
+    arch: string
   }
   const FormData: typeof globalThis.FormData
 }
