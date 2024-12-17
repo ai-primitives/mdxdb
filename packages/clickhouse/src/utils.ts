@@ -1,4 +1,4 @@
-import type { ClickHouseClient } from '@clickhouse/client';
+import type { ClickHouseClient } from '@clickhouse/client-web';
 
 /**
  * Checks if the connected ClickHouse instance meets the minimum version requirements
@@ -16,3 +16,30 @@ export const checkClickHouseVersion = async (client: ClickHouseClient): Promise<
     throw new Error('ClickHouse v24.10+ is required for JSON field support');
   }
 };
+
+/**
+ * Derives the namespace from a given ID
+ * For paths with API endpoints (e.g., docs.example.com/api), returns the full domain (docs.example.com)
+ * For domain-only paths (e.g., docs.example.com), returns the parent domain (example.com)
+ * @param id The document ID to derive namespace from
+ * @returns The derived namespace
+ */
+export function deriveNamespace(id: string): string {
+  if (!id) return '';
+
+  // Remove protocol if present
+  const cleanId = id.replace(/^https?:\/\//, '');
+
+  // Split by path separator
+  const [domain, ...pathParts] = cleanId.split('/');
+
+  // If there are path parts, return the full domain
+  if (pathParts.length > 0) {
+    return domain;
+  }
+
+  // For domain-only paths, return parent domain
+  const domainParts = domain.split('.');
+  if (domainParts.length <= 2) return domain;
+  return domainParts.slice(1).join('.');
+}
