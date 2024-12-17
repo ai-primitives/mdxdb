@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "declaration": true,
+    "declarationMap": true,
+    "moduleResolution": "Bundler",
+    "composite": true,
+    "paths": {
+      "@mdxdb/*": ["../*/dist"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "test", "**/*.test.ts"],
+  "references": [
+    { "path": "../types/tsconfig.build.json" }
+  ]
+}
