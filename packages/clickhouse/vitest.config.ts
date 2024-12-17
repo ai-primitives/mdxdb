@@ -5,6 +5,9 @@ export default defineConfig({
     include: ['test/**/*.test.ts'],
     environment: 'node',
     globals: false,
-    isolate: true
+    isolate: true,
+    env: {
+      CI: process.env.CI || 'false'
+    }
   }
 })
