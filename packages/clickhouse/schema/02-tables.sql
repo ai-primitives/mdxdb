@@ -2,8 +2,10 @@
 -- Created: 2024-03-16
 -- Updated: 2024-03-16
 
+SET allow_experimental_json_type = 1;
+
 -- Oplog table with MergeTree engine for append-only operations
-CREATE TABLE IF NOT EXISTS ${databaseName}.oplog (
+CREATE TABLE IF NOT EXISTS mdxdb.oplog (
     id String,
     type String,
     ns String,
@@ -19,7 +21,7 @@ CREATE TABLE IF NOT EXISTS ${databaseName}.oplog (
 ORDER BY (id, version);
 
 -- Data table with VersionedCollapsingMergeTree engine for delete support
-CREATE TABLE IF NOT EXISTS ${databaseName}.data (
+CREATE TABLE IF NOT EXISTS mdxdb.data (
     id String,
     type String,
     ns String,
