@@ -24,11 +24,12 @@
       "persistent": true
     },
     "build:types": {
+      "dependsOn": ["^build:types"],
       "cache": true,
       "outputs": ["dist/**/*", "*.tsbuildinfo"]
     },
     "build:packages": {
-      "dependsOn": ["build:types"],
+      "dependsOn": ["^build:packages", "^build:types"],
       "cache": true,
       "outputs": ["dist/**/*", "*.tsbuildinfo"]
     }
