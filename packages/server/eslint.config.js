@@ -14,14 +14,37 @@ export default [
       },
       globals: {
         console: 'readonly',
-        process: 'readonly'
+        process: 'readonly',
+        FormData: 'readonly',
+        Response: 'readonly',
+        fetch: 'readonly',
+        global: 'readonly'
       }
     },
     plugins: {
       '@typescript-eslint': tsPlugin
     },
     rules: {
-      ...tsPlugin.configs.recommended.rules
+      ...tsPlugin.configs.recommended.rules,
+      '@typescript-eslint/no-unused-vars': ['error', {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+        caughtErrors: 'all',
+        caughtErrorsIgnorePattern: '^_'
+      }]
+    }
+  },
+  {
+    files: ['dist/**/*.js'],
+    languageOptions: {
+      globals: {
+        console: 'readonly',
+        process: 'readonly',
+        FormData: 'readonly',
+        Response: 'readonly',
+        fetch: 'readonly',
+        global: 'readonly'
+      }
     }
   }
 ]
