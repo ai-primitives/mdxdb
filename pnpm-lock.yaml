@@ -187,6 +187,9 @@ importers:
       '@hono/node-server':
         specifier: ^1.4.0
         version: 1.13.7(hono@3.12.12)
+      '@hono/zod-validator':
+        specifier: ^0.1.11
+        version: 0.1.11(hono@3.12.12)(zod@3.24.1)
       '@mdxdb/clickhouse':
         specifier: workspace:*
         version: link:../clickhouse
@@ -1006,6 +1009,12 @@ packages:
     engines: {node: '>=18.14.1'}
     peerDependencies:
       hono: ^4
+
+  '@hono/zod-validator@0.1.11':
+    resolution: {integrity: sha512-PQXeHUP0+36qpRt8yfeD7N2jbK3ETlGvSN6dMof/HwUC/APRokQRjpXZm4rrlG71Ft0aWE01+Bm4XejqPie5Uw==}
+    peerDependencies:
+      hono: '>=3.9.0'
+      zod: ^3.19.1
 
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
@@ -3699,6 +3708,11 @@ snapshots:
   '@hono/node-server@1.13.7(hono@3.12.12)':
     dependencies:
       hono: 3.12.12
+
+  '@hono/zod-validator@0.1.11(hono@3.12.12)(zod@3.24.1)':
+    dependencies:
+      hono: 3.12.12
+      zod: 3.24.1
 
   '@humanfs/core@0.19.1': {}
 

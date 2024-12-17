@@ -1,5 +1,5 @@
 import type { DatabaseProvider, Document, CollectionProvider, SearchOptions, FilterQuery, VectorSearchOptions, SearchResult } from '@mdxdb/types'
-import { createClient as createBaseClient } from '@clickhouse/client'
+import { createClient as createBaseClient, ClickHouseClient } from '@clickhouse/client'
 
 interface ClickHouseDocument {
   id: string
@@ -62,7 +62,7 @@ function serializeDocument(document: Document): Omit<ClickHouseDocument, 'score'
 
 export class MDXDBClickHouseClient implements DatabaseProvider<Document> {
   readonly namespace: string
-  private client: any // Type this properly once we have proper ClickHouse types
+  private client: ClickHouseClient
   public collections: CollectionProvider<Document>
 
   constructor(url: string = 'http://localhost:8123', namespace: string = 'default') {
@@ -74,12 +74,10 @@ export class MDXDBClickHouseClient implements DatabaseProvider<Document> {
       database: 'default'
     })
 
-    // Initialize collections provider with bound methods
-    const self = this
     this.collections = {
       path: `${namespace}/collections`,
-      async create(collection: string): Promise<void> {
-        await self.client.exec({
+      create: async (collection: string): Promise<void> => {
+        await this.client.exec({
           query: `CREATE TABLE IF NOT EXISTS ${collection} (
             id String,
             content String,
@@ -101,47 +99,47 @@ export class MDXDBClickHouseClient implements DatabaseProvider<Document> {
           ORDER BY (id)`
         })
       },
-      async get(collection: string): Promise<Document[]> {
-        const result = await self.client.query({
+      get: async (collection: string): Promise<Document[]> => {
+        const result = await this.client.query({
           query: `SELECT * FROM ${collection}`
         })
         const rows = (await result.json()) as ClickHouseDocument[]
         return rows.map(parseDocument)
       },
-      async add(collection: string, document: Document): Promise<void> {
+      add: async (collection: string, document: Document): Promise<void> => {
         const values = [serializeDocument(document)]
-        await self.client.insert({
+        await this.client.insert({
           table: collection,
           values
         })
       },
-      async update(collection: string, id: string, document: Document): Promise<void> {
+      update: async (collection: string, id: string, document: Document): Promise<void> => {
         const values = serializeDocument(document)
         const updates = Object.entries(values)
           .map(([key, value]) => `${key} = ${value === null ? 'NULL' : `'${value}'`}`)
           .join(',\n')
 
-        await self.client.exec({
+        await this.client.exec({
           query: `ALTER TABLE ${collection} UPDATE
             ${updates},
             updated_at = now()
           WHERE id = '${id}'`
         })
       },
-      async delete(collection: string, id: string): Promise<void> {
-        await self.client.exec({
+      delete: async (collection: string, id: string): Promise<void> => {
+        await this.client.exec({
           query: `ALTER TABLE ${collection} DELETE WHERE id = '${id}'`
         })
       },
-      async find(_filter: FilterQuery<Document>, options?: SearchOptions<Document>): Promise<Document[]> {
-        const result = await self.client.query({
+      find: async (_filter: FilterQuery<Document>, options?: SearchOptions<Document>): Promise<Document[]> => {
+        const result = await this.client.query({
           query: `SELECT * FROM ${options?.collection || ''} LIMIT ${options?.limit || 10}`
         })
         const rows = (await result.json()) as ClickHouseDocument[]
         return rows.map(parseDocument)
       },
-      async search(query: string, options?: SearchOptions<Document>): Promise<SearchResult<Document>[]> {
-        const result = await self.client.query({
+      search: async (query: string, options?: SearchOptions<Document>): Promise<SearchResult<Document>[]> => {
+        const result = await this.client.query({
           query: `SELECT *, score FROM ${options?.collection || ''}
             WHERE match(content, '${query}')
             LIMIT ${options?.limit || 10}`
@@ -152,7 +150,7 @@ export class MDXDBClickHouseClient implements DatabaseProvider<Document> {
           score: row.score
         }))
       },
-      async vectorSearch(options: VectorSearchOptions & SearchOptions<Document>): Promise<SearchResult<Document>[]> {
+      vectorSearch: async (options: VectorSearchOptions & SearchOptions<Document>): Promise<SearchResult<Document>[]> => {
         if (!options.vector) {
           throw new Error('Vector is required for vector search')
         }

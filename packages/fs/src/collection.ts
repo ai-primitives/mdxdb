@@ -3,6 +3,7 @@ import { promises as fs } from 'fs'
 import * as nodePath from 'path'
 import { EmbeddingsService } from './embeddings'
 import { EmbeddingsStorageService } from './storage'
+import { webcrypto } from 'node:crypto'
 
 export interface FSCollectionOptions {
   openaiApiKey?: string
@@ -74,13 +75,13 @@ export class FSCollection implements CollectionProvider<Document> {
   }
 
   async get(collection: string): Promise<Document[]> {
-    const collectionPath = nodePath.join(this.collectionPath, collection)
+    await fs.mkdir(nodePath.join(this.collectionPath, collection), { recursive: true })
     const docs = await this.getAllDocuments()
     return docs.map(doc => doc.content)
   }
 
   async add(collection: string, document: Document): Promise<void> {
-    const id = document.id || crypto.randomUUID()
+    const id = document.id || webcrypto.randomUUID()
     document.id = id
     await this.writeDocument(nodePath.join(collection, id), document)
   }
