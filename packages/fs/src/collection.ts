@@ -103,7 +103,30 @@ export class FSCollection implements CollectionProvider<Document> {
 
   async find(filter: FilterQuery<Document>): Promise<Document[]> {
     const docs = await this.getAllDocuments()
-    return docs.map(doc => doc.content)
+    const filtered = docs.filter(({ content }) => {
+      return Object.entries(filter).every(([key, value]) => {
+        if (typeof value === 'object' && value !== null) {
+          const operators = value as Record<string, unknown>
+          return Object.entries(operators).every(([op, val]) => {
+            const docValue = content[key as keyof Document]
+            if (docValue === undefined) return false
+
+            switch (op) {
+              case '$eq': return docValue === val
+              case '$gt': return typeof docValue === 'number' && typeof val === 'number' && docValue > val
+              case '$gte': return typeof docValue === 'number' && typeof val === 'number' && docValue >= val
+              case '$lt': return typeof docValue === 'number' && typeof val === 'number' && docValue < val
+              case '$lte': return typeof docValue === 'number' && typeof val === 'number' && docValue <= val
+              case '$in': return Array.isArray(val) && val.includes(docValue)
+              case '$nin': return Array.isArray(val) && !val.includes(docValue)
+              default: return false
+            }
+          })
+        }
+        return content[key as keyof Document] === value
+      })
+    })
+    return filtered.map(doc => doc.content)
   }
 
   async search(query: string, options?: SearchOptions<Document>): Promise<Document[]> {
@@ -137,11 +160,7 @@ export class FSCollection implements CollectionProvider<Document> {
     )
 
     const filteredResults = results
-      .filter(result => {
-        const passes = result.similarity >= threshold
-        console.debug(`Filtering result with similarity ${result.similarity}, threshold ${threshold}, passes: ${passes}`)
-        return passes
-      })
+      .filter(result => result.similarity >= threshold)
       .sort((a, b) => b.similarity - a.similarity)
       .slice(0, options.limit || 10)
 
