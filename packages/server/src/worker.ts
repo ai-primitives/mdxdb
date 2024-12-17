@@ -1,17 +1,24 @@
 import { createApp } from './core'
 import type { ServerConfig, AppEnv } from './core'
-import { createClient } from '@mdxdb/clickhouse'
+import { createClickHouseClient } from '@mdxdb/clickhouse'
 
 // Initialize ClickHouse client with worker-specific configuration
-const initializeClickHouseClient = (env: AppEnv['Bindings']) => {
+const initializeClickHouseClient = async (env: AppEnv['Bindings']) => {
   const url = env.CLICKHOUSE_URL || 'http://localhost:8123'
-  return createClient(url, 'mdxdb-worker')
+  return await createClickHouseClient({
+    url,
+    database: 'mdxdb',
+    username: 'default',
+    password: '',
+    oplogTable: 'oplog',
+    dataTable: 'data'
+  })
 }
 
 // Create server configuration
-const createServerConfig = (env: AppEnv['Bindings']): ServerConfig => ({
+const createServerConfig = async (env: AppEnv['Bindings']): Promise<ServerConfig> => ({
   provider: 'clickhouse',
-  clickhouse: initializeClickHouseClient(env)
+  clickhouse: await initializeClickHouseClient(env)
 })
 
 export type Env = AppEnv
@@ -23,7 +30,7 @@ export interface ExportedWorker {
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     try {
-      const config = createServerConfig(env.Bindings)
+      const config = await createServerConfig(env.Bindings)
       const app = createApp(config)
       return app.fetch(request, env, ctx)
     } catch (error) {
