@@ -3,9 +3,11 @@ import { cors } from 'hono/cors'
 import { zValidator } from '@hono/zod-validator'
 import { z } from 'zod'
 import type { Context, Env, MiddlewareHandler } from 'hono'
-import type { DatabaseProvider, Document, SearchOptions, VectorSearchOptions } from '@mdxdb/types'
+import type { JwtVariables } from 'hono/jwt'
+import type { DatabaseProvider, Document } from '@mdxdb/types'
 import { compileToESM } from './compiler'
 import { deployToCloudflare, type DeploymentOptions } from './deployment'
+import { authMiddleware } from './middleware/auth'
 
 // Request validation schemas
 const searchSchema = z.object({
@@ -52,17 +54,19 @@ export interface ServerConfig {
 }
 
 export interface ServerContext {
-  provider: DatabaseProvider<Document>
+  Variables: {
+    provider: DatabaseProvider<Document>
+  }
 }
 
 export interface ServerBindings {
-  MDXDB_KV: KVNamespace
+  JWT_SECRET: string
   CLICKHOUSE_URL?: string
 }
 
 export type AppEnv = {
   Bindings: ServerBindings
-  Variables: ServerContext
+  Variables: JwtVariables & ServerContext['Variables']
 } & Env
 
 export const createApp = (config: ServerConfig) => {
@@ -78,11 +82,12 @@ export const createApp = (config: ServerConfig) => {
       return c.json({ error: 'Provider not configured' }, 500)
     }
 
-    c.set('provider', provider)
+    c.set('provider', provider as DatabaseProvider<Document>)
     await next()
   }
 
   app.use('*', providerMiddleware)
+  app.use('*', authMiddleware)
   app.use('*', cors())
 
   // Collection operations
@@ -94,6 +99,7 @@ export const createApp = (config: ServerConfig) => {
       await provider.collections.create(name)
       return c.json({ name, status: 'created' })
     } catch (error) {
+      console.error('Failed to create collection:', error)
       return c.json({ error: 'Failed to create collection' }, 500)
     }
   })
@@ -105,6 +111,7 @@ export const createApp = (config: ServerConfig) => {
       const collections = await provider.list()
       return c.json({ collections })
     } catch (error) {
+      console.error('Failed to list collections:', error)
       return c.json({ error: 'Failed to list collections' }, 500)
     }
   })
@@ -119,6 +126,7 @@ export const createApp = (config: ServerConfig) => {
       await provider.collections.add(name, body)
       return c.json({ status: 'created' })
     } catch (error) {
+      console.error('Failed to create document:', error)
       return c.json({ error: 'Failed to create document' }, 500)
     }
   })
@@ -135,6 +143,7 @@ export const createApp = (config: ServerConfig) => {
       }
       return c.json(doc)
     } catch (error) {
+      console.error('Failed to get document:', error)
       return c.json({ error: 'Failed to get document' }, 500)
     }
   })
@@ -152,6 +161,7 @@ export const createApp = (config: ServerConfig) => {
       })
       return c.json({ results })
     } catch (error) {
+      console.error('Failed to search documents:', error)
       return c.json({ error: 'Failed to search documents' }, 500)
     }
   })
@@ -169,6 +179,7 @@ export const createApp = (config: ServerConfig) => {
       })
       return c.json({ results })
     } catch (error) {
+      console.error('Failed to perform vector search:', error)
       return c.json({ error: 'Failed to perform vector search' }, 500)
     }
   })

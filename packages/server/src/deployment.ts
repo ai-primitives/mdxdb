@@ -46,7 +46,7 @@ export const deployToCloudflare = async (script: string, options: DeploymentOpti
   form.append('script', script)
 
   try {
-    const response = await fetch(
+    const response = await (globalThis.fetch as typeof fetch)(
       `https://api.cloudflare.com/client/v4/accounts/${options.accountId}/workers/dispatch/namespaces/${options.namespace}/scripts/${options.name}`,
       {
         method: 'PUT',
