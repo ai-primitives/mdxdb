@@ -1,0 +1,10 @@
+name = "mdxdb-server"
+main = "src/worker.ts"
+compatibility_date = "2024-01-01"
+
+[vars]
+PROVIDER = "clickhouse"
+
+[[kv_namespaces]]
+binding = "MDXDB_KV"
+id = "mdxdb-kv"

@@ -1,16 +1,21 @@
 {
-  "extends": "../../utilities/tsconfig/base.json",
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
     "outDir": "dist",
-    "rootDir": ".",
+    "rootDir": "src",
     "baseUrl": ".",
     "composite": true,
+    "moduleResolution": "Bundler",
     "noUnusedParameters": false,
     "noUnusedLocals": false,
     "paths": {
-      "@mdxdb/types": ["../types/src"]
+      "@mdxdb/types": ["../types/src"],
+      "@mdxdb/types/*": ["../types/src/*"]
     }
   },
   "include": ["src/**/*"],
-  "references": [{ "path": "../types" }]
+  "exclude": ["node_modules", "dist", "test"],
+  "references": [
+    { "path": "../types" }
+  ]
 }
