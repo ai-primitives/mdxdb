@@ -5,13 +5,11 @@
     "rootDir": "src",
     "baseUrl": ".",
     "composite": true,
-    "moduleResolution": "node",
-    "noUnusedParameters": false,
-    "noUnusedLocals": false,
     "paths": {
       "@mdxdb/types": ["../types/src"]
     }
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*.ts", "src/**/*.d.ts"],
+  "exclude": ["dist", "node_modules"],
   "references": [{ "path": "../types" }]
 }
