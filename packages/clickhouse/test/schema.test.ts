@@ -25,6 +25,7 @@ describe('ClickHouse Schema', () => {
       expect(schema).toContain('ts UInt32')
       expect(schema).toContain('ns String')
       expect(schema).toContain('hash JSON')
+      expect(schema).toContain('version UInt64')
     })
 
     it('should generate valid data table schema', () => {
@@ -35,6 +36,7 @@ describe('ClickHouse Schema', () => {
       expect(schema).toContain('ts UInt32')
       expect(schema).toContain('ns String')
       expect(schema).toContain('hash JSON')
+      expect(schema).toContain('version UInt64')
     })
   })
 
@@ -45,6 +47,7 @@ describe('ClickHouse Schema', () => {
       expect(schema).toContain(`TO ${dbName}.data`)
       expect(schema).toContain('AS SELECT')
       expect(schema).toContain(`FROM ${dbName}.oplog`)
+      expect(schema).toContain('1 as sign')
     })
   })
 })
