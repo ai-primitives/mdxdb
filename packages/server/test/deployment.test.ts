@@ -5,7 +5,7 @@ import type { DeploymentResult } from '../src/deployment'
 
 // Mock fetch globally
 const mockFetch = vi.fn()
-;(global as any).fetch = mockFetch
+;(global as { fetch: typeof fetch }).fetch = mockFetch
 
 describe('Deployment Service', () => {
   beforeEach(() => {

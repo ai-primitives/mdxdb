@@ -1,13 +1,6 @@
 import { type BuildOptions, type BuildResult } from 'esbuild'
 import { compile } from '@mdx-js/mdx'
-import type { Node } from 'estree'
 import type { VFile } from 'vfile'
-
-interface Program {
-  type: 'Program'
-  body: Node[]
-  sourceType: 'module' | 'script'
-}
 
 export interface CompileOptions {
   format?: 'esm' | 'cjs'
@@ -34,11 +27,6 @@ export const initializeCompiler = async (wasmURL?: string) => {
       initialized = true
     }
   }
-}
-
-interface MDXOutput {
-  text: string
-  map?: VFile['data']['map']
 }
 
 export const compileMDX = async (

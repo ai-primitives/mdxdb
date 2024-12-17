@@ -1,7 +1,4 @@
-export interface ExecutionContext {
-  waitUntil(promise: Promise<any>): void
-  passThroughOnException(): void
-}
+export type { ExecutionContext } from '@cloudflare/workers-types'
 
 export interface ScheduledEvent {
   cron: string
