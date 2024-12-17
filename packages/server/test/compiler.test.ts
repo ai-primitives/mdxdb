@@ -8,34 +8,57 @@ describe('MDX Compiler', () => {
 
   it('should compile MDX to ESM format', async () => {
     const mdx = `
-      # Hello World
+export const meta = {
+  title: 'Test'
+}
 
-      This is a test MDX file.
+# Hello World
 
-      export const meta = {
-        title: 'Test'
-      }
+This is a test MDX file.
     `
 
     const result = await compileToESM(mdx)
-    expect(result).toContain('export')
+    expect(result).toContain('import { Fragment, jsx')
+    expect(result).toContain('from "react/jsx-runtime"')
+    expect(result).toContain('MDXContent')
     expect(result).toContain('meta')
+    expect(result).toContain('title')
+    expect(result).toContain('Test')
   })
 
   it('should support custom compilation options', async () => {
-    const mdx = 'const x = 1 + 2'
-    const result = await compileMDX(mdx, { minify: true })
-    expect(result.outputFiles[0].text).toContain('const x=3')
+    const mdx = `
+export const x = 1 + 2
+
+# Math Example
+
+The value of x is {x}.
+    `
+    const result = await compileMDX(mdx, { minify: true, development: false })
+    const output = result.outputFiles?.[0]
+    expect(output).toBeDefined()
+    expect(output?.text).toContain('var u=3')
+    expect(output?.text).toContain('MDXContent')
+    expect(output?.text).toContain('jsx-runtime')
   })
 
   it('should handle JSX syntax', async () => {
     const mdx = `
-      import { Button } from './components'
+# Button Example
 
-      <Button>Click me</Button>
+<button className="primary">Click me</button>
     `
     const result = await compileToESM(mdx)
-    expect(result).toContain('Button')
+    expect(result).toContain('import { Fragment, jsx')
+    expect(result).toContain('from "react/jsx-runtime"')
+    expect(result).toContain('MDXContent')
+    expect(result).toContain('button')
+    expect(result).toContain('className')
+    expect(result).toContain('primary')
     expect(result).toContain('Click me')
+  })
+
+  it('should throw error when compilation fails', async () => {
+    await expect(compileToESM('{')).rejects.toThrow()
   })
 })

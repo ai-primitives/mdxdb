@@ -1,4 +1,4 @@
-import { CollectionProvider, Document, FilterQuery, SearchOptions, VectorSearchOptions } from '@mdxdb/types'
+import { CollectionProvider, Document, FilterQuery, SearchOptions, VectorSearchOptions, SearchResult } from '@mdxdb/types'
 import { promises as fs } from 'fs'
 import * as nodePath from 'path'
 import { EmbeddingsService } from './embeddings'
@@ -69,31 +69,35 @@ export class FSCollection implements CollectionProvider<Document> {
     }
   }
 
-  async create(id: string, document: Document): Promise<void> {
-    const existingDoc = await this.readDocument(id)
-    if (existingDoc) {
-      throw new Error(`Document with id ${id} already exists`)
-    }
-    await this.writeDocument(id, document)
+  async create(collection: string): Promise<void> {
+    await fs.mkdir(nodePath.join(this.collectionPath, collection), { recursive: true })
   }
 
-  async read(id: string): Promise<Document | null> {
-    return this.readDocument(id)
+  async get(collection: string): Promise<Document[]> {
+    const collectionPath = nodePath.join(this.collectionPath, collection)
+    const docs = await this.getAllDocuments()
+    return docs.map(doc => doc.content)
   }
 
-  async update(id: string, document: Document): Promise<void> {
-    const existingDoc = await this.readDocument(id)
+  async add(collection: string, document: Document): Promise<void> {
+    const id = document.id || crypto.randomUUID()
+    document.id = id
+    await this.writeDocument(nodePath.join(collection, id), document)
+  }
+
+  async update(collection: string, id: string, document: Document): Promise<void> {
+    const existingDoc = await this.readDocument(nodePath.join(collection, id))
     if (!existingDoc) {
-      throw new Error(`Document with id ${id} not found`)
+      throw new Error(`Document with id ${id} not found in collection ${collection}`)
     }
-    await this.writeDocument(id, document)
+    await this.writeDocument(nodePath.join(collection, id), document)
   }
 
-  async delete(id: string): Promise<void> {
-    const filePath = nodePath.join(this.collectionPath, `${id}.mdx`)
+  async delete(collection: string, id: string): Promise<void> {
+    const filePath = nodePath.join(this.collectionPath, collection, `${id}.mdx`)
     try {
       await fs.unlink(filePath)
-      await this.storageService.deleteEmbedding(id)
+      await this.storageService.deleteEmbedding(nodePath.join(collection, id))
     } catch (error) {
       if ((error as { code?: string }).code !== 'ENOENT') {
         throw error
@@ -129,7 +133,7 @@ export class FSCollection implements CollectionProvider<Document> {
     return filtered.map(doc => doc.content)
   }
 
-  async search(query: string, options?: SearchOptions<Document>): Promise<Document[]> {
+  async search(query: string, options?: SearchOptions<Document>): Promise<SearchResult<Document>[]> {
     const queryEmbedding = await this.embeddingsService.generateEmbedding(query)
     return this.vectorSearch({
       ...options,
@@ -138,7 +142,11 @@ export class FSCollection implements CollectionProvider<Document> {
     })
   }
 
-  async vectorSearch(options: Required<Pick<VectorSearchOptions, 'vector'>> & SearchOptions<Document>): Promise<Document[]> {
+  async vectorSearch(options: VectorSearchOptions & SearchOptions<Document>): Promise<SearchResult<Document>[]> {
+    if (!options.vector) {
+      throw new Error('Vector is required for vector search')
+    }
+
     const docs = await this.getAllDocuments()
     const threshold = options.threshold ?? 0.7
 
@@ -147,23 +155,21 @@ export class FSCollection implements CollectionProvider<Document> {
         const storedEmbedding = await this.storageService.getEmbedding(id)
         if (!storedEmbedding?.embedding) {
           console.debug(`No embedding found for document ${id}`)
-          return { doc: content, similarity: 0 }
+          return { document: content, score: 0 }
         }
 
         const similarity = this.embeddingsService.calculateSimilarity(
-          options.vector,
+          options.vector as number[],
           storedEmbedding.embedding
         )
         console.debug(`Document ${id} similarity: ${similarity}`)
-        return { doc: content, similarity }
+        return { document: content, score: similarity }
       })
     )
 
-    const filteredResults = results
-      .filter(result => result.similarity >= threshold)
-      .sort((a, b) => b.similarity - a.similarity)
+    return results
+      .filter(result => result.score >= threshold)
+      .sort((a, b) => b.score - a.score)
       .slice(0, options.limit || 10)
-
-    return filteredResults.map(result => result.doc)
   }
 }

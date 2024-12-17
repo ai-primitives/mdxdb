@@ -6,14 +6,17 @@
       "dependsOn": ["^build"],
       "outputs": [
         "dist/**/*",
-        "*.tsbuildinfo"
+        "*.tsbuildinfo",
+        ".wrangler/**/*"
       ]
     },
     "lint": {
-      "dependsOn": ["^lint", "build"]
+      "dependsOn": ["^lint", "build"],
+      "outputs": []
     },
     "test": {
-      "dependsOn": ["^test", "build"]
+      "dependsOn": ["^test", "build"],
+      "outputs": ["coverage/**/*"]
     },
     "dev": {
       "cache": false,

@@ -14,10 +14,10 @@
     "@clickhouse/client": "^0.2.10"
   },
   "dependencies": {
-    "@mdxdb/types": "workspace:*"
+    "@mdxdb/types": "workspace:*",
+    "@clickhouse/client": "^0.2.10"
   },
   "devDependencies": {
-    "@clickhouse/client": "^1.9.1",
     "typescript": "^5.5.4",
     "vitest": "^2.1.8",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
