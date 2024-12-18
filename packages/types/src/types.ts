@@ -72,10 +72,11 @@ export interface CollectionProvider<T extends Document = Document> {
   path: string
   create(collection: string): Promise<void>
   get(collection: string): Promise<T[]>
-  add(collection: string, document: T): Promise<void>
-  update(collection: string, id: string, document: T): Promise<void>
-  delete(collection: string, id: string): Promise<void>
+  insert(collection: string, document: T): Promise<void>
+  update(collection: string, filter: FilterQuery<T>, document: Partial<T>): Promise<void>
+  delete(collection: string, filter: FilterQuery<T>): Promise<void>
   find(filter: FilterQuery<T>, options?: SearchOptions<T>): Promise<T[]>
+  findOne(collection: string, filter: FilterQuery<T>): Promise<T | null>
   search(query: string, options?: SearchOptions<T>): Promise<SearchResult<T>[]>
   vectorSearch(options: VectorSearchOptions & SearchOptions<T>): Promise<SearchResult<T>[]>
 }
