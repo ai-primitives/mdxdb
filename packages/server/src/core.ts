@@ -20,6 +20,7 @@ const searchSchema = z.object({
 const vectorSearchSchema = z.object({
   vector: z.array(z.number()),
   limit: z.number().optional(),
+  threshold: z.number().optional(),
   collection: z.string()
 })
 
@@ -173,18 +174,19 @@ export const createApp = (config: ServerConfig) => {
   app.post('/collections/:name/vector-search', zValidator('json', vectorSearchSchema), async (c: Context<AppEnv>) => {
     const { name } = c.req.param()
     const provider = c.get('provider')
-    const { vector, limit } = await c.req.json()
+    const { vector, limit, threshold = 0.7 } = await c.req.json()
 
     try {
       const results = await provider.collections.vectorSearch({
         vector,
         collection: name,
-        limit: limit || 10
+        limit: limit || 10,
+        threshold
       })
       return c.json({ results })
     } catch (error) {
       console.error('Failed to perform vector search:', error)
-      return c.json({ error: 'Failed to perform vector search' }, 500)
+      throw error
     }
   })
 
