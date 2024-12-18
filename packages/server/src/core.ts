@@ -8,6 +8,7 @@ import type { DatabaseProvider, Document } from '@mdxdb/types'
 import { compileToESM } from './compiler'
 import { deployToCloudflare, type DeploymentOptions } from './deployment'
 import { authMiddleware } from './middleware/auth'
+import { errorMiddleware } from './middleware/error'
 
 // Request validation schemas
 const searchSchema = z.object({
@@ -88,6 +89,7 @@ export const createApp = (config: ServerConfig) => {
     await next()
   }
 
+  app.use('*', errorMiddleware)
   app.use('*', providerMiddleware)
   app.use('*', authMiddleware)
   app.use('*', cors())
