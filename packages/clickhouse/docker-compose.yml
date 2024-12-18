@@ -2,8 +2,8 @@ services:
   clickhouse:
     image: clickhouse/clickhouse-server:latest
     ports:
-      - "38123:38123"
-      - "39000:39000"
+      - "58123:58123"
+      - "59000:59000"
     volumes:
       - ./config:/etc/clickhouse-server/config.d
       - ./schema:/docker-entrypoint-initdb.d
@@ -16,7 +16,7 @@ services:
         soft: 262144
         hard: 262144
     healthcheck:
-      test: wget --no-verbose --tries=1 --spider http://localhost:38123/ping || exit 1
+      test: wget --no-verbose --tries=1 --spider http://localhost:58123/ping || exit 1
       interval: 3s
       timeout: 5s
       retries: 10
