@@ -9,6 +9,23 @@ interface VectorSearchResult {
 }
 
 const isCI = process.env.CI === 'true'
+
+const waitForHealthyContainer = async () => {
+  const maxAttempts = 20
+  const interval = 3000 // 3 seconds
+
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      const response = await fetch(`${dockerTestConfig.protocol}://${dockerTestConfig.host}:${dockerTestConfig.port}/ping`)
+      if (response.ok) return true
+    } catch (error) {
+      console.log(`Waiting for ClickHouse to be ready... (attempt ${attempt + 1}/${maxAttempts})`)
+    }
+    await new Promise(resolve => setTimeout(resolve, interval))
+  }
+  throw new Error('ClickHouse container failed to become healthy')
+}
+
 describe.skipIf(isCI)('ClickHouse Docker Integration', () => {
   const client: ClickHouseClient = createClient({
     url: `${dockerTestConfig.protocol}://${dockerTestConfig.host}:${dockerTestConfig.port}`,
@@ -23,6 +40,7 @@ describe.skipIf(isCI)('ClickHouse Docker Integration', () => {
   })
 
   beforeAll(async () => {
+    await waitForHealthyContainer()
     try {
       // Initialize database
       await client.exec({

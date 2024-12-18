@@ -2,34 +2,18 @@
  * Type definitions for ClickHouse provider
  */
 import type { Document } from '@mdxdb/types'
-
-/**
- * Vector index configuration for HNSW
- */
-export interface VectorIndexConfig {
-  type: 'hnsw'
-  metric: 'cosineDistance'
-  dimensions: number
-}
+import type { Config } from './config'
 
 /**
  * Configuration options for ClickHouse client
  */
-export interface ClickHouseConfig {
-  url?: string
-  username?: string
-  password?: string
-  database?: string
-  oplogTable?: string
-  dataTable?: string
-  vectorIndexConfig?: VectorIndexConfig
-}
+export type ClickHouseConfig = Config
 
 /**
  * ClickHouse client interface
  */
 export interface ClickHouseClient {
-  config: ClickHouseConfig
+  config: Config
   connect(): Promise<void>
   disconnect(): Promise<void>
   query<T = Document>(sql: string, params?: Record<string, unknown>): Promise<T[]>

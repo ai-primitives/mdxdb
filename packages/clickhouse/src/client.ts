@@ -3,7 +3,7 @@ import type { DatabaseProvider, Document, CollectionProvider, SearchOptions, Fil
 import { type Config } from './config'
 import { checkClickHouseVersion } from './utils'
 
-class ClickHouseCollectionProvider implements CollectionProvider<Document> {
+export class ClickHouseCollectionProvider implements CollectionProvider<Document> {
   constructor(
     public readonly path: string,
     private readonly client: ClickHouseClient,
@@ -54,13 +54,60 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
   }
 
   async vectorSearch(options: VectorSearchOptions & SearchOptions<Document>): Promise<SearchResult<Document>[]> {
-    void this.client
-    void options
-    throw new Error('Method not implemented for vector search operation')
+    if (!options.vector) {
+      throw new Error('Vector is required for vector search')
+    }
+
+    const { vector, collection, limit = 10, threshold = 0.7 } = options
+
+    interface ClickHouseRow {
+      id: string
+      data: Document
+      score: number
+    }
+
+    const query = {
+      query: `
+        SELECT id, data, cosineDistance(embedding, [${vector.join(',')}]) as score
+        FROM ${this.config.dataTable}
+        WHERE collection = {collection:String}
+        HAVING score <= {threshold:Float64}
+        ORDER BY score ASC
+        LIMIT {limit:UInt32}
+      `,
+      format: 'JSONEachRow' as const,
+      parameters: {
+        collection,
+        threshold,
+        limit
+      }
+    }
+
+    try {
+      const resultSet = await this.client.query(query)
+      const rawData = await resultSet.json<unknown>()
+      const rows = Array.isArray(rawData) ? rawData as ClickHouseRow[] : []
+
+      return rows.map((row) => {
+        const result: SearchResult<Document> = {
+          document: row.data,
+          score: row.score
+        }
+        if (options.includeVectors) {
+          result.vector = vector
+        }
+        return result
+      })
+    } catch (error) {
+      console.error('Vector search failed:', error)
+      throw error instanceof Error
+        ? error
+        : new Error('Unknown error during vector search')
+    }
   }
 }
 
-class ClickHouseDatabaseProvider implements DatabaseProvider<Document> {
+export class ClickHouseDatabaseProvider implements DatabaseProvider<Document> {
   readonly namespace: string
   public collections: CollectionProvider<Document>
   private readonly client: ClickHouseClient

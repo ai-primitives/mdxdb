@@ -13,4 +13,6 @@
     </logger>
     <listen_host>::</listen_host>
     <listen_host>0.0.0.0</listen_host>
+    <interserver_http_port>0</interserver_http_port>
+    <interserver_http_host>disabled</interserver_http_host>
 </clickhouse>

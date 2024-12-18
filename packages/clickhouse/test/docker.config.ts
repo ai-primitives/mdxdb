@@ -1,6 +1,6 @@
 export const dockerTestConfig = {
-  host: 'localhost',
-  port: 8123,
+  host: '127.0.0.1',
+  port: 18123,
   database: 'default',
   username: 'default',
   password: '',
