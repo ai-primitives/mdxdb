@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   clickhouse:
     build: .
@@ -25,6 +24,8 @@ services:
       timeout: 5s
       retries: 10
       start_period: 20s
+    networks:
+      - clickhouse_test
 networks:
-  default:
-    external: true
+  clickhouse_test:
+    name: ${COMPOSE_PROJECT_NAME}_default
