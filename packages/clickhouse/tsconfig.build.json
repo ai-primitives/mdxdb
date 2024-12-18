@@ -4,7 +4,15 @@
     "types": ["node"],
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "target": "ES2022"
+    "target": "ES2022",
+    "composite": true,
+    "paths": {
+      "@mdxdb/types": ["../types/src"]
+    }
   },
+  "references": [
+    { "path": "../types" }
+  ],
+  "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "test"]
 }
