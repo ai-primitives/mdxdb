@@ -140,7 +140,7 @@ export class ClickHouseDatabaseProvider implements DatabaseProvider<Document> {
 export const createClickHouseClient = async (config: Config): Promise<DatabaseProvider<Document>> => {
   try {
     const client = createClient({
-      host: `tcp://localhost:${config.nativePort}`,  // Use native protocol port
+      host: config.url,
       username: config.username,
       password: config.password,
       database: config.database

@@ -29,7 +29,7 @@ const waitForHealthyContainer = async () => {
 
 describe.skipIf(isCI)('ClickHouse Search Tests', () => {
   const client: ClickHouseClient = createClient({
-    url: `${dockerTestConfig.protocol}://${dockerTestConfig.host}:${dockerTestConfig.port}`,
+    url: dockerTestConfig.url,
     database: dockerTestConfig.database,
     username: dockerTestConfig.username,
     password: dockerTestConfig.password,

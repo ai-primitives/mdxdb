@@ -111,8 +111,47 @@ export async function setup() {
           continue;
         }
 
+        // Get dynamically allocated ports
+        const { stdout: httpPort } = await execAsync(`docker port ${containerId.trim()} 8123`);
+        const { stdout: nativePort } = await execAsync(`docker port ${containerId.trim()} 9000`);
+
+        console.log('Raw HTTP port output:', JSON.stringify(httpPort));
+        console.log('Raw Native port output:', JSON.stringify(nativePort));
+
+        if (!httpPort.trim() || !nativePort.trim()) {
+          console.log('Ports not allocated yet, waiting...');
+          attempts++;
+          continue;
+        }
+
+        // Extract port numbers from output (format: "0.0.0.0:12345" or "[::]:12345")
+        const httpPortMatch = httpPort.match(/[0-9]+$/m);
+        const nativePortMatch = nativePort.match(/[0-9]+$/m);
+
+        console.log('Port matches:', { httpPortMatch, nativePortMatch });
+
+        if (!httpPortMatch || !nativePortMatch) {
+          console.log('Failed to parse port numbers, retrying...');
+          attempts++;
+          continue;
+        }
+
+        const httpPortNumber = httpPortMatch[0];
+        const nativePortNumber = nativePortMatch[0];
+
+        console.log('Parsed ports:', { httpPortNumber, nativePortNumber });
+
+        // Set environment variables for tests
+        const clickhouseUrl = `http://localhost:${httpPortNumber}`;
+        console.log('Setting CLICKHOUSE_URL to:', clickhouseUrl);
+
+        process.env.CLICKHOUSE_URL = clickhouseUrl;
+        process.env.CLICKHOUSE_NATIVE_PORT = nativePortNumber;
+        process.env.CLICKHOUSE_DATABASE = 'test_db';
+
         const { stdout: status } = await execAsync(`docker inspect --format='{{.State.Health.Status}}' ${containerId.trim()}`);
         console.log(`Container health status: ${status.trim()}`);
+        console.log(`Using ports - HTTP: ${httpPortNumber}, Native: ${nativePortNumber}`);
 
         if (status.trim() === 'healthy') {
           isHealthy = true;

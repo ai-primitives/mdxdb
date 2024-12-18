@@ -6,7 +6,8 @@ import type { Document, DatabaseProvider } from '@mdxdb/types'
 describe('ClickHouse Vector Search', () => {
   let client: DatabaseProvider<Document>
   const mockConfig: Config = {
-    url: 'http://localhost:58123',
+    url: 'http://localhost:8123',
+    nativePort: 9000,
     username: 'default',
     password: '',
     database: 'test_db',
@@ -20,11 +21,16 @@ describe('ClickHouse Vector Search', () => {
   }
 
   beforeEach(async () => {
-    client = await createClickHouseClient(mockConfig)
+    try {
+      client = await createClickHouseClient(mockConfig)
+    } catch (error) {
+      console.error('Failed to create client:', error)
+      throw error
+    }
   })
 
   afterEach(async () => {
-    await client.disconnect()
+    if (client && typeof client.disconnect === 'function') await client.disconnect()
   })
 
   it('should perform vector search with threshold', async () => {
