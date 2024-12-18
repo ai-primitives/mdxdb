@@ -1,19 +1,17 @@
 import { serve } from '@hono/node-server'
 import { createApp } from './core'
 import type { ServerConfig } from './core'
-import { createClickHouseClient } from '@mdxdb/clickhouse'
+import { createClickHouseProvider } from '@mdxdb/clickhouse'
 import { createDatabase } from '@mdxdb/fs'
 
 export const startServer = async (config: ServerConfig = { provider: 'fs' }) => {
   // Initialize provider based on configuration
   if (config.provider === 'clickhouse' && !config.clickhouse) {
-    config.clickhouse = await createClickHouseClient({
+    config.clickhouse = await createClickHouseProvider({
       url: 'http://localhost:8123',
       database: 'mdxdb',
       username: 'default',
-      password: '',
-      oplogTable: 'oplog',
-      dataTable: 'data'
+      password: ''
     })
   } else if (config.provider === 'fs' && !config.fs) {
     config.fs = createDatabase({ basePath: './data' })

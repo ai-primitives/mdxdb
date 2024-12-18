@@ -1,1 +1,53 @@
-{"name":"@mdxdb/server","version":"0.0.1","private":true,"type":"module","main":"./dist/index.js","module":"./dist/index.js","types":"./dist/index.d.ts","exports":{".":{"types":"./dist/index.d.ts","import":"./dist/index.js"}},"scripts":{"dev":"tsx watch src/index.ts","build":"tsc -p tsconfig.build.json","start":"node dist/index.js","test":"vitest run","test:watch":"vitest watch","deploy":"wrangler deploy","lint":"eslint ."},"dependencies":{"@hono/node-server":"^1.4.0","@hono/zod-validator":"^0.1.11","@mdxdb/clickhouse":"workspace:*","@mdxdb/fs":"workspace:*","@mdxdb/types":"workspace:*","esbuild-wasm":"^0.19.0","hono":"^4.6.14","zod":"^3.22.0"},"devDependencies":{"@cloudflare/workers-types":"^4.20231218.0","@mdx-js/mdx":"^3.1.0","@mdx-js/react":"^3.1.0","@types/estree":"^1.0.6","@types/mdx":"^2.0.13","@types/node":"^22.10.2","@types/react":"^18.3.17","@typescript-eslint/eslint-plugin":"^8.18.1","@typescript-eslint/parser":"^8.18.1","esbuild":"^0.19.12","eslint":"^9.17.0","react":"^18.3.1","tsx":"^4.7.0","typescript":"^5.3.3","vfile":"^6.0.3","vitest":"^1.1.0","wrangler":"^3.22.1"}}
+{
+  "name": "@mdxdb/server",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "deploy": "wrangler deploy",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.4.0",
+    "@hono/zod-validator": "^0.1.11",
+    "@mdxdb/clickhouse": "^0.0.1",
+    "@mdxdb/fs": "^0.0.1",
+    "@mdxdb/types": "^0.0.1",
+    "esbuild-wasm": "^0.19.0",
+    "hono": "^4.6.14",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20231218.0",
+    "@mdx-js/mdx": "^3.1.0",
+    "@mdx-js/react": "^3.1.0",
+    "@types/estree": "^1.0.6",
+    "@types/mdx": "^2.0.13",
+    "@types/node": "^22.10.2",
+    "@types/react": "^18.3.17",
+    "@typescript-eslint/eslint-plugin": "^8.18.1",
+    "@typescript-eslint/parser": "^8.18.1",
+    "esbuild": "^0.19.12",
+    "eslint": "^9.17.0",
+    "react": "^18.3.1",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3",
+    "vfile": "^6.0.3",
+    "vitest": "^1.1.0",
+    "wrangler": "^3.22.1"
+  }
+}

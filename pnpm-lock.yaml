@@ -45,9 +45,12 @@ importers:
 
   packages/ai:
     dependencies:
+      '@mdxdb/clickhouse':
+        specifier: 0.0.1
+        version: 0.0.1(@clickhouse/client-web@1.9.1)
       '@mdxdb/types':
-        specifier: workspace:*
-        version: link:../types
+        specifier: 0.0.1
+        version: 0.0.1
       openai:
         specifier: ^4.28.0
         version: 4.76.3(zod@3.24.1)
@@ -78,20 +81,20 @@ importers:
         specifier: ^22.10.2
         version: 22.10.2
       '@typescript-eslint/eslint-plugin':
-        specifier: ^6.21.0
-        version: 6.21.0(@typescript-eslint/parser@6.21.0(eslint@8.57.1)(typescript@5.5.4))(eslint@8.57.1)(typescript@5.5.4)
+        specifier: ^8.18.1
+        version: 8.18.1(@typescript-eslint/parser@8.18.1(eslint@9.17.0)(typescript@5.5.4))(eslint@9.17.0)(typescript@5.5.4)
       '@typescript-eslint/parser':
-        specifier: ^6.21.0
-        version: 6.21.0(eslint@8.57.1)(typescript@5.5.4)
+        specifier: ^8.18.1
+        version: 8.18.1(eslint@9.17.0)(typescript@5.5.4)
       eslint:
-        specifier: ^8.57.1
-        version: 8.57.1
+        specifier: ^9.17.0
+        version: 9.17.0
       typescript:
-        specifier: ^5.5.4
+        specifier: ^5.3.3
         version: 5.5.4
       vitest:
-        specifier: ^2.1.8
-        version: 2.1.8(@types/node@22.10.2)(msw@2.6.9(@types/node@22.10.2)(typescript@5.5.4))
+        specifier: ^1.1.0
+        version: 1.6.0(@types/node@22.10.2)
 
   packages/example-package:
     devDependencies:
@@ -1146,6 +1149,15 @@ packages:
     peerDependencies:
       '@types/react': '>=16'
       react: '>=16'
+
+  '@mdxdb/clickhouse@0.0.1':
+    resolution: {integrity: sha512-AllzJ42cHP9ELJ/tNzp9XkKMVoN6n31Y9PYyyfho0xGZI2+PIYtAVeXlRnSRrULYdIdKGZ6NaJremjlbb1C3/A==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      '@clickhouse/client-web': ^1.9.1
+
+  '@mdxdb/types@0.0.1':
+    resolution: {integrity: sha512-XoG2gFY5XzVKZOjSWmDCDOx3NVdUFjeRJXzOvTM/DCSL5Vt7k5Dl4zGBxOnoLhsyFB32/2GJ4lmokDjrIVGGUg==}
 
   '@mswjs/interceptors@0.37.3':
     resolution: {integrity: sha512-USvgCL/uOGFtVa6SVyRrC8kIAedzRohxIXN5LISlg5C5vLZCn7dgMFVSNhSF9cuBEFrm/O2spDWEZeMnw4ZXYg==}
@@ -4939,6 +4951,16 @@ snapshots:
       '@types/mdx': 2.0.13
       '@types/react': 18.3.17
       react: 18.3.1
+
+  '@mdxdb/clickhouse@0.0.1(@clickhouse/client-web@1.9.1)':
+    dependencies:
+      '@clickhouse/client-web': 1.9.1
+      '@mdxdb/types': link:packages/types
+      zod: 3.24.1
+
+  '@mdxdb/types@0.0.1':
+    dependencies:
+      mdxld: 0.1.1
 
   '@mswjs/interceptors@0.37.3':
     dependencies:

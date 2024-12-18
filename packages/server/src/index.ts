@@ -1,4 +1,4 @@
-import { DatabaseProvider } from "@mdxdb/types";
+import { DatabaseProvider, Document } from "@mdxdb/types";
 import { Hono } from "hono";
 
 export function createServer(config: { provider: DatabaseProvider }) {
@@ -8,7 +8,7 @@ export function createServer(config: { provider: DatabaseProvider }) {
   app.get("/api/collections/:name", async (c) => {
     const name = c.req.param("name");
     const collection = provider.collection(name);
-    const result = await collection.find({});
+    const result = await collection.find(name, {});
     return c.json(result);
   });
 
