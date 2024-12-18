@@ -65,6 +65,7 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
       - run: pnpm install
       - run: pnpm run build
+      - run: pnpm run prepare
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
