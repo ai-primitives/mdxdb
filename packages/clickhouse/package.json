@@ -1,6 +1,6 @@
 {
   "name": "@mdxdb/clickhouse",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "ClickHouse provider for MDXDB",
   "type": "module",
   "main": "dist/index.js",

@@ -1,6 +1,6 @@
 {
   "name": "@mdxdb/fetch",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "HTTP/API provider for mdxdb",
   "type": "module",
   "main": "dist/index.js",
