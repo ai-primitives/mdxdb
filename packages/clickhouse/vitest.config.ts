@@ -10,6 +10,11 @@ export default defineConfig({
       reporter: ["text", "json", "html"],
       include: ["src/**/*.ts"],
       exclude: ["**/*.test.ts", "**/*.d.ts"]
+    },
+    poolOptions: {
+      threads: {
+        singleThread: true
+      }
     }
   }
 });

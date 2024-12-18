@@ -18,14 +18,4 @@
     <mysql_port>0</mysql_port>
     <postgresql_port>0</postgresql_port>
     <prometheus_port>0</prometheus_port>
-    <distributed_ddl>
-        <enabled>false</enabled>
-    </distributed_ddl>
-    <zookeeper>
-        <enabled>false</enabled>
-    </zookeeper>
-    <keeper_server>
-        <enabled>false</enabled>
-    </keeper_server>
-    <remote_servers></remote_servers>
 </clickhouse>
