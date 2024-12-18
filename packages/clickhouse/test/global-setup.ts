@@ -39,7 +39,7 @@ async function initializeDatabase(projectName: string) {
 
     // Create database
     console.log('Creating database...');
-    await execAsync(`docker exec ${containerId.trim()} clickhouse-client --query "CREATE DATABASE IF NOT EXISTS test_db"`);
+    await execAsync(`docker exec ${containerId.trim()} clickhouse-client --port 9000 --query "CREATE DATABASE IF NOT EXISTS test_db"`);
 
     // Read and execute schema files
     const schemaDir = path.join(process.cwd(), 'schema');
@@ -56,7 +56,7 @@ async function initializeDatabase(projectName: string) {
 
           // Copy schema file to container and execute
           await execAsync(`docker cp ${tempFile} ${containerId.trim()}:/tmp/${file}`);
-          await execAsync(`docker exec ${containerId.trim()} clickhouse-client --database test_db --queries-file /tmp/${file}`);
+          await execAsync(`docker exec ${containerId.trim()} clickhouse-client --port 9000 --database test_db --queries-file /tmp/${file}`);
         }
       }
     } finally {

@@ -1,7 +1,7 @@
 export const dockerTestConfig = {
-  host: '127.0.0.1',
-  port: 58123,
-  database: 'default',
+  url: 'http://localhost:58123',  // HTTP interface
+  nativePort: 59000,  // Native protocol port
+  database: 'test_db',
   username: 'default',
   password: '',
   protocol: 'http',

@@ -2,13 +2,13 @@ services:
   clickhouse:
     build: .
     ports:
-      - "58123:58123"
-      - "59000:59000"
+      - "58123:8123"  # HTTP port
+      - "59000:9000"  # Native protocol port
     volumes:
       - ./config:/etc/clickhouse-server/config.d
       - ./schema:/docker-entrypoint-initdb.d
     environment:
-      CLICKHOUSE_DB: default
+      CLICKHOUSE_DB: test_db
       CLICKHOUSE_USER: default
       CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
       CLICKHOUSE_KEEPER_SERVER_ENABLED: 0
@@ -19,7 +19,7 @@ services:
         hard: 262144
     restart: on-failure:3
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:58123/ping"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8123/ping"]
       interval: 3s
       timeout: 5s
       retries: 10
