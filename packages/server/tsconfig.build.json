@@ -1,7 +1,15 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "types": ["@cloudflare/workers-types", "node"]
+    "types": ["@cloudflare/workers-types", "node"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "target": "ES2022",
+    "composite": true
   },
+  "references": [
+    { "path": "../types" },
+    { "path": "../clickhouse" }
+  ],
   "exclude": ["node_modules", "dist", "test"]
 }

@@ -87,8 +87,32 @@ export class FSCollection implements CollectionProvider<Document> {
   }
 
   async findOne(collection: string, filter: FilterQuery<Document>): Promise<Document | null> {
-    const results = await this.find(filter)
-    return results[0] || null
+    const collectionPath = nodePath.join(this.collectionPath, collection)
+    const docs = await this.get(collection)
+    const filtered = docs.filter(doc =>
+      Object.entries(filter).every(([key, value]) => {
+        if (typeof value === 'object' && value !== null) {
+          const operators = value as Record<string, unknown>
+          return Object.entries(operators).every(([op, val]) => {
+            const docValue = doc[key as keyof Document]
+            if (docValue === undefined) return false
+
+            switch (op) {
+              case '$eq': return docValue === val
+              case '$gt': return typeof docValue === 'number' && typeof val === 'number' && docValue > val
+              case '$gte': return typeof docValue === 'number' && typeof val === 'number' && docValue >= val
+              case '$lt': return typeof docValue === 'number' && typeof val === 'number' && docValue < val
+              case '$lte': return typeof docValue === 'number' && typeof val === 'number' && docValue <= val
+              case '$in': return Array.isArray(val) && val.includes(docValue)
+              case '$nin': return Array.isArray(val) && !val.includes(docValue)
+              default: return false
+            }
+          })
+        }
+        return doc[key as keyof Document] === value
+      })
+    )
+    return filtered[0] || null
   }
 
   async get(collection: string): Promise<Document[]> {
