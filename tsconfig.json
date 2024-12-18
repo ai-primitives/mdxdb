@@ -13,6 +13,7 @@
   },
   "references": [
     { "path": "packages/types" },
+    { "path": "packages/clickhouse" },
     { "path": "packages/fs" },
     { "path": "packages/fetch" },
     { "path": "packages/server" },

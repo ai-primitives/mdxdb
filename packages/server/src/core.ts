@@ -4,7 +4,7 @@ import { zValidator } from '@hono/zod-validator'
 import { z } from 'zod'
 import type { Context, Env, MiddlewareHandler } from 'hono'
 import type { JwtVariables } from 'hono/jwt'
-import type { DatabaseProvider, Document, FilterQuery, SearchOptions, SearchResult } from '@mdxdb/types'
+import type { DatabaseProvider, Document, FilterQuery, SearchOptions, SearchResult, CollectionProvider } from '@mdxdb/types'
 import { compileToESM } from './compiler'
 import { deployToCloudflare, type DeploymentOptions } from './deployment'
 import { authMiddleware } from './middleware/auth'
@@ -134,11 +134,11 @@ export const createApp = (config: ServerConfig) => {
 
   app.get('/collections/:name/documents/:id', async (c: Context<AppEnv>) => {
     const { name, id } = c.req.param()
-    const provider = c.get('provider')
+    const provider = c.get('provider') as DatabaseProvider<Document>
 
     try {
-      const collection = provider.collection(name)
-      const doc = await collection.findOne(name, { id } as FilterQuery<Document>)
+      const collection = provider.collection(name) as CollectionProvider<Document>
+      const doc = await collection.findOne(name, { id: { $eq: id } } as FilterQuery<Document>)
       if (!doc) {
         return c.json({ error: 'Document not found' }, 404)
       }
@@ -152,13 +152,13 @@ export const createApp = (config: ServerConfig) => {
   // Document search operations
   app.post('/collections/:name/search', zValidator('json', searchSchema), async (c: Context<AppEnv>) => {
     const { name } = c.req.param()
-    const provider = c.get('provider')
+    const provider = c.get('provider') as DatabaseProvider<Document>
     const { query, limit } = await c.req.json()
 
     try {
-      const collection = provider.collection(name)
-      const docs = await collection.find(name, { content: { $eq: query } } as FilterQuery<Document>)
-      const results = docs.map(doc => ({ document: doc, score: 1 }))
+      const collection = provider.collection(name) as CollectionProvider<Document>
+      const searchOptions: SearchOptions<Document> = { limit }
+      const results = await collection.search(query, searchOptions)
       return c.json({ results })
     } catch (error) {
       console.error('Failed to search documents:', error)

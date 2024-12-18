@@ -3,7 +3,11 @@
   "compilerOptions": {
     "outDir": "dist",
     "types": ["@cloudflare/workers-types", "vitest/globals", "node"],
-    "typeRoots": ["./src/types", "./node_modules/@types"]
+    "typeRoots": ["./src/types", "./node_modules/@types"],
+    "paths": {
+      "@mdxdb/clickhouse": ["../clickhouse/src"],
+      "@mdxdb/types": ["../types/src"]
+    }
   },
   "include": ["src/**/*.ts", "test/**/*.ts"],
   "exclude": ["node_modules", "dist"]
