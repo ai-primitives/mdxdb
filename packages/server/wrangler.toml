@@ -16,16 +16,22 @@ id = "mdxdb-kv"
 # Development environment
 [env.development]
 vars.CLICKHOUSE_URL = "http://localhost:8123"
+vars.CLICKHOUSE_USERNAME = "default"
+vars.CLICKHOUSE_PASSWORD = ""
 vars.JWT_SECRET = "development-secret-do-not-use-in-production"
 
 # Staging environment
 [env.staging]
 vars.CLICKHOUSE_URL = "https://clickhouse.staging.example"
+vars.CLICKHOUSE_USERNAME = "default"
+vars.CLICKHOUSE_PASSWORD = ""
 vars.JWT_SECRET = "staging-secret-placeholder"
 
 # Production environment
 [env.production]
 vars.CLICKHOUSE_URL = "https://clickhouse.production.example"
+vars.CLICKHOUSE_USERNAME = "default"
+vars.CLICKHOUSE_PASSWORD = ""
 vars.JWT_SECRET = "production-secret-placeholder"
 
 [miniflare]
