@@ -10,17 +10,25 @@ export interface Document {
   data?: Record<string, any>;
 }
 
-export interface SearchOptions {
+export interface SearchOptions<T = Document> {
   limit?: number;
   offset?: number;
 }
 
-export interface VectorSearchOptions extends SearchOptions {
+export interface VectorSearchOptions extends SearchOptions<Document> {
   vector: number[];
 }
 
-export interface FilterQuery {
-  [key: string]: any;
+export interface FilterQuery<T = Document> {
+  [key: string]: T[keyof T] | {
+    $eq?: T[keyof T],
+    $gt?: T[keyof T],
+    $gte?: T[keyof T],
+    $lt?: T[keyof T],
+    $lte?: T[keyof T],
+    $in?: T[keyof T][],
+    $nin?: T[keyof T][]
+  };
 }
 
 export interface SearchResult<T = Document> {
@@ -28,15 +36,15 @@ export interface SearchResult<T = Document> {
   total: number;
 }
 
-export interface CollectionProvider {
-  find(query: FilterQuery, options?: SearchOptions): Promise<SearchResult>;
-  findOne(query: FilterQuery): Promise<Document | null>;
-  insert(doc: Document): Promise<void>;
-  update(query: FilterQuery, update: Partial<Document>): Promise<void>;
-  delete(query: FilterQuery): Promise<void>;
-  vectorSearch(options: VectorSearchOptions): Promise<SearchResult>;
+export interface CollectionProvider<T = Document> {
+  find(query: FilterQuery<T>, options?: SearchOptions<T>): Promise<SearchResult<T>>;
+  findOne(query: FilterQuery<T>): Promise<T | null>;
+  insert(doc: T): Promise<void>;
+  update(query: FilterQuery<T>, update: Partial<T>): Promise<void>;
+  delete(query: FilterQuery<T>): Promise<void>;
+  vectorSearch(options: VectorSearchOptions & SearchOptions<T>): Promise<SearchResult<T>>;
 }
 
-export interface DatabaseProvider extends Provider {
-  collection(name: string): CollectionProvider;
+export interface DatabaseProvider<T = Document> extends Provider {
+  collection(name: string): CollectionProvider<T>;
 }
