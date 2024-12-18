@@ -1,4 +1,4 @@
-import { createClient } from '@clickhouse/client-web'
+import { createClient, type WebClickHouseClient } from '@clickhouse/client-web'
 import type { DatabaseProvider, Document, CollectionProvider, SearchOptions, FilterQuery, VectorSearchOptions, SearchResult } from '@mdxdb/types'
 import { type Config } from './config'
 import { checkClickHouseVersion } from './utils'
@@ -6,7 +6,7 @@ import { checkClickHouseVersion } from './utils'
 class ClickHouseCollectionProvider implements CollectionProvider<Document> {
   constructor(
     public readonly path: string,
-    private readonly client: ReturnType<typeof createClient>,
+    private readonly client: WebClickHouseClient,
     private readonly config: Config
   ) {
     void this.config.database
@@ -71,10 +71,10 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
 class ClickHouseDatabaseProvider implements DatabaseProvider<Document> {
   readonly namespace: string
   public collections: CollectionProvider<Document>
-  private readonly client: ReturnType<typeof createClient>
+  private readonly client: WebClickHouseClient
   private readonly config: Config
 
-  constructor(client: ReturnType<typeof createClient>, config: Config) {
+  constructor(client: WebClickHouseClient, config: Config) {
     this.namespace = `clickhouse://${config.url}`
     this.client = client
     this.config = config
