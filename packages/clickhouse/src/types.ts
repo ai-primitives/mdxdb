@@ -4,6 +4,15 @@
 import type { Document } from '@mdxdb/types'
 
 /**
+ * Vector index configuration for HNSW
+ */
+export interface VectorIndexConfig {
+  type: 'hnsw'
+  metric: 'cosineDistance'
+  dimensions: number
+}
+
+/**
  * Configuration options for ClickHouse client
  */
 export interface ClickHouseConfig {
@@ -13,6 +22,7 @@ export interface ClickHouseConfig {
   database?: string
   oplogTable?: string
   dataTable?: string
+  vectorIndexConfig?: VectorIndexConfig
 }
 
 /**

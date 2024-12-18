@@ -62,6 +62,8 @@ export interface ServerContext {
 export interface ServerBindings {
   JWT_SECRET: string
   CLICKHOUSE_URL?: string
+  CLICKHOUSE_USERNAME?: string
+  CLICKHOUSE_PASSWORD?: string
 }
 
 export type AppEnv = {

@@ -9,10 +9,15 @@ const initializeClickHouseClient = async (env: AppEnv['Bindings']) => {
   return await createClickHouseClient({
     url,
     database: 'mdxdb',
-    username: 'default',
-    password: '',
+    username: env.CLICKHOUSE_USERNAME || 'default',
+    password: env.CLICKHOUSE_PASSWORD || '',
     oplogTable: 'oplog',
-    dataTable: 'data'
+    dataTable: 'data',
+    vectorIndexConfig: {
+      type: 'hnsw',
+      metric: 'cosineDistance',
+      dimensions: 256
+    }
   })
 }
 
