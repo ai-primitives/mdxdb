@@ -171,7 +171,8 @@ export class FSCollection implements CollectionProvider<Document> {
     const queryEmbedding = await this.embeddingsService.generateEmbedding(query)
     return this.vectorSearch({
       ...options,
-      vector: queryEmbedding
+      vector: queryEmbedding,
+      threshold: options?.threshold ?? 0.7
     })
   }
 
