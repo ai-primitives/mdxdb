@@ -8,39 +8,55 @@ const execAsync = promisify(exec);
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 // Helper function to ensure clean Docker environment
-async function cleanupDocker() {
+async function cleanupDocker(projectName?: string) {
   try {
-    await execAsync('docker compose down --volumes --remove-orphans', { cwd: process.cwd() });
-    await wait(1000); // Wait for resources to be released
+    if (projectName) {
+      // Stop and remove containers for specific project
+      await execAsync(`docker compose --project-name ${projectName} down --volumes --remove-orphans`, { cwd: process.cwd() });
+      await wait(2000); // Wait longer for resources to be released
+    }
+
+    // Remove all unused networks
     await execAsync('docker network prune -f', { cwd: process.cwd() });
-    await wait(1000); // Wait for network cleanup
+    await wait(2000);
+
+    // List remaining networks for debugging
+    const { stdout: networks } = await execAsync('docker network ls');
+    console.log('Current networks:', networks);
   } catch (error) {
     console.log('Cleanup error (non-fatal):', error);
-    await wait(2000); // Wait longer if there was an error
+    await wait(3000); // Wait even longer if there was an error
   }
 }
 
+// Generate a unique project name
+const projectName = `test-${Date.now()}`;
+
 beforeAll(async () => {
-  // Ensure container is running and healthy
+  console.log(`Starting test setup with project name: ${projectName}`);
+
   try {
-    console.log('Starting ClickHouse container...');
-
     // Clean up any existing resources first
-    await cleanupDocker();
+    await cleanupDocker(projectName);
 
-    // Generate a unique project name
-    const projectName = `test-${Date.now()}`;
-    console.log(`Using project name: ${projectName}`);
+    // Create network explicitly first
+    const networkName = `${projectName}_default`;
+    console.log(`Creating network: ${networkName}`);
+    try {
+      await execAsync(`docker network create ${networkName}`);
+      await wait(2000); // Wait for network creation
+    } catch (error) {
+      console.log('Network creation error (attempting to continue):', error);
+    }
 
-    // Start the container with fresh network
-    const startCommand = 'docker compose up -d --force-recreate --renew-anon-volumes --remove-orphans';
-    console.log(`Running command: ${startCommand}`);
-
-    await execAsync(startCommand, {
+    // Start the container with explicit network
+    console.log('Starting ClickHouse container...');
+    await execAsync('docker compose up -d --force-recreate --renew-anon-volumes --remove-orphans', {
       cwd: process.cwd(),
       env: {
         ...process.env,
-        COMPOSE_PROJECT_NAME: projectName
+        COMPOSE_PROJECT_NAME: projectName,
+        DOCKER_DEFAULT_PLATFORM: 'linux/amd64' // Ensure consistent platform
       }
     });
 
@@ -51,10 +67,10 @@ beforeAll(async () => {
 
     while (!isHealthy && attempts < maxAttempts) {
       try {
-        await wait(1000); // Wait between health checks
+        await wait(2000); // Longer wait between health checks
 
         // Get container ID first
-        const { stdout: containerId } = await execAsync(`docker compose ps -q clickhouse`);
+        const { stdout: containerId } = await execAsync(`docker compose --project-name ${projectName} ps -q clickhouse`);
         if (!containerId.trim()) {
           console.log('Container not found, waiting...');
           attempts++;
@@ -68,7 +84,7 @@ beforeAll(async () => {
         if (status.trim() === 'healthy') {
           isHealthy = true;
           console.log('Container is healthy!');
-          await wait(2000); // Wait a bit after container is healthy
+          await wait(3000); // Wait longer after container is healthy
         } else {
           console.log(`Waiting for container to be healthy (attempt ${attempts + 1}/${maxAttempts})...`);
           attempts++;
@@ -76,7 +92,7 @@ beforeAll(async () => {
       } catch (error) {
         console.error('Error checking container health:', error);
         attempts++;
-        await wait(2000); // Wait longer on error
+        await wait(3000); // Wait longer on error
       }
     }
 
@@ -85,11 +101,13 @@ beforeAll(async () => {
     }
   } catch (error) {
     console.error('Error setting up test environment:', error);
+    // Attempt cleanup on error
+    await cleanupDocker(projectName);
     throw error;
   }
 }, 60000);
 
 afterAll(async () => {
-  // Clean up containers and networks after tests
-  await cleanupDocker();
+  // Clean up containers and networks
+  await cleanupDocker(projectName);
 }, 30000);
