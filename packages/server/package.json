@@ -26,9 +26,9 @@
   "dependencies": {
     "@hono/node-server": "^1.4.0",
     "@hono/zod-validator": "^0.1.11",
-    "@mdxdb/clickhouse": "^0.1.0",
-    "@mdxdb/fs": "^0.1.0",
-    "@mdxdb/types": "^0.1.0",
+    "@mdxdb/clickhouse": "workspace:*",
+    "@mdxdb/fs": "workspace:*",
+    "@mdxdb/types": "workspace:*",
     "esbuild-wasm": "^0.19.0",
     "hono": "^4.6.14",
     "zod": "^3.22.0"

@@ -172,12 +172,28 @@
   These issues block the server package implementation and need to be resolved.
 
 - CI workflow failures in @mdxdb/clickhouse package:
-  - No test files found in the package
-  - Causing CI workflow to fail with exit code 1
-  - Needs test files to be added or CI configuration updated
-  This is blocking PR #12 and needs to be addressed before merging the CI permissions configuration.
+  - Type compatibility issues with WebClickHouseClient and ClickHouseClient<unknown>
+  - Removed unnecessary @clickhouse/client-common dependency
+  - Updated client.ts to use proper types from @clickhouse/client-web
+  - Pending verification of CI checks after fixes
+  - Reproduction steps:
+    1. Run `pnpm install` in packages/clickhouse
+    2. Run `pnpm run build:types` to generate type declarations
+    3. Error occurs due to incorrect type import from @clickhouse/client-web
 
-## Known Issues
+- Workspace dependency version mismatches:
+  - @mdxdb/types and @mdxdb/clickhouse at version 0.1.0
+  - @mdxdb/ai and @mdxdb/server at version 0.0.1
+  - Causing pnpm install failures due to version resolution
+  - Blocking CI checks and package builds
+  - Needs version alignment across workspace packages
+
+- Type compatibility issues in @mdxdb/fetch package:
+  - Method signatures in FetchCollectionProvider not matching CollectionProvider interface
+  - update and delete methods using string ID instead of FilterQuery
+  - Missing insert and findOne method implementations
+  - Location: packages/fetch/src/index.ts
+  These issues are blocking the build process and need to be addressed in a separate PR.
 
 - [ ] ESLint configuration issues in @mdxdb/types package
   - TypeScript parser configuration needs review
