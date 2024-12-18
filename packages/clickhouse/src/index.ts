@@ -1,17 +1,41 @@
-import { type ClickHouseClient } from '@clickhouse/client-web'
-import { createClickHouseClient } from './client'
-import { type Config } from './config'
-import { checkClickHouseVersion } from './utils'
-import { type TableSchema } from './schema'
+import { DatabaseProvider, Document, CollectionProvider, SearchOptions, FilterQuery, VectorSearchOptions, SearchResult } from "@mdxdb/types";
 
-// Re-export types from @mdxdb/types
-export type { Document, DatabaseProvider, CollectionProvider, SearchOptions, FilterQuery, VectorSearchOptions } from '@mdxdb/types'
+export class ClickHouseProvider implements DatabaseProvider {
+  constructor(private readonly config: { url: string; password: string }) {}
 
-// Export local types and functions
-export { createClickHouseClient, checkClickHouseVersion }
-export type { Config, ClickHouseClient, TableSchema }
+  async connect(): Promise<void> {
+    // Implementation
+  }
 
-// Export additional functionality
-export * from './schema'
-export * from './utils'
-export * from './client'
+  async disconnect(): Promise<void> {
+    // Implementation
+  }
+
+  async query<T>(query: string): Promise<T> {
+    // Implementation
+    return {} as T;
+  }
+
+  collection(name: string): CollectionProvider {
+    return {
+      async find(query: FilterQuery, options?: SearchOptions): Promise<SearchResult> {
+        return { hits: [], total: 0 };
+      },
+      async findOne(query: FilterQuery): Promise<Document | null> {
+        return null;
+      },
+      async insert(doc: Document): Promise<void> {
+        // Implementation
+      },
+      async update(query: FilterQuery, update: Partial<Document>): Promise<void> {
+        // Implementation
+      },
+      async delete(query: FilterQuery): Promise<void> {
+        // Implementation
+      },
+      async vectorSearch(options: VectorSearchOptions): Promise<SearchResult> {
+        return { hits: [], total: 0 };
+      }
+    };
+  }
+}

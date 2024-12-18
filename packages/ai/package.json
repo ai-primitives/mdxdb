@@ -19,7 +19,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@mdxdb/types": "workspace:*",
+    "@mdxdb/clickhouse": "0.0.1", "@mdxdb/types": "0.0.1",
     "openai": "^4.28.0"
   },
   "devDependencies": {
