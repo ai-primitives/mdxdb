@@ -1,6 +1,6 @@
 services:
   clickhouse:
-    image: clickhouse/clickhouse-server:latest
+    build: .
     ports:
       - "58123:58123"
       - "59000:59000"
@@ -15,9 +15,3 @@ services:
       nofile:
         soft: 262144
         hard: 262144
-    healthcheck:
-      test: wget --no-verbose --tries=1 --spider http://localhost:58123/ping || exit 1
-      interval: 3s
-      timeout: 5s
-      retries: 10
-      start_period: 20s
