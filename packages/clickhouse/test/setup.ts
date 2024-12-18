@@ -7,6 +7,7 @@ const execAsync = promisify(exec);
 beforeAll(async () => {
   // Ensure container is running and healthy
   try {
+    console.log('Starting ClickHouse container...');
     await execAsync('docker compose up -d', { cwd: process.cwd() });
 
     // Wait for container to be healthy
@@ -16,17 +17,30 @@ beforeAll(async () => {
 
     while (!isHealthy && attempts < maxAttempts) {
       try {
-        const { stdout } = await execAsync('docker compose ps --format json');
-        const containers = JSON.parse(`[${stdout.trim().split('\n').join(',')}]`);
-        const clickhouse = containers.find((c: any) => c.Service === 'clickhouse');
+        // Get container ID first
+        const { stdout: containerId } = await execAsync('docker compose ps -q clickhouse');
+        if (!containerId.trim()) {
+          console.log('Container not found, waiting...');
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          attempts++;
+          continue;
+        }
 
-        if (clickhouse && clickhouse.Health === 'healthy') {
+        // Check container health status
+        const { stdout: status } = await execAsync(`docker inspect --format='{{.State.Health.Status}}' ${containerId.trim()}`);
+        console.log(`Container health status: ${status.trim()}`);
+
+        if (status.trim() === 'healthy') {
           isHealthy = true;
         } else {
+          // Get container logs for debugging
+          const { stdout: logs } = await execAsync(`docker logs ${containerId.trim()}`);
+          console.log('Container logs:', logs);
           await new Promise(resolve => setTimeout(resolve, 1000));
           attempts++;
         }
       } catch (error) {
+        console.error('Error checking container health:', error);
         await new Promise(resolve => setTimeout(resolve, 1000));
         attempts++;
       }
