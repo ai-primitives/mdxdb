@@ -22,11 +22,7 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
     throw new Error(`Method not implemented for collection: ${collection}`)
   }
 
-  async add(collection: string, document: Document): Promise<void> {
-    void this.client
-    void document
-    throw new Error(`Method not implemented for collection: ${collection}`)
-  }
+
 
   async insert(collection: string, document: Document): Promise<void> {
     void this.client
