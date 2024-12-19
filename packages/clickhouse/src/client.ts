@@ -156,6 +156,7 @@ export class ClickHouseCollectionProvider implements CollectionProvider<Document
         : new Error('Unknown error during vector search')
     }
   }
+}
 
 export class ClickHouseDatabaseProvider implements DatabaseProvider<Document> {
   readonly namespace: string
