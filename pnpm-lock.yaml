@@ -270,17 +270,13 @@ importers:
         specifier: ^6.0.3
         version: 6.0.3
       vitest:
-        specifier: ^1.1.0
+        specifier: ^1.6.0
         version: 1.6.0(@types/node@22.10.2)
       wrangler:
         specifier: ^3.22.1
         version: 3.96.0(@cloudflare/workers-types@4.20241216.0)
 
   packages/types:
-    dependencies:
-      mdxld:
-        specifier: ^0.1.0
-        version: 0.1.1
     devDependencies:
       '@eslint/js':
         specifier: ^8.57.0
@@ -297,6 +293,9 @@ importers:
       eslint:
         specifier: ^8.57.1
         version: 8.57.1
+      mdxld:
+        specifier: ^0.1.0
+        version: 0.1.1
       typescript:
         specifier: ^5.5.4
         version: 5.5.4
