@@ -1,6 +1,6 @@
 {
   "name": "@mdxdb/clickhouse",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "description": "ClickHouse provider for MDXDB",
   "type": "module",
   "main": "dist/index.js",
@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@clickhouse/client-web": "^1.9.1",
-    "@mdxdb/types": "workspace:*",
+    "@mdxdb/types": "^0.0.1",
     "zod": "^3.24.1"
   },
   "devDependencies": {

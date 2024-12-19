@@ -1,9 +1,12 @@
 {
   "name": "@mdxdb/fs",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "bin": {
+    "mdxdb": "./bin/mdxdb.js"
+  },
   "scripts": {
     "build": "tsc",
     "build:types": "tsc --emitDeclarationOnly",
@@ -15,9 +18,12 @@
   "dependencies": {
     "@ai-sdk/openai": "^1.0.0",
     "@ai-sdk/provider": "^1.0.2",
-    "@mdxdb/types": "workspace:*",
+    "@mdxdb/types": "^0.0.1",
     "ai": "^2.2.0",
-    "mdxld": "^0.1.0"
+    "commander": "^12.0.0",
+    "csv-parse": "^5.5.3",
+    "mdxld": "^0.1.0",
+    "yaml": "^2.3.4"
   },
   "devDependencies": {
     "@eslint/js": "^8.57.0",
