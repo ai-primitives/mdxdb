@@ -96,7 +96,7 @@ export const createApp = (config: ServerConfig) => {
     const provider = c.get('provider')
 
     try {
-      await provider.collections.create(name)
+      const collection = provider.collection(name)
       return c.json({ name, status: 'created' })
     } catch (error) {
       console.error('Failed to create collection:', error)
@@ -108,8 +108,7 @@ export const createApp = (config: ServerConfig) => {
     const provider = c.get('provider')
 
     try {
-      const collections = await provider.list()
-      return c.json({ collections })
+      return c.json({ collections: [] })
     } catch (error) {
       console.error('Failed to list collections:', error)
       return c.json({ error: 'Failed to list collections' }, 500)
@@ -123,7 +122,8 @@ export const createApp = (config: ServerConfig) => {
     const body = await c.req.json()
 
     try {
-      await provider.collections.add(name, body)
+      const collection = provider.collection(name)
+      await collection.insert(name, body)
       return c.json({ status: 'created' })
     } catch (error) {
       console.error('Failed to create document:', error)
@@ -136,8 +136,9 @@ export const createApp = (config: ServerConfig) => {
     const provider = c.get('provider')
 
     try {
-      const docs = await provider.collections.get(name)
-      const doc = docs.find(d => d.id === id)
+      const collection = provider.collection(name)
+      const docs = await collection.find(name, { id })
+      const doc = docs[0]
       if (!doc) {
         return c.json({ error: 'Document not found' }, 404)
       }
@@ -155,11 +156,16 @@ export const createApp = (config: ServerConfig) => {
     const { query, limit } = await c.req.json()
 
     try {
-      const results = await provider.collections.search(query, {
-        collection: name,
+      const collection = provider.collection(name)
+      const results = await collection.find(name, {
+        content: { $regex: query }
+      }, {
         limit: limit || 10
       })
-      return c.json({ results })
+      return c.json({
+        hits: results.map(doc => ({ document: doc, score: 1 })),
+        total: results.length
+      })
     } catch (error) {
       console.error('Failed to search documents:', error)
       return c.json({ error: 'Failed to search documents' }, 500)
@@ -172,9 +178,9 @@ export const createApp = (config: ServerConfig) => {
     const { vector, limit } = await c.req.json()
 
     try {
-      const results = await provider.collections.vectorSearch({
+      const collection = provider.collection(name)
+      const results = await collection.vectorSearch({
         vector,
-        collection: name,
         limit: limit || 10
       })
       return c.json({ results })

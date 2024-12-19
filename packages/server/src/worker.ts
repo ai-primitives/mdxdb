@@ -1,18 +1,16 @@
 import { createApp } from './core'
 import type { ServerConfig, AppEnv } from './core'
-import { createClickHouseClient } from '@mdxdb/clickhouse'
+import { createClickHouseProvider } from '@mdxdb/clickhouse'
 import type { ExecutionContext } from '@cloudflare/workers-types'
 
 // Initialize ClickHouse client with worker-specific configuration
 const initializeClickHouseClient = async (env: AppEnv['Bindings']) => {
   const url = env.CLICKHOUSE_URL || 'http://localhost:8123'
-  return await createClickHouseClient({
+  return await createClickHouseProvider({
     url,
     database: 'mdxdb',
     username: 'default',
-    password: '',
-    oplogTable: 'oplog',
-    dataTable: 'data'
+    password: ''
   })
 }
 

@@ -79,53 +79,14 @@ export class FSCollection implements CollectionProvider<Document> {
     await fs.mkdir(nodePath.join(this.collectionPath, collection), { recursive: true })
   }
 
-  async add(collection: string, document: Document): Promise<void> {
+  async insert(collection: string, document: Document): Promise<void> {
     const id = document.id || webcrypto.randomUUID()
     document.id = id
     const fullPath = nodePath.join(collection, id)
     await this.writeDocument(fullPath, document)
   }
 
-  async get(collection: string): Promise<Document[]> {
-    const collectionPath = nodePath.join(this.collectionPath, collection)
-    await fs.mkdir(collectionPath, { recursive: true })
-    const files = await fs.readdir(collectionPath)
-    const mdxFiles = files.filter(file => file.endsWith('.mdx'))
-
-    const documents = await Promise.all(
-      mdxFiles.map(async file => {
-        const id = nodePath.basename(file, '.mdx')
-        return this.readDocument(nodePath.join(collection, id))
-      })
-    )
-
-    return documents.filter((doc): doc is Document => doc !== null)
-  }
-
-  async update(collection: string, id: string, document: Document): Promise<void> {
-    const existingDoc = await this.readDocument(nodePath.join(collection, id))
-    if (!existingDoc) {
-      throw new Error(`Document with id ${id} not found in collection ${collection}`)
-    }
-    const fullPath = nodePath.join(collection, id)
-    const filePath = nodePath.join(this.collectionPath, `${fullPath}.mdx`)
-    await fs.unlink(filePath)
-    await this.writeDocument(fullPath, document)
-  }
-
-  async delete(collection: string, id: string): Promise<void> {
-    const filePath = nodePath.join(this.collectionPath, collection, `${id}.mdx`)
-    try {
-      await fs.unlink(filePath)
-      await this.storageService.deleteEmbedding(nodePath.join(collection, id))
-    } catch (error) {
-      if ((error as { code?: string }).code !== 'ENOENT') {
-        throw error
-      }
-    }
-  }
-
-  async find(filter: FilterQuery<Document>): Promise<Document[]> {
+  async find(collection: string, filter: FilterQuery<Document>, options?: SearchOptions<Document>): Promise<Document[]> {
     const docs = await this.getAllDocuments()
     const filtered = docs.filter(({ content }) => {
       return Object.entries(filter).every(([key, value]) => {
@@ -153,22 +114,50 @@ export class FSCollection implements CollectionProvider<Document> {
     return filtered.map(doc => doc.content)
   }
 
-  async search(query: string, options?: SearchOptions<Document>): Promise<SearchResult<Document>[]> {
+  async findOne(collection: string, filter: FilterQuery<Document>): Promise<Document | null> {
+    const results = await this.find(collection, filter)
+    return results[0] || null
+  }
+
+  async update(collection: string, id: string, document: Partial<Document>): Promise<void> {
+    const existingDoc = await this.readDocument(nodePath.join(collection, id))
+    if (!existingDoc) {
+      throw new Error(`Document with id ${id} not found in collection ${collection}`)
+    }
+    const fullPath = nodePath.join(collection, id)
+    const filePath = nodePath.join(this.collectionPath, `${fullPath}.mdx`)
+    await fs.unlink(filePath)
+    await this.writeDocument(fullPath, { ...existingDoc, ...document })
+  }
+
+  async delete(collection: string, id: string): Promise<void> {
+    const filePath = nodePath.join(this.collectionPath, collection, `${id}.mdx`)
+    try {
+      await fs.unlink(filePath)
+      await this.storageService.deleteEmbedding(nodePath.join(collection, id))
+    } catch (error) {
+      if ((error as { code?: string }).code !== 'ENOENT') {
+        throw error
+      }
+    }
+  }
+
+  async search(query: string, options?: SearchOptions<Document>): Promise<SearchResult<Document>> {
     const queryEmbedding = await this.embeddingsService.generateEmbedding(query)
     return this.vectorSearch({
       ...options,
       vector: queryEmbedding,
-      threshold: options?.threshold ?? 0.7
+      threshold: (options as VectorSearchOptions).threshold ?? 0.7
     })
   }
 
-  async vectorSearch(options: VectorSearchOptions & SearchOptions<Document>): Promise<SearchResult<Document>[]> {
-    if (!options.vector) {
+  async vectorSearch(_options: VectorSearchOptions & SearchOptions<Document>): Promise<SearchResult<Document>> {
+    if (!_options.vector) {
       throw new Error('Vector is required for vector search')
     }
 
     const docs = await this.getAllDocuments()
-    const threshold = options.threshold ?? 0.7
+    const threshold = _options.threshold ?? 0.7
 
     const results = await Promise.all(
       docs.map(async ({ id, content }) => {
@@ -186,7 +175,7 @@ export class FSCollection implements CollectionProvider<Document> {
         }
 
         const similarity = this.embeddingsService.calculateSimilarity(
-          options.vector as number[],
+          _options.vector,
           storedEmbedding.embedding
         )
         console.debug(`Document ${id} similarity: ${similarity}`)
@@ -201,9 +190,14 @@ export class FSCollection implements CollectionProvider<Document> {
       })
     )
 
-    return results
+    const filteredResults = results
       .filter(result => result.score >= threshold)
       .sort((a, b) => b.score - a.score)
-      .slice(0, options.limit || 10)
+      .slice(0, _options.limit || 10)
+
+    return {
+      hits: filteredResults,
+      total: filteredResults.length
+    }
   }
 }

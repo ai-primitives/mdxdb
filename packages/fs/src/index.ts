@@ -30,6 +30,10 @@ class FSDatabase implements DatabaseProvider<Document> {
 
   async disconnect(): Promise<void> {}
 
+  async query<T>(_query: string): Promise<T> {
+    throw new Error('Query operations are not supported in the filesystem database')
+  }
+
   async list(): Promise<string[]> {
     return Array.from(this[collectionsSymbol])
   }

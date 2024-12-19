@@ -189,13 +189,21 @@
   - Build failures in @mdxdb/server package due to type errors
   These issues block the server package implementation and need to be resolved.
 
+- Interface compatibility issues in FSCollection implementation:
+  - Property 'update' in FSCollection not assignable to CollectionProvider<Document>
+  - Property 'delete' in FSCollection not assignable to CollectionProvider<Document>
+  - Property 'find' in FSCollection not assignable to CollectionProvider<Document>
+  - Property 'vectorSearch' in FSCollection not assignable to CollectionProvider<Document>
+  - Missing properties 'findOne' and 'insert' in FSCollection implementation
+  - Invalid 'threshold' property in VectorSearchOptions & SearchOptions<Document>
+  - Type mismatch in search result format for vector searches
+  These issues were found in CI build #12394089151 and need to be resolved before merging PR #21.
+
 - CI workflow failures in @mdxdb/clickhouse package:
   - No test files found in the package
   - Causing CI workflow to fail with exit code 1
   - Needs test files to be added or CI configuration updated
   This is blocking PR #12 and needs to be addressed before merging the CI permissions configuration.
-
-## Known Issues
 
 - [ ] ESLint configuration issues in @mdxdb/types package
   - TypeScript parser configuration needs review

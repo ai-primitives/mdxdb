@@ -35,46 +35,8 @@ class FetchCollectionProvider<T extends Document = Document> implements Collecti
     private readonly _fetchWithRetry: (_path: string, _init?: RequestInit) => Promise<Response>
   ) {}
 
-  async create(collection: string): Promise<void> {
-    await this._fetchWithRetry(`collections/${this.path}/${collection}`, {
-      method: 'PUT',
-      headers: this._headers
-    })
-  }
-
-  async get(collection: string): Promise<T[]> {
-    const response = await this._fetchWithRetry(`collections/${this.path}/${collection}`, {
-      method: 'GET',
-      headers: this._headers
-    })
-    return response.json()
-  }
-
-  async add(collection: string, document: T): Promise<void> {
-    await this._fetchWithRetry(`collections/${this.path}/${collection}`, {
-      method: 'POST',
-      headers: this._headers,
-      body: JSON.stringify(document)
-    })
-  }
-
-  async update(collection: string, id: string, document: T): Promise<void> {
-    await this._fetchWithRetry(`collections/${this.path}/${collection}/${id}`, {
-      method: 'PUT',
-      headers: this._headers,
-      body: JSON.stringify(document)
-    })
-  }
-
-  async delete(collection: string, id: string): Promise<void> {
-    await this._fetchWithRetry(`collections/${this.path}/${collection}/${id}`, {
-      method: 'DELETE',
-      headers: this._headers
-    })
-  }
-
-  async find(filter: FilterQuery<T>, options?: SearchOptions<T>): Promise<T[]> {
-    const response = await this._fetchWithRetry(`collections/${this.path}/find`, {
+  async find(collection: string, filter: FilterQuery<T>, options?: SearchOptions<T>): Promise<T[]> {
+    const response = await this._fetchWithRetry(`collections/${collection}/find`, {
       method: 'POST',
       headers: this._headers,
       body: JSON.stringify({ filter, ...options })
@@ -82,33 +44,56 @@ class FetchCollectionProvider<T extends Document = Document> implements Collecti
     return response.json()
   }
 
-  async search(query: string, options?: SearchOptions<T>): Promise<SearchResult<T>[]> {
-    const response = await this._fetchWithRetry(`collections/${this.path}/search`, {
-      method: 'POST',
-      headers: this._headers,
-      body: JSON.stringify({ query, ...options })
-    })
-    return response.json()
+  async findOne?(collection: string, filter: FilterQuery<T>): Promise<T | null> {
+    const docs = await this.find(collection, filter, { limit: 1 })
+    return docs[0] || null
   }
 
-  async vectorSearch(options: VectorSearchOptions & SearchOptions<T>): Promise<SearchResult<T>[]> {
+  async insert(collection: string, document: T): Promise<void> {
+    await this._fetchWithRetry(`collections/${collection}`, {
+      method: 'POST',
+      headers: this._headers,
+      body: JSON.stringify(document)
+    })
+  }
+
+  async update(collection: string, id: string, document: Partial<T>): Promise<void> {
+    await this._fetchWithRetry(`collections/${collection}/${id}`, {
+      method: 'PUT',
+      headers: this._headers,
+      body: JSON.stringify(document)
+    })
+  }
+
+  async delete(collection: string, id: string): Promise<void> {
+    await this._fetchWithRetry(`collections/${collection}/${id}`, {
+      method: 'DELETE',
+      headers: this._headers
+    })
+  }
+
+  async vectorSearch(options: VectorSearchOptions & SearchOptions<T>): Promise<SearchResult<T>> {
     const response = await this._fetchWithRetry(`collections/${this.path}/vector-search`, {
       method: 'POST',
       headers: this._headers,
       body: JSON.stringify(options)
     })
-    return response.json()
+    const results = await response.json()
+    return {
+      hits: results.map((doc: T) => ({ document: doc, score: 1 })),
+      total: results.length
+    }
   }
 }
 
-const providerState = new WeakMap<FetchProvider<Document>, {
+const providerState = new WeakMap<FetchProvider<any>, {
   options: Required<Omit<FetchProviderOptions, 'namespace'>>
   fetchWithRetry: (_path: string, _init?: RequestInit, _retryCount?: number) => Promise<Response>
 }>()
 
 export class FetchProvider<T extends Document = Document> implements DatabaseProvider<T> {
   readonly namespace: string
-  public collections: CollectionProvider<T>
+  private readonly collections: CollectionProvider<T>
 
   constructor(options: FetchProviderOptions) {
     this.namespace = options.namespace
@@ -172,6 +157,15 @@ export class FetchProvider<T extends Document = Document> implements DatabasePro
     // No-op for HTTP provider
   }
 
+  async query<R>(query: string): Promise<R> {
+    const state = providerState.get(this)!
+    const response = await state.fetchWithRetry('query', {
+      method: 'POST',
+      body: JSON.stringify({ query })
+    })
+    return response.json()
+  }
+
   async list(): Promise<string[]> {
     const state = providerState.get(this)!
     const response = await state.fetchWithRetry('collections')
@@ -186,6 +180,4 @@ export class FetchProvider<T extends Document = Document> implements DatabasePro
       state.fetchWithRetry
     )
   }
-
-  [key: string]: DatabaseProvider<T> | CollectionProvider<T> | string | (() => Promise<void>) | (() => Promise<string[]>) | ((name: string) => CollectionProvider<T>)
 }
