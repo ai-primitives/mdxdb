@@ -44,6 +44,10 @@ export class FSCollection implements CollectionProvider<Document> {
 
   private async writeDocument(id: string, document: Document): Promise<void> {
     const filePath = nodePath.join(this.collectionPath, `${id}.mdx`)
+    const exists = await fs.access(filePath).then(() => true).catch(() => false)
+    if (exists) {
+      throw new Error(`Document with id ${id} already exists`)
+    }
     await fs.mkdir(nodePath.dirname(filePath), { recursive: true })
     await fs.writeFile(filePath, document.content, 'utf-8')
 
@@ -150,7 +154,7 @@ export class FSCollection implements CollectionProvider<Document> {
       if (!doc.id) continue // Skip documents without IDs
       const updatedDoc = { ...doc, ...document, id: doc.id }
       const fullPath = nodePath.join(collection, doc.id)
-      await this.updateDocument(fullPath, updatedDoc)
+      await this.writeDocument(fullPath, updatedDoc)
     }
   }
 
