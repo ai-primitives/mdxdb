@@ -123,7 +123,11 @@ export class ClickHouseCollectionProvider implements CollectionProvider<Document
     try {
       const resultSet = await this.client.query(query)
       const rawData = await resultSet.json<unknown>()
-      const rows = Array.isArray(rawData) ? rawData as ClickHouseRow[] : []
+      const rows = rawData && typeof rawData === 'object' && 'data' in rawData
+        ? (rawData.data as ClickHouseRow[])
+        : Array.isArray(rawData)
+          ? rawData as ClickHouseRow[]
+          : []
 
       return rows.map((row) => {
         const result: SearchResult<Document> = {
