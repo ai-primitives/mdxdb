@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { mkdtemp, writeFile, rm } from 'fs/promises'
-import { join } from 'path'
+import { mkdtemp, writeFile, rm, mkdir } from 'fs/promises'
+import { join, resolve } from 'path'
 import { tmpdir } from 'os'
 import { FSDatabase } from '../../src/index.js'
 import { importCommand } from '../../src/cli/import.js'
@@ -8,12 +8,17 @@ import { importCommand } from '../../src/cli/import.js'
 describe('import command', () => {
   let tempDir: string
   let db: FSDatabase
+  let fixturesDir: string
 
   beforeEach(async () => {
     // Create temporary directory for test files
     tempDir = await mkdtemp(join(tmpdir(), 'mdxdb-test-'))
     db = new FSDatabase(tempDir)
     await db.connect()
+
+    // Set up fixtures directory
+    fixturesDir = resolve(__dirname, 'fixtures')
+    await mkdir(fixturesDir, { recursive: true })
   })
 
   afterEach(async () => {
@@ -29,7 +34,7 @@ Test Post,A test description,John Doe`
       await writeFile(csvFile, csvContent)
 
       await importCommand.parseAsync([
-        'node', 'mdxdb', 'import',
+        process.execPath, 'import',
         csvFile,
         '--collection', 'posts'
       ])
@@ -53,7 +58,7 @@ BlogPosting,https://schema.org,Test Post`
       await writeFile(csvFile, csvContent)
 
       await importCommand.parseAsync([
-        'node', 'mdxdb', 'import',
+        process.execPath, 'import',
         csvFile,
         '--collection', 'posts'
       ])
@@ -78,7 +83,7 @@ BlogPosting,https://schema.org,Test Post`
       await writeFile(jsonlFile, jsonlContent)
 
       await importCommand.parseAsync([
-        'node', 'mdxdb', 'import',
+        process.execPath, 'import',
         jsonlFile,
         '--collection', 'posts'
       ])
@@ -100,19 +105,14 @@ BlogPosting,https://schema.org,Test Post`
   describe('template and field mapping', () => {
     it('should use template file for content', async () => {
       const csvContent = 'title,author\nTest Post,John Doe'
-      const templateContent = '# {title}\n\nWritten by {author}'
-
       const csvFile = join(tempDir, 'test.csv')
-      const templateFile = join(tempDir, 'template.mdx')
+      const templateFile = join(fixturesDir, 'template.mdx')
 
-      // Write files and wait for both operations to complete
-      await Promise.all([
-        writeFile(csvFile, csvContent),
-        writeFile(templateFile, templateContent)
-      ])
+      await writeFile(csvFile, csvContent)
 
       await importCommand.parseAsync([
-        'node', 'mdxdb', 'import',
+        process.execPath,
+        'import',
         csvFile,
         '--collection', 'posts',
         '--template', templateFile
@@ -131,7 +131,8 @@ BlogPosting,https://schema.org,Test Post`
       await writeFile(csvFile, csvContent)
 
       await importCommand.parseAsync([
-        'node', 'mdxdb', 'import',
+        process.execPath,
+        'import',
         csvFile,
         '--collection', 'posts',
         '--id-field', 'postTitle',
@@ -170,7 +171,8 @@ BlogPosting,https://schema.org,Test Post`
       await writeFile(jsonlFile, jsonlContent)
 
       await importCommand.parseAsync([
-        'node', 'mdxdb', 'import',
+        process.execPath,
+        'import',
         jsonlFile,
         '--collection', 'posts'
       ])
@@ -201,7 +203,8 @@ BlogPosting,https://schema.org,Test Post,"[{\\"@type\\":\\"Person\\",\\"name\\":
       await writeFile(csvFile, csvContent)
 
       await importCommand.parseAsync([
-        'node', 'mdxdb', 'import',
+        process.execPath,
+        'import',
         csvFile,
         '--collection', 'posts'
       ])
@@ -236,7 +239,8 @@ BlogPosting,https://schema.org,Test Post,"[{\\"@type\\":\\"Person\\",\\"name\\":
       await writeFile(csvFile, csvContent)
 
       await expect(importCommand.parseAsync([
-        'node', 'mdxdb', 'import',
+        process.execPath,
+        'import',
         csvFile,
         '--collection', 'posts'
       ])).rejects.toThrow()
@@ -248,7 +252,8 @@ BlogPosting,https://schema.org,Test Post,"[{\\"@type\\":\\"Person\\",\\"name\\":
       await writeFile(jsonlFile, jsonlContent)
 
       await expect(importCommand.parseAsync([
-        'node', 'mdxdb', 'import',
+        process.execPath,
+        'import',
         jsonlFile,
         '--collection', 'posts'
       ])).rejects.toThrow()

@@ -195,6 +195,12 @@
   - Needs test files to be added or CI configuration updated
   This is blocking PR #12 and needs to be addressed before merging the CI permissions configuration.
 
+- Import command test failures in @mdxdb/fs package:
+  - CSV parser import issues with csv-parse/sync module
+  - Template file path resolution in test environment
+  - Collection.get() method usage instead of list()
+  These issues are being addressed in PR #27 and affect the import command functionality.
+
 ## Known Issues
 
 - [ ] ESLint configuration issues in @mdxdb/types package
