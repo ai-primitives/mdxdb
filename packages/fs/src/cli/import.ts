@@ -84,7 +84,10 @@ export const importCommand = new Command('import')
         } catch (error) {
           console.error(`Failed to read template file: ${error instanceof Error ? error.message : 'unknown error'}`)
           console.error(`Template path attempted: ${options.template}`)
-          throw new Error(`Failed to read template file: ${error instanceof Error ? error.message : 'unknown error'}. Make sure the template file exists and is accessible.`)
+          // Only throw if template was explicitly provided
+          if (options.template) {
+            throw new Error(`Failed to read template file: ${error instanceof Error ? error.message : 'unknown error'}. Make sure the template file exists and is accessible.`)
+          }
         }
       }
 
