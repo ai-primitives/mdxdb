@@ -1,11 +1,13 @@
 import { Command } from 'commander'
-import { parse } from 'csv-parse'
-import { createReadStream } from 'fs'
+import { existsSync, createReadStream } from 'fs'
 import { readFile } from 'fs/promises'
+import { extname } from 'path'
+import * as path from 'path'
+import { parse as parseCsv } from 'csv-parse'
 import { createInterface } from 'readline'
-import { parse as parseYAML, stringify as stringifyYAML } from 'yaml'
+import { stringify as stringifyYAML } from 'yaml'
 import { FSDatabase } from '../index.js'
-import path from 'path'
+import crypto from 'crypto'
 
 interface ImportOptions {
   collection: string
@@ -54,7 +56,7 @@ export const importCommand = new Command('import')
   })
   .option('-i, --id-field <field>', 'Field to use as document ID')
   .option('-m, --content-field <field>', 'Field to use as main MDX content')
-  .option('-t, --template <file>', 'MDX template file to use for content')
+  .option('-t, --template [file]', 'MDX template file to use for content')
   .option('-F, --frontmatter-fields <fields>', 'Fields to include in frontmatter (comma-separated)')
   .action(async (file: string, options: ImportOptions) => {
     try {
@@ -69,22 +71,24 @@ export const importCommand = new Command('import')
       const collection = db.collection(options.collection)
       await collection.create(options.collection)
 
-      // Load template if specified
+      // Load template if specified and not empty
       let template = ''
       if (options.template && options.template.trim() !== '') {
         try {
-          // Resolve template path relative to input file directory if not absolute
           const templatePath = path.isAbsolute(options.template)
             ? options.template
-            : path.join(path.dirname(file), options.template)
+            : path.resolve(path.dirname(file), options.template)
 
-          console.log(`Attempting to read template file from: ${templatePath}`)
+          if (!existsSync(templatePath)) {
+            throw new Error(`Template file not found: ${templatePath}`)
+          }
+
           template = await readFile(templatePath, 'utf-8')
-          console.log('Successfully read template file')
         } catch (error) {
-          console.error(`Failed to read template file: ${error instanceof Error ? error.message : 'unknown error'}`)
-          console.error(`Template path attempted: ${options.template}`)
-          throw new Error(`Failed to read template file: ${error instanceof Error ? error.message : 'unknown error'}. Make sure the template file exists and is accessible.`)
+          if (error instanceof Error) {
+            throw new Error(`Failed to read template file: ${error.message}. Make sure the template file exists and is accessible.`)
+          }
+          throw error
         }
       }
 

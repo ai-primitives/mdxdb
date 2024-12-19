@@ -35,7 +35,7 @@ Test Post,A test description,John Doe`
       ])
 
       const collection = db.collection('posts')
-      const docs = await collection.list()
+      const docs = await collection.get('posts')
       expect(docs).toHaveLength(1)
 
       const doc = docs[0]
@@ -59,7 +59,7 @@ BlogPosting,https://schema.org,Test Post`
       ])
 
       const collection = db.collection('posts')
-      const docs = await collection.list()
+      const docs = await collection.get('posts')
       expect(docs).toHaveLength(1)
 
       const doc = docs[0]
@@ -84,7 +84,7 @@ BlogPosting,https://schema.org,Test Post`
       ])
 
       const collection = db.collection('posts')
-      const docs = await collection.list()
+      const docs = await collection.get('posts')
       expect(docs).toHaveLength(2)
 
       expect(docs[0].data).toMatchObject({
@@ -105,8 +105,11 @@ BlogPosting,https://schema.org,Test Post`
       const csvFile = join(tempDir, 'test.csv')
       const templateFile = join(tempDir, 'template.mdx')
 
-      await writeFile(csvFile, csvContent)
-      await writeFile(templateFile, templateContent)
+      // Write files and wait for both operations to complete
+      await Promise.all([
+        writeFile(csvFile, csvContent),
+        writeFile(templateFile, templateContent)
+      ])
 
       await importCommand.parseAsync([
         'node', 'mdxdb', 'import',
@@ -116,7 +119,7 @@ BlogPosting,https://schema.org,Test Post`
       ])
 
       const collection = db.collection('posts')
-      const docs = await collection.list()
+      const docs = await collection.get('posts')
       expect(docs).toHaveLength(1)
       expect(docs[0].content).toContain('# Test Post')
       expect(docs[0].content).toContain('Written by John Doe')
@@ -137,7 +140,7 @@ BlogPosting,https://schema.org,Test Post`
       ])
 
       const collection = db.collection('posts')
-      const docs = await collection.list()
+      const docs = await collection.get('posts')
       expect(docs).toHaveLength(1)
       expect(docs[0].id).toBe('Test Post')
       expect(docs[0].content).toContain('Hello World')
@@ -173,7 +176,7 @@ BlogPosting,https://schema.org,Test Post`
       ])
 
       const collection = db.collection('posts')
-      const docs = await collection.list()
+      const docs = await collection.get('posts')
       expect(docs).toHaveLength(1)
       expect(docs[0].data).toMatchObject({
         title: 'Test Post',
@@ -204,7 +207,7 @@ BlogPosting,https://schema.org,Test Post,"[{\\"@type\\":\\"Person\\",\\"name\\":
       ])
 
       const collection = db.collection('posts')
-      const docs = await collection.list()
+      const docs = await collection.get('posts')
       expect(docs).toHaveLength(1)
       expect(docs[0].data).toMatchObject({
         $type: 'BlogPosting',
