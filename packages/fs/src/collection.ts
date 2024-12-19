@@ -4,7 +4,6 @@ import * as nodePath from 'path'
 import { EmbeddingsService } from './embeddings'
 import { EmbeddingsStorageService } from './storage'
 import { webcrypto } from 'node:crypto'
-import * as yaml from 'yaml'
 
 export interface FSCollectionOptions {
   openaiApiKey?: string
@@ -30,18 +29,6 @@ export class FSCollection implements CollectionProvider<Document> {
       const filePath = nodePath.join(this.collectionPath, `${id}.mdx`)
       const content = await fs.readFile(filePath, 'utf-8')
       const docId = id.split('/').pop() || id
-
-      // Extract frontmatter data
-      const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/)
-      if (frontmatterMatch) {
-        const [, frontmatter, documentContent] = frontmatterMatch
-        return {
-          id: docId,
-          content: documentContent,
-          data: yaml.parse(frontmatter) || {}
-        }
-      }
-
       return {
         id: docId,
         content,
@@ -95,7 +82,8 @@ export class FSCollection implements CollectionProvider<Document> {
   async add(collection: string, document: Document): Promise<void> {
     const id = document.id || webcrypto.randomUUID()
     document.id = id
-    await this.writeDocument(nodePath.join(this.collectionPath, collection, id), document)
+    const fullPath = nodePath.join(collection, id)
+    await this.writeDocument(fullPath, document)
   }
 
   async get(collection: string): Promise<Document[]> {
@@ -108,20 +96,6 @@ export class FSCollection implements CollectionProvider<Document> {
       mdxFiles.map(async file => {
         const id = nodePath.basename(file, '.mdx')
         return this.readDocument(nodePath.join(collection, id))
-      })
-    )
-
-    return documents.filter((doc): doc is Document => doc !== null)
-  }
-
-  async list(): Promise<Document[]> {
-    const files = await fs.readdir(this.collectionPath)
-    const mdxFiles = files.filter(file => file.endsWith('.mdx'))
-
-    const documents = await Promise.all(
-      mdxFiles.map(async file => {
-        const id = nodePath.basename(file, '.mdx')
-        return this.readDocument(id)
       })
     )
 
