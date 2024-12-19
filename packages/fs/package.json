@@ -18,7 +18,7 @@
   "dependencies": {
     "@ai-sdk/openai": "^1.0.0",
     "@ai-sdk/provider": "^1.0.2",
-    "@mdxdb/types": "workspace:*",
+    "@mdxdb/types": "^0.1.0",
     "ai": "^2.2.0",
     "commander": "^12.0.0",
     "csv-parse": "^5.5.3",
