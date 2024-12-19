@@ -37,9 +37,14 @@ async function initializeDatabase(projectName: string) {
       throw new Error('Container not found');
     }
 
+    // Wait for ClickHouse to be ready
+    console.log('Waiting for ClickHouse to be ready...');
+    await wait(5000);
+
     // Create database
     console.log('Creating database...');
     await execAsync(`docker exec ${containerId.trim()} clickhouse-client --port 9000 --query "CREATE DATABASE IF NOT EXISTS test_db"`);
+    await wait(2000);
 
     // Read and execute schema files
     const schemaDir = path.join(process.cwd(), 'schema');
@@ -56,7 +61,9 @@ async function initializeDatabase(projectName: string) {
 
           // Copy schema file to container and execute
           await execAsync(`docker cp ${tempFile} ${containerId.trim()}:/tmp/${file}`);
+          console.log(`Executing SQL file: ${file}`);
           await execAsync(`docker exec ${containerId.trim()} clickhouse-client --port 9000 --database test_db --queries-file /tmp/${file}`);
+          await wait(1000);
         }
       }
     } finally {
@@ -98,11 +105,11 @@ export async function setup() {
     // Wait for container health
     let isHealthy = false;
     let attempts = 0;
-    const maxAttempts = 30;
+    const maxAttempts = 40;
 
     while (!isHealthy && attempts < maxAttempts) {
       try {
-        await wait(2000);
+        await wait(3000);
 
         const { stdout: containerId } = await execAsync(`docker compose --project-name ${projectName} ps -q clickhouse`);
         if (!containerId.trim()) {
@@ -111,12 +118,22 @@ export async function setup() {
           continue;
         }
 
+        // Get container status before checking ports
+        const { stdout: status } = await execAsync(`docker inspect --format='{{.State.Health.Status}}' ${containerId.trim()}`);
+        console.log(`Container health status: ${status.trim()}`);
+
+        if (status.trim() !== 'healthy') {
+          console.log(`Waiting for container to be healthy (attempt ${attempts + 1}/${maxAttempts})...`);
+          attempts++;
+          continue;
+        }
+
         // Get dynamically allocated ports
         const { stdout: httpPort } = await execAsync(`docker port ${containerId.trim()} 8123`);
         const { stdout: nativePort } = await execAsync(`docker port ${containerId.trim()} 9000`);
 
-        console.log('Raw HTTP port output:', JSON.stringify(httpPort));
-        console.log('Raw Native port output:', JSON.stringify(nativePort));
+        console.log('Raw HTTP port output:', httpPort);
+        console.log('Raw Native port output:', nativePort);
 
         if (!httpPort.trim() || !nativePort.trim()) {
           console.log('Ports not allocated yet, waiting...');
@@ -149,20 +166,13 @@ export async function setup() {
         process.env.CLICKHOUSE_NATIVE_PORT = nativePortNumber;
         process.env.CLICKHOUSE_DATABASE = 'test_db';
 
-        const { stdout: status } = await execAsync(`docker inspect --format='{{.State.Health.Status}}' ${containerId.trim()}`);
-        console.log(`Container health status: ${status.trim()}`);
-        console.log(`Using ports - HTTP: ${httpPortNumber}, Native: ${nativePortNumber}`);
+        isHealthy = true;
+        console.log('Container is healthy!');
 
-        if (status.trim() === 'healthy') {
-          isHealthy = true;
-          console.log('Container is healthy!');
-          // Initialize database after container is healthy
-          await initializeDatabase(projectName);
-          await wait(3000);
-        } else {
-          console.log(`Waiting for container to be healthy (attempt ${attempts + 1}/${maxAttempts})...`);
-          attempts++;
-        }
+        // Initialize database after container is healthy
+        await initializeDatabase(projectName);
+        await wait(5000); // Give more time for schema to be fully applied
+
       } catch (error) {
         console.error('Error checking container health:', error);
         attempts++;
