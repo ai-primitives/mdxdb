@@ -16,6 +16,32 @@ interface ImportOptions {
   frontmatterFields?: string
 }
 
+function convertPrefixes(obj: any): any {
+  if (Array.isArray(obj)) {
+    return obj.map(item => convertPrefixes(item))
+  } else if (typeof obj === 'object' && obj !== null) {
+    return Object.entries(obj).reduce((acc, [key, value]) => {
+      const newKey = key.startsWith('@') ? key.replace('@', '$') : key
+      if (typeof value === 'string' && (key.startsWith('@') || value.trim().startsWith('{'))) {
+        try {
+          const parsedValue = JSON.parse(value)
+          acc[newKey] = typeof parsedValue === 'object' && parsedValue !== null
+            ? convertPrefixes(parsedValue)
+            : parsedValue
+        } catch {
+          acc[newKey] = value
+        }
+      } else if (typeof value === 'object' && value !== null) {
+        acc[newKey] = convertPrefixes(value)
+      } else {
+        acc[newKey] = value
+      }
+      return acc
+    }, {} as Record<string, any>)
+  }
+  return obj
+}
+
 export const importCommand = new Command('import')
   .description('Import CSV or JSONL file into MDX documents')
   .argument('<file>', 'Input file (CSV or JSONL)')
@@ -39,25 +65,41 @@ export const importCommand = new Command('import')
       const db = new FSDatabase(process.cwd())
       await db.connect()
 
-      // Create collection if it doesn't exist
+      // Get collection
       const collection = db.collection(options.collection)
       await collection.create(options.collection)
 
       // Load template if specified
       let template = ''
       if (options.template) {
-        template = await readFile(options.template, 'utf-8')
+        try {
+          const templatePath = path.isAbsolute(options.template)
+            ? options.template
+            : path.join(process.cwd(), options.template)
+          if (options.template.trim() !== '') {
+            template = await readFile(templatePath, 'utf-8')
+          }
+        } catch (error) {
+          console.error(`Failed to read template file: ${error instanceof Error ? error.message : 'unknown error'}`)
+          if (options.template.trim() !== '') {
+            throw error
+          }
+        }
       }
 
       // Parse frontmatter field list
-      const frontmatterFields = options.frontmatterFields?.split(',') || []
+      const frontmatterFields = options.frontmatterFields?.split(',').map(f => f.trim()).filter(Boolean) || []
 
       // Process records based on format
       if (format === 'csv') {
         const parser = createReadStream(file).pipe(
           parse({
             columns: true,
-            skip_empty_lines: true
+            skip_empty_lines: true,
+            cast: true,
+            cast_date: false,
+            trim: true,
+            relax_column_count: true
           })
         )
 
@@ -72,44 +114,73 @@ export const importCommand = new Command('import')
 
         for await (const line of fileStream) {
           if (line.trim()) {
-            const record = JSON.parse(line)
-            await processRecord(record)
+            try {
+              const record = JSON.parse(line)
+              await processRecord(record)
+            } catch (error) {
+              console.error(`Failed to parse JSONL line: ${error instanceof Error ? error.message : 'unknown error'}`)
+              throw error
+            }
           }
         }
       }
 
       async function processRecord(record: Record<string, any>) {
-        // Generate document ID
-        const id = options.idField ? record[options.idField] : crypto.randomUUID()
+        // Convert @ prefixes to $ for YAML-LD compatibility
+        const processedRecord = Object.entries(record).reduce((acc, [key, value]) => {
+          const newKey = key.startsWith('@') ? key.replace('@', '$') : key
 
-        // Generate content
-        let content = ''
-        if (options.contentField && record[options.contentField]) {
-          content = record[options.contentField]
-        } else if (template) {
-          content = template
-        }
-
-        // Generate frontmatter
-        const frontmatter: Record<string, any> = {}
-        const fields = frontmatterFields.length > 0 ? frontmatterFields : Object.keys(record)
-
-        for (const field of fields) {
-          if (field in record && field !== options.contentField) {
-            // Convert @ prefixes to $ for YAML-LD compatibility
-            const key = field.startsWith('@') ? `$${field.slice(1)}` : field
-            frontmatter[key] = record[field]
+          // Handle nested objects and arrays
+          if (typeof value === 'string' && (key.startsWith('@') || value.trim().startsWith('{'))) {
+            try {
+              const parsedValue = JSON.parse(value)
+              acc[newKey] = Array.isArray(parsedValue)
+                ? parsedValue.map(item => convertPrefixes(item))
+                : convertPrefixes(parsedValue)
+            } catch {
+              acc[newKey] = value
+            }
+          } else if (typeof value === 'object' && value !== null) {
+            acc[newKey] = convertPrefixes(value)
+          } else {
+            acc[newKey] = value
           }
+          return acc
+        }, {} as Record<string, any>)
+
+        // Generate content from template or content field
+        let content = ''
+        if (options.contentField && processedRecord[options.contentField]) {
+          content = processedRecord[options.contentField]
+          // Remove content field from frontmatter if specified
+          delete processedRecord[options.contentField]
+        } else if (template) {
+          content = Object.entries(processedRecord).reduce(
+            (text, [key, value]) => text.replace(new RegExp(`{${key}}`, 'g'), String(value)),
+            template
+          )
         }
 
-        // Create MDX document with YAML frontmatter
-        const mdx = `---\n${stringifyYAML(frontmatter)}---\n\n${content}`
+        // Filter frontmatter fields if specified
+        const frontmatterData = frontmatterFields.length > 0
+          ? frontmatterFields.reduce((acc, field) => {
+              if (field in processedRecord) {
+                acc[field] = processedRecord[field]
+              }
+              return acc
+            }, {} as Record<string, any>)
+          : processedRecord
+
+        // Use specified ID field or fall back to title or UUID
+        const id = options.idField && processedRecord[options.idField]
+          ? processedRecord[options.idField]
+          : (processedRecord.title || crypto.randomUUID())
 
         // Add document to collection
-        await collection.add(options.collection, {
+        await collection.add(id, {
           id,
-          content: mdx,
-          data: frontmatter
+          content: `---\n${stringifyYAML(frontmatterData)}---\n\n${content}`,
+          data: frontmatterData
         })
       }
 
@@ -117,9 +188,11 @@ export const importCommand = new Command('import')
     } catch (error: unknown) {
       if (error instanceof Error) {
         console.error('Import failed:', error.message)
+        throw error
       } else {
-        console.error('Import failed with unknown error')
+        const unknownError = new Error('Import failed with unknown error')
+        console.error(unknownError.message)
+        throw unknownError
       }
-      process.exit(1)
     }
   })
