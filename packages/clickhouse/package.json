@@ -24,6 +24,7 @@
     "lint": "eslint 'src/**/*.ts'"
   },
   "dependencies": {
+    "@clickhouse/client-common": "^0.2.6",
     "@clickhouse/client-web": "^0.2.6",
     "@mdxdb/types": "workspace:*",
     "zod": "^3.22.0"
