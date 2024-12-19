@@ -35,7 +35,7 @@ describe('FSCollection', () => {
       const collection = new FSCollection(TEST_DIR, 'test')
       const doc: Document = { id: 'test1', content: 'test content', data: {} }
 
-      await collection.add('test1', doc)
+      await collection.insert('test1', doc)
       const docs = await collection.get('test1')
 
       expect(docs).toHaveLength(1)
@@ -49,8 +49,8 @@ describe('FSCollection', () => {
       const doc: Document = { id: 'test1', content: 'test content', data: {} }
       const updatedDoc: Document = { id: 'test1', content: 'updated content', data: {} }
 
-      await collection.add('test1', doc)
-      await collection.update('test1', 'test1', updatedDoc)
+      await collection.insert('test1', doc)
+      await collection.update('test1', { id: 'test1' }, updatedDoc)
       const docs = await collection.get('test1')
 
       expect(docs).toHaveLength(1)
@@ -63,8 +63,8 @@ describe('FSCollection', () => {
       const collection = new FSCollection(TEST_DIR, 'test')
       const doc: Document = { id: 'test1', content: 'test content', data: {} }
 
-      await collection.add('test1', doc)
-      await collection.delete('test1', 'test1')
+      await collection.insert('test1', doc)
+      await collection.delete('test1', { id: 'test1' })
       const docs = await collection.get('test1')
 
       expect(docs).toHaveLength(0)
@@ -75,15 +75,15 @@ describe('FSCollection', () => {
       const collection = new FSCollection(TEST_DIR, 'test')
       const doc: Document = { id: 'test1', content: 'test content', data: {} }
 
-      await collection.add('test1', doc)
-      await expect(collection.add('test1', doc)).rejects.toThrow('already exists')
+      await collection.insert('test1', doc)
+      await expect(collection.insert('test1', doc)).rejects.toThrow('already exists')
     })
 
     it('should throw error when updating non-existent document', async () => {
       const collection = new FSCollection(TEST_DIR, 'test')
       const doc: Document = { id: 'test1', content: 'test content', data: {} }
 
-      await expect(collection.update('test1', 'test1', doc)).rejects.toThrow('not found')
+      await expect(collection.update('test1', { id: 'test1' }, doc)).rejects.toThrow('not found')
     })
   })
 
