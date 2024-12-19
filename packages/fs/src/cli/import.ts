@@ -73,16 +73,18 @@ export const importCommand = new Command('import')
       let template = ''
       if (options.template && options.template.trim() !== '') {
         try {
-          // Resolve template path relative to input file directory
-          const inputDir = path.dirname(file)
+          // Resolve template path relative to input file directory if not absolute
           const templatePath = path.isAbsolute(options.template)
             ? options.template
-            : path.join(inputDir, options.template)
+            : path.join(path.dirname(file), options.template)
 
+          console.log(`Attempting to read template file from: ${templatePath}`)
           template = await readFile(templatePath, 'utf-8')
+          console.log('Successfully read template file')
         } catch (error) {
           console.error(`Failed to read template file: ${error instanceof Error ? error.message : 'unknown error'}`)
-          throw error
+          console.error(`Template path attempted: ${options.template}`)
+          throw new Error(`Failed to read template file: ${error instanceof Error ? error.message : 'unknown error'}. Make sure the template file exists and is accessible.`)
         }
       }
 
