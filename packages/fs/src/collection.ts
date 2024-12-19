@@ -44,10 +44,15 @@ export class FSCollection implements CollectionProvider<Document> {
 
   private async writeDocument(id: string, document: Document): Promise<void> {
     const filePath = nodePath.join(this.collectionPath, `${id}.mdx`)
-    const exists = await fs.access(filePath).then(() => true).catch(() => false)
-    if (exists) {
-      throw new Error(`Document with id ${id} already exists`)
-    }
+    await fs.mkdir(nodePath.dirname(filePath), { recursive: true })
+    await fs.writeFile(filePath, document.content, 'utf-8')
+
+    const embedding = await this.embeddingsService.generateEmbedding(document.content)
+    await this.storageService.storeEmbedding(id, document.content, embedding)
+  }
+
+  private async updateDocument(id: string, document: Document): Promise<void> {
+    const filePath = nodePath.join(this.collectionPath, `${id}.mdx`)
     await fs.mkdir(nodePath.dirname(filePath), { recursive: true })
     await fs.writeFile(filePath, document.content, 'utf-8')
 
@@ -145,7 +150,7 @@ export class FSCollection implements CollectionProvider<Document> {
       if (!doc.id) continue // Skip documents without IDs
       const updatedDoc = { ...doc, ...document, id: doc.id }
       const fullPath = nodePath.join(collection, doc.id)
-      await this.writeDocument(fullPath, updatedDoc)
+      await this.updateDocument(fullPath, updatedDoc)
     }
   }
 
