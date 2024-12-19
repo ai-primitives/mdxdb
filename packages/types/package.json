@@ -12,9 +12,9 @@
     "lint": "eslint 'src/**/*.ts' --ignore-pattern '*.d.ts'"
   },
   "dependencies": {
-    "mdxld": "^0.1.0"
   },
   "devDependencies": {
+    "mdxld": "^0.1.0",
     "@eslint/js": "^8.57.0",
     "@types/node": "^20.10.0",
     "@typescript-eslint/eslint-plugin": "^8.18.1",
