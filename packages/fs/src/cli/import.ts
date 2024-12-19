@@ -71,19 +71,15 @@ export const importCommand = new Command('import')
 
       // Load template if specified
       let template = ''
-      if (options.template) {
+      if (options.template && options.template.trim() !== '') {
         try {
           const templatePath = path.isAbsolute(options.template)
             ? options.template
             : path.join(process.cwd(), options.template)
-          if (options.template.trim() !== '') {
-            template = await readFile(templatePath, 'utf-8')
-          }
+          template = await readFile(templatePath, 'utf-8')
         } catch (error) {
           console.error(`Failed to read template file: ${error instanceof Error ? error.message : 'unknown error'}`)
-          if (options.template.trim() !== '') {
-            throw error
-          }
+          throw error
         }
       }
 
