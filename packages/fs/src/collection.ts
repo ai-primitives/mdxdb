@@ -134,7 +134,7 @@ export class FSCollection implements CollectionProvider<Document> {
   async update(collection: string, filter: FilterQuery<Document>, document: Partial<Document>): Promise<void> {
     const docs = await this.find(filter)
     if (docs.length === 0) {
-      throw new Error('No documents found matching filter')
+      throw new Error('Document not found')
     }
 
     for (const doc of docs) {
@@ -151,10 +151,11 @@ export class FSCollection implements CollectionProvider<Document> {
     const docs = await this.find(filter)
     for (const doc of docs) {
       if (!doc.id) continue // Skip documents without IDs
-      const filePath = nodePath.join(this.collectionPath, collection, `${doc.id}.mdx`)
+      const fullPath = nodePath.join(collection, doc.id)
+      const filePath = nodePath.join(this.collectionPath, `${fullPath}.mdx`)
       try {
         await fs.unlink(filePath)
-        await this.storageService.deleteEmbedding(nodePath.join(collection, doc.id))
+        await this.storageService.deleteEmbedding(fullPath)
       } catch (error) {
         if ((error as { code?: string }).code !== 'ENOENT') {
           throw error
@@ -164,13 +165,13 @@ export class FSCollection implements CollectionProvider<Document> {
   }
 
   async find(filter: FilterQuery<Document>): Promise<Document[]> {
-    const docs = await this.getAllDocuments()
-    const filtered = docs.filter(({ content }) => {
+    const collectionDocs = await this.get(this.path)
+    const filtered = collectionDocs.filter((doc) => {
       return Object.entries(filter).every(([key, value]) => {
         if (typeof value === 'object' && value !== null) {
           const operators = value as Record<string, unknown>
           return Object.entries(operators).every(([op, val]) => {
-            const docValue = content[key as keyof Document]
+            const docValue = doc[key as keyof Document]
             if (docValue === undefined) return false
 
             switch (op) {
@@ -185,10 +186,10 @@ export class FSCollection implements CollectionProvider<Document> {
             }
           })
         }
-        return content[key as keyof Document] === value
+        return doc[key as keyof Document] === value
       })
     })
-    return filtered.map(doc => doc.content)
+    return filtered
   }
 
   async search(query: string, options?: SearchOptions<Document>): Promise<SearchResult<Document>[]> {
