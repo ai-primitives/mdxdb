@@ -23,6 +23,24 @@
   - [ ] Document interface with JSON-LD support
   - [ ] Collection and Database types
   - [ ] Vector search types and options
+- [ ] CSV/JSONL Import Feature
+  - [ ] CLI Setup
+    - [ ] Create bin directory and CLI entry point
+    - [ ] Add commander.js for CLI argument parsing
+    - [ ] Add import command implementation
+  - [ ] Import Implementation
+    - [ ] Add yaml package for frontmatter handling
+    - [ ] Implement CSV parser using csv-parse
+    - [ ] Implement JSONL parser using readline
+    - [ ] Add frontmatter generation from record fields
+    - [ ] Add MDX content generation from template/field
+  - [ ] Testing
+    - [ ] Add unit tests for parsers
+    - [ ] Add integration tests for import command
+    - [ ] Add example files for testing
+  - [ ] Documentation
+    - [ ] Add usage examples to README
+    - [ ] Add API documentation for programmatic usage
 - [ ] @mdxdb/fetch
   - [ ] HTTP/API provider implementation
   - [ ] RESTful endpoints integration

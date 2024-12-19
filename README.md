@@ -229,6 +229,22 @@ DEBUG=mdxdb:fs:*,mdxdb:vector:* npm test
 
 ## Development
 
+### CLI Commands
+
+#### Import Data
+Import CSV or JSONL files into MDX documents:
+
+```bash
+mdxdb import <file> --collection <name> [options]
+```
+
+Options:
+- `--format`: Input format (csv|jsonl), default: auto-detected from extension
+- `--id-field`: Field to use as document ID, default: first field or auto-generated UUID
+- `--content-field`: Field to use as main MDX content, default: none (empty content)
+- `--frontmatter-fields`: Fields to include in frontmatter (comma-separated), default: all
+- `--template`: MDX template file to use for content
+
 ```bash
 # Install dependencies
 npm install
