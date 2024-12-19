@@ -1,4 +1,5 @@
-import { createClient, type ClickHouseClient } from '@clickhouse/client-web'
+import { createClient } from '@clickhouse/client-web'
+import type { ClickHouseClient } from '@clickhouse/client-common'
 import type { DatabaseProvider, Document, CollectionProvider, SearchOptions, FilterQuery, VectorSearchOptions, SearchResult } from '@mdxdb/types'
 import { type Config } from './config'
 import { checkClickHouseVersion } from './utils'
@@ -107,7 +108,7 @@ export const createClickHouseClient = async (config: Config): Promise<DatabasePr
       database: config.database
     })
 
-    const provider = new ClickHouseDatabaseProvider(client, config)
+    const provider = new ClickHouseDatabaseProvider(client as ClickHouseClient, config)
     await provider.connect()
     return provider
   } catch (error) {
