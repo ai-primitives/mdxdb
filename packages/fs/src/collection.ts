@@ -132,24 +132,30 @@ export class FSCollection implements CollectionProvider<Document> {
   }
 
   async update(collection: string, filter: FilterQuery<Document>, document: Partial<Document>): Promise<void> {
-    const docs = await this.find(filter)
-    if (docs.length === 0) {
+    const docs = await this.get(collection)
+    const filtered = docs.filter(doc =>
+      Object.entries(filter).every(([key, value]) => doc[key as keyof Document] === value)
+    )
+
+    if (filtered.length === 0) {
       throw new Error('Document not found')
     }
 
-    for (const doc of docs) {
+    for (const doc of filtered) {
       if (!doc.id) continue // Skip documents without IDs
       const updatedDoc = { ...doc, ...document, id: doc.id }
       const fullPath = nodePath.join(collection, doc.id)
-      const filePath = nodePath.join(this.collectionPath, `${fullPath}.mdx`)
-      await fs.unlink(filePath)
       await this.writeDocument(fullPath, updatedDoc)
     }
   }
 
   async delete(collection: string, filter: FilterQuery<Document>): Promise<void> {
-    const docs = await this.find(filter)
-    for (const doc of docs) {
+    const docs = await this.get(collection)
+    const filtered = docs.filter(doc =>
+      Object.entries(filter).every(([key, value]) => doc[key as keyof Document] === value)
+    )
+
+    for (const doc of filtered) {
       if (!doc.id) continue // Skip documents without IDs
       const fullPath = nodePath.join(collection, doc.id)
       const filePath = nodePath.join(this.collectionPath, `${fullPath}.mdx`)
@@ -165,13 +171,13 @@ export class FSCollection implements CollectionProvider<Document> {
   }
 
   async find(filter: FilterQuery<Document>): Promise<Document[]> {
-    const collectionDocs = await this.get(this.path)
-    const filtered = collectionDocs.filter((doc) => {
-      return Object.entries(filter).every(([key, value]) => {
+    const docs = await this.getAllDocuments()
+    const filtered = docs.filter(({ content }) =>
+      Object.entries(filter).every(([key, value]) => {
         if (typeof value === 'object' && value !== null) {
           const operators = value as Record<string, unknown>
           return Object.entries(operators).every(([op, val]) => {
-            const docValue = doc[key as keyof Document]
+            const docValue = content[key as keyof Document]
             if (docValue === undefined) return false
 
             switch (op) {
@@ -186,10 +192,10 @@ export class FSCollection implements CollectionProvider<Document> {
             }
           })
         }
-        return doc[key as keyof Document] === value
+        return content[key as keyof Document] === value
       })
-    })
-    return filtered
+    )
+    return filtered.map(doc => doc.content)
   }
 
   async search(query: string, options?: SearchOptions<Document>): Promise<SearchResult<Document>[]> {
