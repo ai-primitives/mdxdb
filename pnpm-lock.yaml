@@ -46,8 +46,8 @@ importers:
   packages/ai:
     dependencies:
       '@mdxdb/types':
-        specifier: workspace:*
-        version: link:../types
+        specifier: ^0.1.0
+        version: 0.1.0
       openai:
         specifier: ^4.28.0
         version: 4.76.3(zod@3.24.1)
@@ -68,8 +68,8 @@ importers:
         specifier: ^1.9.1
         version: 1.9.1
       '@mdxdb/types':
-        specifier: ^0.0.1
-        version: 0.0.1
+        specifier: workspace:*
+        version: link:../types
       zod:
         specifier: ^3.24.1
         version: 3.24.1
@@ -166,8 +166,8 @@ importers:
         specifier: ^1.0.2
         version: 1.0.2
       '@mdxdb/types':
-        specifier: workspace:*
-        version: link:../types
+        specifier: ^0.1.0
+        version: 0.1.0
       ai:
         specifier: ^2.2.0
         version: 2.2.37(react@18.3.1)(solid-js@1.9.3)(svelte@4.2.19)(vue@3.5.13(typescript@5.5.4))
@@ -1155,8 +1155,8 @@ packages:
       '@types/react': '>=16'
       react: '>=16'
 
-  '@mdxdb/types@0.0.1':
-    resolution: {integrity: sha512-XoG2gFY5XzVKZOjSWmDCDOx3NVdUFjeRJXzOvTM/DCSL5Vt7k5Dl4zGBxOnoLhsyFB32/2GJ4lmokDjrIVGGUg==}
+  '@mdxdb/types@0.1.0':
+    resolution: {integrity: sha512-yh30UysfKbhjNnIpmsNmPk9Yc8U9lCHe8L0z2r/NrlWpSVa0IY/amoFmtYVaxIGTTTqDB0kHww+greOIkLntyQ==}
 
   '@mswjs/interceptors@0.37.3':
     resolution: {integrity: sha512-USvgCL/uOGFtVa6SVyRrC8kIAedzRohxIXN5LISlg5C5vLZCn7dgMFVSNhSF9cuBEFrm/O2spDWEZeMnw4ZXYg==}
@@ -4958,9 +4958,7 @@ snapshots:
       '@types/react': 18.3.17
       react: 18.3.1
 
-  '@mdxdb/types@0.0.1':
-    dependencies:
-      mdxld: 0.1.1
+  '@mdxdb/types@0.1.0': {}
 
   '@mswjs/interceptors@0.37.3':
     dependencies:
