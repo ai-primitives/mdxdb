@@ -97,6 +97,16 @@ export class ClickHouseCollectionProvider implements CollectionProvider<Document
 
     const { vector, collection, limit = 10, threshold = 0.7 } = options
 
+    // Validate vector dimensions and configuration
+    if (!this.config.vectorIndexConfig?.dimensions) {
+      throw new Error('Vector index configuration is missing or invalid')
+    }
+
+    const expectedDimensions = this.config.vectorIndexConfig.dimensions
+    if (vector.length !== expectedDimensions) {
+      throw new Error(`Vector dimensions do not match configuration. Expected ${expectedDimensions}, got ${vector.length}`)
+    }
+
     interface ClickHouseRow {
       id: string
       data: Document
@@ -146,7 +156,6 @@ export class ClickHouseCollectionProvider implements CollectionProvider<Document
         : new Error('Unknown error during vector search')
     }
   }
-}
 
 export class ClickHouseDatabaseProvider implements DatabaseProvider<Document> {
   readonly namespace: string
