@@ -64,6 +64,9 @@ importers:
 
   packages/clickhouse:
     dependencies:
+      '@clickhouse/client-common':
+        specifier: ^0.2.6
+        version: 0.2.10
       '@clickhouse/client-web':
         specifier: ^0.2.6
         version: 0.2.10
