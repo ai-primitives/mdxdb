@@ -1,4 +1,4 @@
-import { createClient, type ClickHouseClient } from '@clickhouse/client-web'
+import { createClient } from '@clickhouse/client-web'
 import type { DatabaseProvider, Document, CollectionProvider, SearchOptions, FilterQuery, VectorSearchOptions, SearchResult } from '@mdxdb/types'
 import { type Config } from './config'
 import { checkClickHouseVersion } from './utils'
@@ -6,7 +6,7 @@ import { checkClickHouseVersion } from './utils'
 class ClickHouseCollectionProvider implements CollectionProvider<Document> {
   constructor(
     public readonly path: string,
-    private readonly client: ClickHouseClient,
+    private readonly client: ReturnType<typeof createClient>,
     private readonly config: Config
   ) {
     void this.config.database
@@ -22,21 +22,23 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
     throw new Error(`Method not implemented for collection: ${collection}`)
   }
 
-  async add(collection: string, document: Document): Promise<void> {
+
+
+  async insert(collection: string, document: Document): Promise<void> {
     void this.client
     void document
     throw new Error(`Method not implemented for collection: ${collection}`)
   }
 
-  async update(collection: string, id: string, document: Document): Promise<void> {
+  async update(collection: string, filter: FilterQuery<Document>, document: Partial<Document>): Promise<void> {
     void this.client
     void document
-    throw new Error(`Method not implemented for collection: ${collection}, id: ${id}`)
+    throw new Error(`Method not implemented for collection: ${collection}, filter: ${JSON.stringify(filter)}`)
   }
 
-  async delete(collection: string, id: string): Promise<void> {
+  async delete(collection: string, filter: FilterQuery<Document>): Promise<void> {
     void this.client
-    throw new Error(`Method not implemented for collection: ${collection}, id: ${id}`)
+    throw new Error(`Method not implemented for collection: ${collection}, filter: ${JSON.stringify(filter)}`)
   }
 
   async find(filter: FilterQuery<Document>, options?: SearchOptions<Document>): Promise<Document[]> {
@@ -44,6 +46,12 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
     void filter
     void options
     throw new Error('Method not implemented for find operation')
+  }
+
+  async findOne(collection: string, filter: FilterQuery<Document>): Promise<Document | null> {
+    void this.client
+    void filter
+    throw new Error(`Method not implemented for collection: ${collection}, filter: ${JSON.stringify(filter)}`)
   }
 
   async search(query: string, options?: SearchOptions<Document>): Promise<SearchResult<Document>[]> {
@@ -63,10 +71,10 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
 class ClickHouseDatabaseProvider implements DatabaseProvider<Document> {
   readonly namespace: string
   public collections: CollectionProvider<Document>
-  private readonly client: ClickHouseClient
+  private readonly client: ReturnType<typeof createClient>
   private readonly config: Config
 
-  constructor(client: ClickHouseClient, config: Config) {
+  constructor(client: ReturnType<typeof createClient>, config: Config) {
     this.namespace = `clickhouse://${config.url}`
     this.client = client
     this.config = config

@@ -27,18 +27,24 @@ jobs:
       - run: pnpm install
       - name: Build types package
         run: cd packages/types && pnpm run build:types
-      - name: Build all packages
-        run: pnpm run build:packages
+      - name: Build packages in order
+        run: |
+          # Build packages in dependency order
+          for pkg in types clickhouse fs server; do
+            echo "Building $pkg..."
+            cd "packages/$pkg" && pnpm run build:packages && cd ../..
+          done
       - name: Run Tests
         run: |
           set +e  # Don't exit on error
           TEST_EXIT_CODE=0
-          for pkg in packages/*; do
-            if [ -d "$pkg/test" ] && [ -n "$(find "$pkg/test" -name '*.test.ts' -type f 2>/dev/null)" ]; then
-              echo "Testing $(basename $pkg)..."
-              (cd "$pkg" && pnpm test) || TEST_EXIT_CODE=1
+          # Run tests in dependency order
+          for pkg in types clickhouse fs server; do
+            if [ -d "packages/$pkg/test" ] && [ -n "$(find "packages/$pkg/test" -name '*.test.ts' -type f 2>/dev/null)" ]; then
+              echo "Testing $pkg..."
+              (cd "packages/$pkg" && pnpm test) || TEST_EXIT_CODE=1
             else
-              echo "No tests found for $(basename $pkg), skipping..."
+              echo "No tests found for $pkg, skipping..."
             fi
           done
           exit $TEST_EXIT_CODE

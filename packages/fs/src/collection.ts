@@ -79,11 +79,40 @@ export class FSCollection implements CollectionProvider<Document> {
     await fs.mkdir(nodePath.join(this.collectionPath, collection), { recursive: true })
   }
 
-  async add(collection: string, document: Document): Promise<void> {
+  async insert(collection: string, document: Document): Promise<void> {
     const id = document.id || webcrypto.randomUUID()
     document.id = id
     const fullPath = nodePath.join(collection, id)
     await this.writeDocument(fullPath, document)
+  }
+
+  async findOne(collection: string, filter: FilterQuery<Document>): Promise<Document | null> {
+    const collectionPath = nodePath.join(this.collectionPath, collection)
+    const docs = await this.get(collection)
+    const filtered = docs.filter(doc =>
+      Object.entries(filter).every(([key, value]) => {
+        if (typeof value === 'object' && value !== null) {
+          const operators = value as Record<string, unknown>
+          return Object.entries(operators).every(([op, val]) => {
+            const docValue = doc[key as keyof Document]
+            if (docValue === undefined) return false
+
+            switch (op) {
+              case '$eq': return docValue === val
+              case '$gt': return typeof docValue === 'number' && typeof val === 'number' && docValue > val
+              case '$gte': return typeof docValue === 'number' && typeof val === 'number' && docValue >= val
+              case '$lt': return typeof docValue === 'number' && typeof val === 'number' && docValue < val
+              case '$lte': return typeof docValue === 'number' && typeof val === 'number' && docValue <= val
+              case '$in': return Array.isArray(val) && val.includes(docValue)
+              case '$nin': return Array.isArray(val) && !val.includes(docValue)
+              default: return false
+            }
+          })
+        }
+        return doc[key as keyof Document] === value
+      })
+    )
+    return filtered[0] || null
   }
 
   async get(collection: string): Promise<Document[]> {
@@ -102,25 +131,34 @@ export class FSCollection implements CollectionProvider<Document> {
     return documents.filter((doc): doc is Document => doc !== null)
   }
 
-  async update(collection: string, id: string, document: Document): Promise<void> {
-    const existingDoc = await this.readDocument(nodePath.join(collection, id))
-    if (!existingDoc) {
-      throw new Error(`Document with id ${id} not found in collection ${collection}`)
+  async update(collection: string, filter: FilterQuery<Document>, document: Partial<Document>): Promise<void> {
+    const docs = await this.find(filter)
+    if (docs.length === 0) {
+      throw new Error('No documents found matching filter')
     }
-    const fullPath = nodePath.join(collection, id)
-    const filePath = nodePath.join(this.collectionPath, `${fullPath}.mdx`)
-    await fs.unlink(filePath)
-    await this.writeDocument(fullPath, document)
+
+    for (const doc of docs) {
+      if (!doc.id) continue // Skip documents without IDs
+      const updatedDoc = { ...doc, ...document, id: doc.id }
+      const fullPath = nodePath.join(collection, doc.id)
+      const filePath = nodePath.join(this.collectionPath, `${fullPath}.mdx`)
+      await fs.unlink(filePath)
+      await this.writeDocument(fullPath, updatedDoc)
+    }
   }
 
-  async delete(collection: string, id: string): Promise<void> {
-    const filePath = nodePath.join(this.collectionPath, collection, `${id}.mdx`)
-    try {
-      await fs.unlink(filePath)
-      await this.storageService.deleteEmbedding(nodePath.join(collection, id))
-    } catch (error) {
-      if ((error as { code?: string }).code !== 'ENOENT') {
-        throw error
+  async delete(collection: string, filter: FilterQuery<Document>): Promise<void> {
+    const docs = await this.find(filter)
+    for (const doc of docs) {
+      if (!doc.id) continue // Skip documents without IDs
+      const filePath = nodePath.join(this.collectionPath, collection, `${doc.id}.mdx`)
+      try {
+        await fs.unlink(filePath)
+        await this.storageService.deleteEmbedding(nodePath.join(collection, doc.id))
+      } catch (error) {
+        if ((error as { code?: string }).code !== 'ENOENT') {
+          throw error
+        }
       }
     }
   }
@@ -168,7 +206,6 @@ export class FSCollection implements CollectionProvider<Document> {
     }
 
     const docs = await this.getAllDocuments()
-    const threshold = options.threshold ?? 0.7
 
     const results = await Promise.all(
       docs.map(async ({ id, content }) => {
@@ -176,11 +213,7 @@ export class FSCollection implements CollectionProvider<Document> {
         if (!storedEmbedding?.embedding) {
           console.debug(`No embedding found for document ${id}`)
           return {
-            document: {
-              id,
-              content: content.content,
-              data: content.data || {}
-            },
+            document: content,
             score: 0
           }
         }
@@ -191,18 +224,14 @@ export class FSCollection implements CollectionProvider<Document> {
         )
         console.debug(`Document ${id} similarity: ${similarity}`)
         return {
-          document: {
-            id,
-            content: content.content,
-            data: content.data || {}
-          },
+          document: content,
           score: similarity
         }
       })
     )
 
     return results
-      .filter(result => result.score >= threshold)
+      .filter(result => result.score >= (options.threshold ?? 0.7))
       .sort((a, b) => b.score - a.score)
       .slice(0, options.limit || 10)
   }

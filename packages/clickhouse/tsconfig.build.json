@@ -1,15 +1,18 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "types": ["@cloudflare/workers-types", "node"],
+    "types": ["node"],
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "target": "ES2022",
-    "composite": true
+    "composite": true,
+    "paths": {
+      "@mdxdb/types": ["../types/src"]
+    }
   },
   "references": [
-    { "path": "../types" },
-    { "path": "../clickhouse" }
+    { "path": "../types" }
   ],
+  "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "test"]
 }
