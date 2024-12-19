@@ -153,7 +153,8 @@ export class FSCollection implements CollectionProvider<Document> {
     for (const doc of filtered) {
       if (!doc.id) continue // Skip documents without IDs
       const updatedDoc = { ...doc, ...document, id: doc.id }
-      await this.updateDocument(doc.id, updatedDoc)
+      const fullPath = nodePath.join(collection, doc.id)
+      await this.updateDocument(fullPath, updatedDoc)
     }
   }
 
