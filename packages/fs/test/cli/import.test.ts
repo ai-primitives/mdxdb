@@ -16,9 +16,10 @@ describe('import command', () => {
     db = new FSDatabase(tempDir)
     await db.connect()
 
-    // Set up fixtures directory
+    // Set up fixtures directory and template file
     fixturesDir = resolve(__dirname, 'fixtures')
     await mkdir(fixturesDir, { recursive: true })
+    await writeFile(join(fixturesDir, 'template.mdx'), '# {title}\n\nWritten by {author}\n\n{content}')
   })
 
   afterEach(async () => {
@@ -34,7 +35,7 @@ Test Post,A test description,John Doe`
       await writeFile(csvFile, csvContent)
 
       await importCommand.parseAsync([
-        process.execPath, 'import',
+        process.execPath, join(__dirname, '../../bin/mdxdb.js'), 'import',
         csvFile,
         '--collection', 'posts'
       ])
@@ -58,7 +59,7 @@ BlogPosting,https://schema.org,Test Post`
       await writeFile(csvFile, csvContent)
 
       await importCommand.parseAsync([
-        process.execPath, 'import',
+        process.execPath, join(__dirname, '../../bin/mdxdb.js'), 'import',
         csvFile,
         '--collection', 'posts'
       ])
@@ -83,7 +84,7 @@ BlogPosting,https://schema.org,Test Post`
       await writeFile(jsonlFile, jsonlContent)
 
       await importCommand.parseAsync([
-        process.execPath, 'import',
+        process.execPath, join(__dirname, '../../bin/mdxdb.js'), 'import',
         jsonlFile,
         '--collection', 'posts'
       ])
@@ -111,7 +112,7 @@ BlogPosting,https://schema.org,Test Post`
       await writeFile(csvFile, csvContent)
 
       await importCommand.parseAsync([
-        process.execPath,
+        process.execPath, join(__dirname, '../../bin/mdxdb.js'),
         'import',
         csvFile,
         '--collection', 'posts',
@@ -131,7 +132,7 @@ BlogPosting,https://schema.org,Test Post`
       await writeFile(csvFile, csvContent)
 
       await importCommand.parseAsync([
-        process.execPath,
+        process.execPath, join(__dirname, '../../bin/mdxdb.js'),
         'import',
         csvFile,
         '--collection', 'posts',
@@ -171,7 +172,7 @@ BlogPosting,https://schema.org,Test Post`
       await writeFile(jsonlFile, jsonlContent)
 
       await importCommand.parseAsync([
-        process.execPath,
+        process.execPath, join(__dirname, '../../bin/mdxdb.js'),
         'import',
         jsonlFile,
         '--collection', 'posts'
@@ -203,7 +204,7 @@ BlogPosting,https://schema.org,Test Post,"[{\\"@type\\":\\"Person\\",\\"name\\":
       await writeFile(csvFile, csvContent)
 
       await importCommand.parseAsync([
-        process.execPath,
+        process.execPath, join(__dirname, '../../bin/mdxdb.js'),
         'import',
         csvFile,
         '--collection', 'posts'
@@ -239,7 +240,7 @@ BlogPosting,https://schema.org,Test Post,"[{\\"@type\\":\\"Person\\",\\"name\\":
       await writeFile(csvFile, csvContent)
 
       await expect(importCommand.parseAsync([
-        process.execPath,
+        process.execPath, join(__dirname, '../../bin/mdxdb.js'),
         'import',
         csvFile,
         '--collection', 'posts'
@@ -252,7 +253,7 @@ BlogPosting,https://schema.org,Test Post,"[{\\"@type\\":\\"Person\\",\\"name\\":
       await writeFile(jsonlFile, jsonlContent)
 
       await expect(importCommand.parseAsync([
-        process.execPath,
+        process.execPath, join(__dirname, '../../bin/mdxdb.js'),
         'import',
         jsonlFile,
         '--collection', 'posts'

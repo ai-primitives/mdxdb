@@ -77,10 +77,12 @@ export const importCommand = new Command('import')
         try {
           const templatePath = path.isAbsolute(options.template)
             ? options.template
-            : path.resolve(path.dirname(file), options.template)
+            : path.resolve(process.cwd(), options.template)
 
           if (!existsSync(templatePath)) {
-            throw new Error(`Template file not found: ${templatePath}`)
+            console.error(`Template file not found: ${templatePath}`)
+            console.error(`Template path attempted: ${options.template}`)
+            throw new Error(`Failed to read template file: ENOENT: no such file or directory, open '${templatePath}'. Make sure the template file exists and is accessible.`)
           }
 
           template = await readFile(templatePath, 'utf-8')
