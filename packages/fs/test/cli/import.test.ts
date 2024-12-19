@@ -85,7 +85,7 @@ BlogPosting,https://schema.org,Test Post`
 
   describe('JSONL import', () => {
     it('should import JSONL file with nested objects', async () => {
-      const jsonlContent = `{"title":"Test Post","metadata":{"author":"John Doe","tags":["test","example"]}}\n{"title":"Another Post","metadata":{"author":"Jane Doe","tags":["sample"]}}`
+      const jsonlContent = '{"title":"Test Post","metadata":{"author":"John Doe","tags":["test","example"]}}\n{"title":"Another Post","metadata":{"author":"Jane Doe","tags":["sample"]}}'
       const jsonlFile = join(tempDir, 'test.jsonl')
       await writeFile(jsonlFile, jsonlContent)
 

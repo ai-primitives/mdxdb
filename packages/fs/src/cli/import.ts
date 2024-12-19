@@ -14,7 +14,7 @@ interface ImportOptions {
   format?: 'csv' | 'jsonl'
   idField?: string
   contentField?: string
-  template?: string
+  template?: string | boolean  // Can be true when --template is used without value
   frontmatterFields?: string
 }
 
@@ -73,7 +73,7 @@ export const importCommand = new Command('import')
 
       // Load template if specified and not empty
       let template = ''
-      if (options.template && options.template.trim() !== '') {
+      if (typeof options.template === 'string' && options.template.trim() !== '') {
         try {
           const templatePath = path.isAbsolute(options.template)
             ? options.template
