@@ -26,7 +26,7 @@
   "dependencies": {
     "@clickhouse/client-common": "^0.2.6",
     "@clickhouse/client-web": "^0.2.6",
-    "@mdxdb/types": "workspace:*",
+    "@mdxdb/types": "^0.1.0",
     "zod": "^3.22.0"
   },
   "devDependencies": {
