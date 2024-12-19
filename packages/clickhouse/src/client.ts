@@ -1,9 +1,12 @@
 import { createClient, type ClickHouseClient } from '@clickhouse/client-web'
-import type { DatabaseProvider, Document, CollectionProvider, SearchOptions, FilterQuery, VectorSearchOptions, SearchResult } from '@mdxdb/types'
-import { type Config } from './config'
+import type {
+  DatabaseProvider, Document, CollectionProvider, SearchOptions,
+  FilterQuery, VectorSearchOptions, SearchResult
+} from '@mdxdb/types'
+import type { Config } from './config'
 import { checkClickHouseVersion } from './utils'
 
-class ClickHouseCollectionProvider implements CollectionProvider<Document> {
+export class ClickHouseCollectionProvider implements CollectionProvider<Document> {
   constructor(
     public readonly path: string,
     private readonly client: ClickHouseClient,
@@ -23,9 +26,30 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
   }
 
   async add(collection: string, document: Document): Promise<void> {
-    void this.client
-    void document
-    throw new Error(`Method not implemented for collection: ${collection}`)
+    try {
+      const query = {
+        query: `
+          INSERT INTO ${this.config.dataTable}
+          (id, type, data, content, embedding, collection)
+          VALUES
+          ({id:String}, {type:String}, {data:JSON}, {content:String}, {embedding:Array(Float64)}, {collection:String})
+        `,
+        parameters: {
+          id: document.id,
+          type: document.type,
+          data: JSON.stringify(document),
+          content: document.content,
+          embedding: document.embeddings,
+          collection
+        }
+      }
+      await this.client.query(query)
+    } catch (error) {
+      console.error('Failed to add document:', error)
+      throw error instanceof Error
+        ? error
+        : new Error('Unknown error while adding document')
+    }
   }
 
   async update(collection: string, id: string, document: Document): Promise<void> {
@@ -35,8 +59,24 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
   }
 
   async delete(collection: string, id: string): Promise<void> {
-    void this.client
-    throw new Error(`Method not implemented for collection: ${collection}, id: ${id}`)
+    try {
+      const query = {
+        query: `
+          DELETE FROM ${this.config.dataTable}
+          WHERE id = {id:String} AND collection = {collection:String}
+        `,
+        parameters: {
+          id,
+          collection
+        }
+      }
+      await this.client.query(query)
+    } catch (error) {
+      console.error('Failed to delete document:', error)
+      throw error instanceof Error
+        ? error
+        : new Error('Unknown error while deleting document')
+    }
   }
 
   async find(filter: FilterQuery<Document>, options?: SearchOptions<Document>): Promise<Document[]> {
@@ -54,13 +94,74 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
   }
 
   async vectorSearch(options: VectorSearchOptions & SearchOptions<Document>): Promise<SearchResult<Document>[]> {
-    void this.client
-    void options
-    throw new Error('Method not implemented for vector search operation')
+    if (!options.vector) {
+      throw new Error('Vector is required for vector search')
+    }
+
+    const { vector, collection, limit = 10, threshold = 0.7 } = options
+
+    // Validate vector dimensions and configuration
+    if (!this.config.vectorIndexConfig?.dimensions) {
+      throw new Error('Vector index configuration is missing or invalid')
+    }
+
+    const expectedDimensions = this.config.vectorIndexConfig.dimensions
+    if (vector.length !== expectedDimensions) {
+      throw new Error(`Vector dimensions do not match configuration. Expected ${expectedDimensions}, got ${vector.length}`)
+    }
+
+    interface ClickHouseRow {
+      id: string
+      data: Document
+      score: number
+    }
+
+    const query = {
+      query: `
+        SELECT id, data, cosineDistance(embedding, [${vector.join(',')}]) as score
+        FROM ${this.config.dataTable}
+        WHERE collection = {collection:String}
+        HAVING score <= {threshold:Float64}
+        ORDER BY score ASC
+        LIMIT {limit:UInt32}
+      `,
+      format: 'JSONEachRow' as const,
+      parameters: {
+        collection,
+        threshold,
+        limit
+      }
+    }
+
+    try {
+      const resultSet = await this.client.query(query)
+      const rawData = await resultSet.json<unknown>()
+      const rows = rawData && typeof rawData === 'object' && 'data' in rawData
+        ? (rawData.data as ClickHouseRow[])
+        : Array.isArray(rawData)
+          ? rawData as ClickHouseRow[]
+          : []
+
+      return rows.map((row) => {
+        const result: SearchResult<Document> = {
+          document: row.data,
+          score: row.score
+        }
+        if (options.includeVectors) {
+          result.vector = vector
+        }
+        return result
+      })
+    } catch (error) {
+      console.error('Vector search failed:', error)
+      throw error instanceof Error
+        ? error
+        : new Error('Unknown error during vector search')
+    }
   }
 }
 
-class ClickHouseDatabaseProvider implements DatabaseProvider<Document> {
+export class ClickHouseDatabaseProvider implements DatabaseProvider<Document> {
   readonly namespace: string
   public collections: CollectionProvider<Document>
   private readonly client: ClickHouseClient

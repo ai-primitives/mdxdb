@@ -1,19 +1,28 @@
 import { createApp } from './core'
 import type { ServerConfig, AppEnv } from './core'
 import { createClickHouseClient } from '@mdxdb/clickhouse'
+import type { Config, VectorIndexConfig } from '@mdxdb/clickhouse'
 import type { ExecutionContext } from '@cloudflare/workers-types'
 
 // Initialize ClickHouse client with worker-specific configuration
 const initializeClickHouseClient = async (env: AppEnv['Bindings']) => {
   const url = env.CLICKHOUSE_URL || 'http://localhost:8123'
-  return await createClickHouseClient({
+  const vectorConfig: VectorIndexConfig = {
+    type: 'hnsw',
+    metric: 'cosineDistance',
+    dimensions: 256
+  }
+
+  const config: Config = {
     url,
     database: 'mdxdb',
-    username: 'default',
-    password: '',
+    username: env.CLICKHOUSE_USERNAME || 'default',
+    password: env.CLICKHOUSE_PASSWORD || '',
     oplogTable: 'oplog',
-    dataTable: 'data'
-  })
+    dataTable: 'data',
+    vectorIndexConfig: vectorConfig
+  }
+  return await createClickHouseClient(config)
 }
 
 // Create server configuration

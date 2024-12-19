@@ -1,10 +1,21 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "../../utilities/tsconfig/base.json",
   "compilerOptions": {
     "outDir": "dist",
+    "rootDir": "src",
+    "baseUrl": ".",
+    "composite": true,
     "types": ["@cloudflare/workers-types", "vitest/globals", "node"],
-    "typeRoots": ["./src/types", "./node_modules/@types"]
+    "typeRoots": ["./src/types", "./node_modules/@types"],
+    "paths": {
+      "@mdxdb/types": ["../types/dist"],
+      "@mdxdb/clickhouse": ["../clickhouse/dist"]
+    }
   },
   "include": ["src/**/*.ts", "test/**/*.ts"],
-  "exclude": ["node_modules", "dist"]
+  "exclude": ["node_modules", "dist"],
+  "references": [
+    { "path": "../types" },
+    { "path": "../clickhouse" }
+  ]
 }

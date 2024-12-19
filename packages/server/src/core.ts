@@ -8,6 +8,7 @@ import type { DatabaseProvider, Document } from '@mdxdb/types'
 import { compileToESM } from './compiler'
 import { deployToCloudflare, type DeploymentOptions } from './deployment'
 import { authMiddleware } from './middleware/auth'
+import { errorMiddleware } from './middleware/error'
 
 // Request validation schemas
 const searchSchema = z.object({
@@ -19,6 +20,7 @@ const searchSchema = z.object({
 const vectorSearchSchema = z.object({
   vector: z.array(z.number()),
   limit: z.number().optional(),
+  threshold: z.number().optional(),
   collection: z.string()
 })
 
@@ -62,6 +64,8 @@ export interface ServerContext {
 export interface ServerBindings {
   JWT_SECRET: string
   CLICKHOUSE_URL?: string
+  CLICKHOUSE_USERNAME?: string
+  CLICKHOUSE_PASSWORD?: string
 }
 
 export type AppEnv = {
@@ -86,6 +90,7 @@ export const createApp = (config: ServerConfig) => {
     await next()
   }
 
+  app.use('*', errorMiddleware)
   app.use('*', providerMiddleware)
   app.use('*', authMiddleware)
   app.use('*', cors())
@@ -169,18 +174,19 @@ export const createApp = (config: ServerConfig) => {
   app.post('/collections/:name/vector-search', zValidator('json', vectorSearchSchema), async (c: Context<AppEnv>) => {
     const { name } = c.req.param()
     const provider = c.get('provider')
-    const { vector, limit } = await c.req.json()
+    const { vector, limit, threshold = 0.7 } = await c.req.json()
 
     try {
       const results = await provider.collections.vectorSearch({
         vector,
         collection: name,
-        limit: limit || 10
+        limit: limit || 10,
+        threshold
       })
       return c.json({ results })
     } catch (error) {
       console.error('Failed to perform vector search:', error)
-      return c.json({ error: 'Failed to perform vector search' }, 500)
+      throw error
     }
   })
 

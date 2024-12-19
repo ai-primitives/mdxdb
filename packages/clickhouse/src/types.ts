@@ -2,24 +2,18 @@
  * Type definitions for ClickHouse provider
  */
 import type { Document } from '@mdxdb/types'
+import type { Config } from './config'
 
 /**
  * Configuration options for ClickHouse client
  */
-export interface ClickHouseConfig {
-  url?: string
-  username?: string
-  password?: string
-  database?: string
-  oplogTable?: string
-  dataTable?: string
-}
+export type ClickHouseConfig = Config
 
 /**
  * ClickHouse client interface
  */
 export interface ClickHouseClient {
-  config: ClickHouseConfig
+  config: Config
   connect(): Promise<void>
   disconnect(): Promise<void>
   query<T = Document>(sql: string, params?: Record<string, unknown>): Promise<T[]>
