@@ -23,9 +23,30 @@ export class ClickHouseCollectionProvider implements CollectionProvider<Document
   }
 
   async add(collection: string, document: Document): Promise<void> {
-    void this.client
-    void document
-    throw new Error(`Method not implemented for collection: ${collection}`)
+    try {
+      const query = {
+        query: `
+          INSERT INTO ${this.config.dataTable}
+          (id, type, data, content, embedding, collection)
+          VALUES
+          ({id:String}, {type:String}, {data:JSON}, {content:String}, {embedding:Array(Float64)}, {collection:String})
+        `,
+        parameters: {
+          id: document.id,
+          type: document.type,
+          data: JSON.stringify(document),
+          content: document.content,
+          embedding: document.embeddings,
+          collection
+        }
+      }
+      await this.client.query(query)
+    } catch (error) {
+      console.error('Failed to add document:', error)
+      throw error instanceof Error
+        ? error
+        : new Error('Unknown error while adding document')
+    }
   }
 
   async update(collection: string, id: string, document: Document): Promise<void> {
@@ -35,8 +56,24 @@ export class ClickHouseCollectionProvider implements CollectionProvider<Document
   }
 
   async delete(collection: string, id: string): Promise<void> {
-    void this.client
-    throw new Error(`Method not implemented for collection: ${collection}, id: ${id}`)
+    try {
+      const query = {
+        query: `
+          DELETE FROM ${this.config.dataTable}
+          WHERE id = {id:String} AND collection = {collection:String}
+        `,
+        parameters: {
+          id,
+          collection
+        }
+      }
+      await this.client.query(query)
+    } catch (error) {
+      console.error('Failed to delete document:', error)
+      throw error instanceof Error
+        ? error
+        : new Error('Unknown error while deleting document')
+    }
   }
 
   async find(filter: FilterQuery<Document>, options?: SearchOptions<Document>): Promise<Document[]> {

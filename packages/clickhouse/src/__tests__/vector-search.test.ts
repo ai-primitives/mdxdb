@@ -10,7 +10,7 @@ describe('ClickHouse Vector Search', () => {
     nativePort: 9000,
     username: 'default',
     password: '',
-    database: 'test_db',
+    database: 'mdxdb',
     oplogTable: 'oplog',
     dataTable: 'data',
     vectorIndexConfig: {
