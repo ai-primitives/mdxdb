@@ -1,6 +1,9 @@
 import { createClient, type ClickHouseClient } from '@clickhouse/client-web'
-import type { DatabaseProvider, Document, CollectionProvider, SearchOptions, FilterQuery, VectorSearchOptions, SearchResult } from '@mdxdb/types'
-import { type Config } from './config'
+import type {
+  DatabaseProvider, Document, CollectionProvider, SearchOptions,
+  FilterQuery, VectorSearchOptions, SearchResult
+} from '@mdxdb/types'
+import type { Config } from './config'
 import { checkClickHouseVersion } from './utils'
 
 export class ClickHouseCollectionProvider implements CollectionProvider<Document> {
