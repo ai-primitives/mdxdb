@@ -3,7 +3,8 @@
   "private": true,
   "type": "module",
   "workspaces": [
-    "packages/*"
+    "packages/types",
+    "packages/example-package"
   ],
   "scripts": {
     "build": "turbo run build",
