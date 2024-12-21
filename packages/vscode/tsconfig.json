@@ -1,7 +1,7 @@
 {
 	"compilerOptions": {
 		"module": "ES2022",
-		"moduleResolution": "bundler",
+		"moduleResolution": "node",
 		"target": "ES2022",
 		"outDir": "out",
 		"lib": [
@@ -22,6 +22,10 @@
 		"noUnusedParameters": true  /* Report errors on unused parameters. */
 	},
 	"include": ["src/**/*", "src/**/*.d.ts"],
+	"references": [
+		{ "path": "../types" },
+		{ "path": "../fs" }
+	],
 	"exclude": [
 		"node_modules",
 		".vscode-test",

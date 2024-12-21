@@ -10,7 +10,7 @@ interface MDXDocument extends Document {
   metadata: {
     id: string;
     type: 'mdx';
-    path: string;
+    path: string[];
     ts: number;
   };
 }
@@ -92,7 +92,7 @@ export class MDXFileSystemProvider implements vscode.FileSystemProvider {
       metadata: {
         id: uri.fsPath,
         type: 'mdx',
-        path: uri.fsPath,
+        path: uri.fsPath.split(path.sep).filter(Boolean),
         ts: Date.now()
       }
     }
