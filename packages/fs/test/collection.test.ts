@@ -45,9 +45,13 @@ describe('FSCollection', () => {
 
       await collection.add('test1', doc)
       const docs = await collection.get('test1')
+      const results = await collection.find({ metadata: { id: 'test1' } })
 
       expect(docs).toHaveLength(1)
       expect(docs[0]).toMatchObject(doc)
+      expect(results).toHaveLength(1)
+      expect(results[0].document).toMatchObject(doc)
+      expect(results[0].score).toBe(1)
       expect(EmbeddingsService.prototype.generateEmbedding).toHaveBeenCalledWith('test content')
       expect(EmbeddingsStorageService.prototype.storeEmbedding).toHaveBeenCalled()
     })
@@ -74,9 +78,13 @@ describe('FSCollection', () => {
       await collection.add('test1', doc)
       await collection.update('test1', 'test1', updatedDoc)
       const docs = await collection.get('test1')
+      const results = await collection.find({ metadata: { id: 'test1' } })
 
       expect(docs).toHaveLength(1)
       expect(docs[0]).toMatchObject(updatedDoc)
+      expect(results).toHaveLength(1)
+      expect(results[0].document).toMatchObject(updatedDoc)
+      expect(results[0].score).toBe(1)
       expect(EmbeddingsService.prototype.generateEmbedding).toHaveBeenCalledWith('updated content')
       expect(EmbeddingsStorageService.prototype.storeEmbedding).toHaveBeenCalled()
     })
@@ -95,8 +103,10 @@ describe('FSCollection', () => {
       await collection.add('test1', doc)
       await collection.delete('test1', 'test1')
       const docs = await collection.get('test1')
+      const results = await collection.find({ metadata: { id: 'test1' } })
 
       expect(docs).toHaveLength(0)
+      expect(results).toHaveLength(0)
       expect(EmbeddingsStorageService.prototype.deleteEmbedding).toHaveBeenCalledWith('test1/test1')
     })
 

@@ -20,8 +20,7 @@ describe('Vector Search', () => {
   beforeEach(() => {
     // Mock configuration
     mockConfig = {
-      protocol: 'http',
-      host: 'localhost',
+      host: 'http://localhost',
       port: 8123,
       username: 'default',
       password: '',

@@ -2,6 +2,9 @@
   "$schema": "https://turbo.build/schema.json",
   "ui": "tui",
   "tasks": {
+    "clean": {
+      "cache": false
+    },
     "build": {
       "dependsOn": ["build:types", "build:packages"],
       "outputs": [
@@ -24,7 +27,7 @@
       "persistent": true
     },
     "build:types": {
-      "dependsOn": ["^build:types"],
+      "dependsOn": ["^build:types", "clean"],
       "cache": false,
       "outputs": ["dist/**/*", "*.tsbuildinfo"]
     },

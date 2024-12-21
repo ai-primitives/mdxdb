@@ -5,9 +5,10 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "rm -rf dist && tsc --declaration --declarationMap",
-    "build:types": "rm -rf dist && tsc --emitDeclarationOnly --declaration --declarationMap",
-    "build:packages": "rm -rf dist && tsc --declaration --declarationMap",
+    "build": "tsc --declaration --declarationMap",
+    "build:types": "tsc --emitDeclarationOnly --declaration --declarationMap",
+    "build:packages": "tsc --declaration --declarationMap",
+    "clean": "rm -rf dist",
     "test": "vitest run",
     "lint": "eslint 'src/**/*.ts' --ignore-pattern '*.d.ts'"
   },

@@ -48,6 +48,7 @@ beforeAll(async () => {
     await client.exec({
       query: `
         CREATE TABLE IF NOT EXISTS ${dockerTestConfig.database}.${dockerTestConfig.dataTable} (
+          id String,
           metadata JSON,
           type String,
           ns String,
@@ -59,10 +60,13 @@ beforeAll(async () => {
           ts UInt32,
           hash JSON,
           version UInt64,
-          sign Int8
+          sign Int8,
+          INDEX idx_content content TYPE full_text GRANULARITY 1,
+          INDEX idx_embedding embedding TYPE vector_similarity('hnsw', 'cosineDistance')
         ) ENGINE = VersionedCollapsingMergeTree(sign, version)
-        ORDER BY (JSONExtractString(metadata, 'id'), version)
+        ORDER BY (id, version)
         AS SELECT
+          JSONExtractString(metadata, 'id') as id,
           metadata,
           type,
           ns,

@@ -58,7 +58,7 @@ export class FSCollection implements CollectionProvider<Document> {
                 content,
                 {
                   $id: docId,
-                  $type: 'document'
+                  $type: 'document' as string
                 },
                 {
                   id: docId,
@@ -96,12 +96,12 @@ export class FSCollection implements CollectionProvider<Document> {
         parsedContent?.content || content,
         {
           $id: docId,
-          $type: parsedContent?.metadata?.type || 'document',
+          $type: (parsedContent?.metadata?.type as string) || 'document',
           ...(parsedContent?.data || {})
         },
         {
-          id: parsedContent?.metadata?.id || docId,
-          type: parsedContent?.metadata?.type || 'document',
+          id: (parsedContent?.metadata?.id as string) || docId,
+          type: (parsedContent?.metadata?.type as string) || 'document',
           ts: Date.now(),
           ...(parsedContent?.metadata || {})
         },
@@ -175,7 +175,7 @@ export class FSCollection implements CollectionProvider<Document> {
     }
 
     // Sync id across document
-    document.id = document.metadata.id
+    document.id = document.metadata.id as string
 
     // Initialize or update data
     document.data = {
@@ -187,7 +187,7 @@ export class FSCollection implements CollectionProvider<Document> {
     // Set collections
     document.collections = document.collections || [collection]
 
-    const fullPath = nodePath.join(collection, document.id)
+    const fullPath = nodePath.join(collection, document.id || '')
     await this.writeDocument(fullPath, document)
   }
 
@@ -214,8 +214,8 @@ export class FSCollection implements CollectionProvider<Document> {
     }
     if (!document.metadata) {
       document.id = id
-      document.metadata = { id: id, type: 'document' }
-      document.data = { $id: id, $type: 'document' }
+      document.metadata = { id: id, type: 'document' as string }
+      document.data = { $id: id, $type: 'document' as string }
     } else {
       document.id = id
       document.data.$id = id
@@ -243,7 +243,7 @@ export class FSCollection implements CollectionProvider<Document> {
     }
   }
 
-  async find(filter: FilterQuery<Document>): Promise<Document[]> {
+  async find(filter: FilterQuery<Document>, options?: SearchOptions<Document>): Promise<Document[]> {
     const docs = await this.getAllDocuments()
     const filtered = docs.filter(({ content }) => {
       return Object.entries(filter).every(([key, value]) => {
@@ -257,7 +257,7 @@ export class FSCollection implements CollectionProvider<Document> {
               case '$eq': return docValue === val
               case '$gt': return typeof docValue === 'number' && typeof val === 'number' && docValue > val
               case '$gte': return typeof docValue === 'number' && typeof val === 'number' && docValue >= val
-              case '$lt': return typeof docValue === 'number' && typeof val === 'number' && docValue < val
+              case '$lt': return typeof docValue === 'number' && typeof val === 'number' && docValue <= val
               case '$lte': return typeof docValue === 'number' && typeof val === 'number' && docValue <= val
               case '$in': return Array.isArray(val) && val.includes(docValue)
               case '$nin': return Array.isArray(val) && !val.includes(docValue)
@@ -268,7 +268,33 @@ export class FSCollection implements CollectionProvider<Document> {
         return content[key as keyof Document] === value
       })
     })
-    return filtered.map(doc => doc.content)
+
+    // Map to Document[] directly without SearchResult wrapper
+    const results = filtered.map(doc => new FSDocument(
+      doc.content.id || '',  // Ensure id is never undefined
+      doc.content.content,
+      {
+        ...doc.content.data,
+        $id: doc.content.id || '',
+        $type: (doc.content.metadata?.type || 'document') as string
+      },
+      {
+        ...doc.content.metadata,
+        type: doc.content.metadata?.type || 'document'
+      },
+      doc.content.embeddings,
+      doc.content.collections
+    ))
+
+    // Apply search options
+    let finalResults = results
+    if (options?.limit !== undefined) {
+      finalResults = finalResults.slice(options.offset || 0, (options.offset || 0) + options.limit)
+    } else if (options?.offset !== undefined) {
+      finalResults = finalResults.slice(options.offset)
+    }
+
+    return finalResults
   }
 
   async search(query: string, options?: SearchOptions<Document>): Promise<SearchResult<Document>[]> {
@@ -300,8 +326,8 @@ export class FSCollection implements CollectionProvider<Document> {
               {
                 ...(content.data || {}),
                 $id: id,
-                $type: 'document',
-                $context: content.data?.$context
+                $type: 'document' as string,
+                $context: content.data?.$context as string | Record<string, unknown> | undefined
               },
               {
                 id: id,
@@ -326,8 +352,8 @@ export class FSCollection implements CollectionProvider<Document> {
             {
               ...(content.data || {}),
               $id: id,
-              $type: 'document',
-              $context: content.data?.$context
+              $type: 'document' as string,
+              $context: content.data?.$context as string | Record<string, unknown> | undefined
             },
             {
               id: id,

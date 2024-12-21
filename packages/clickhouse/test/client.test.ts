@@ -18,7 +18,7 @@ vi.mock('@clickhouse/client-web', () => ({
 describe('ClickHouse Client', () => {
   it('should create client with valid config', async () => {
     const config: Config = {
-      host: 'localhost',
+      host: 'http://localhost',
       port: 8123,
       username: 'default',
       password: '',

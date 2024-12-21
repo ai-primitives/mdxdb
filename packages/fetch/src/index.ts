@@ -73,7 +73,7 @@ class FetchCollectionProvider<T extends Document = Document> implements Collecti
     })
   }
 
-  async find(filter: FilterQuery<T>, options?: SearchOptions<T>): Promise<T[]> {
+  async find(filter: FilterQuery<T>, options?: SearchOptions<T>): Promise<SearchResult<T>[]> {
     const response = await this._fetchWithRetry(`collections/${this.path}/find`, {
       method: 'POST',
       headers: this._headers,

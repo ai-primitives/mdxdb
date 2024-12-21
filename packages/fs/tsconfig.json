@@ -16,7 +16,7 @@
       "@mdxdb/types/*": ["../types/dist/*"]
     }
   },
-  "include": ["src/**/*", "src/**/*.ts"],
+  "include": ["src/**/*", "src/**/*.ts", "src/document.ts", "src/collection.ts"],
   "exclude": ["node_modules", "dist", "test"],
   "references": [
     { "path": "../types" }
