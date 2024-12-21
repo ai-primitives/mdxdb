@@ -24,16 +24,23 @@ export class FSCollection implements CollectionProvider<Document> {
     this.collectionPath = nodePath.join(basePath, path)
   }
 
-  private async readDocument(id: string): Promise<Document | null> {
+  protected async readDocument(id: string): Promise<Document | null> {
     try {
+      // Try node_modules first
+      if (id.startsWith('node_modules/')) {
+        const modulePath = nodePath.join(process.cwd(), id)
+        if (await fs.access(modulePath).then(() => true).catch(() => false)) {
+          const content = await fs.readFile(modulePath, 'utf-8')
+          const docId = id.split('/').pop() || id
+          return { id: docId, content, data: {} }
+        }
+      }
+
+      // Fall back to collection path
       const filePath = nodePath.join(this.collectionPath, `${id}.mdx`)
       const content = await fs.readFile(filePath, 'utf-8')
       const docId = id.split('/').pop() || id
-      return {
-        id: docId,
-        content,
-        data: {}
-      }
+      return { id: docId, content, data: {} }
     } catch (error) {
       if ((error as { code?: string }).code === 'ENOENT') {
         return null
@@ -205,5 +212,9 @@ export class FSCollection implements CollectionProvider<Document> {
       .filter(result => result.score >= threshold)
       .sort((a, b) => b.score - a.score)
       .slice(0, options.limit || 10)
+  }
+
+  async readSchemaOrgFile(filename: string): Promise<Document | null> {
+    return this.readDocument(`node_modules/mdxld/types/schema.org/${filename}`)
   }
 }
