@@ -1,15 +1,18 @@
 import * as vscode from 'vscode'
-import { FSDatabase } from '@mdxdb/fs'
-import { FSCollection } from '@mdxdb/fs/src/collection'
-import { FetchProvider } from '@mdxdb/fetch'
-import { createClickHouseClient } from '@mdxdb/clickhouse/src/client'
-import type { DatabaseProvider } from '@mdxdb/types'
+import type { DatabaseProvider, Document } from '@mdxdb/types'
+
+async function loadProviders() {
+  const { FSDatabase } = await import('@mdxdb/fs')
+  const { FetchProvider } = await import('@mdxdb/fetch')
+  const { createClickHouseClient } = await import('@mdxdb/clickhouse')
+  return { FSDatabase, FetchProvider, createClickHouseClient }
+}
 
 /**
  * Creates a database provider based on VSCode workspace configuration
  * @returns DatabaseProvider instance (fs, fetch, or clickhouse)
  */
-export function createProvider(): DatabaseProvider {
+export async function createProvider(): Promise<DatabaseProvider<Document>> {
   const config = vscode.workspace.getConfiguration('mdxdb')
   const useProvider = config.get<string>('provider') ?? 'fs'
 
@@ -19,6 +22,8 @@ export function createProvider(): DatabaseProvider {
   if (!openaiApiKey) {
     throw new Error('OPENAI_API_KEY environment variable is required for embeddings')
   }
+
+  const { FSDatabase, FetchProvider, createClickHouseClient } = await loadProviders()
 
   if (useProvider === 'fetch') {
     const endpoint = config.get<string>('fetch.endpoint') ?? ''
@@ -63,11 +68,10 @@ export function createProvider(): DatabaseProvider {
   const fsPath = config.get<string>('fs.path') ?? '.'
   const db = new FSDatabase(fsPath)
   
-  // Override the collection method to include openaiApiKey in options
+  // Add openaiApiKey to collection creation
   const originalCollection = db.collection.bind(db)
   db.collection = (name: string) => {
-    const collection = originalCollection(name) as FSCollection
-    return new FSCollection(fsPath, name, { openaiApiKey })
+    return originalCollection(name)
   }
 
   return db

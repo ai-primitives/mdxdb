@@ -113,11 +113,13 @@
   "dependencies": {
     "@mdxdb/fs": "workspace:*",
     "@mdxdb/types": "workspace:*",
-    "@mdxdb/fetch": "workspace:*",
-    "@mdxdb/clickhouse": "workspace:*",
     "@mdx-js/mdx": "^3.0.0",
     "json5": "^2.2.0",
     "vscode-languageclient": "^8.0.0"
+  },
+  "optionalDependencies": {
+    "@mdxdb/fetch": "workspace:*",
+    "@mdxdb/clickhouse": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "20.x",
