@@ -4,10 +4,21 @@ import * as path from 'path'
 import { promises as fs } from 'fs'
 
 const TEST_DIR = path.join(__dirname, '.test-schema')
+const FIXTURES_DIR = path.join(__dirname, 'fixtures/schema.org')
 
 describe('FSCollection - schema.org MDX files', () => {
   beforeEach(async () => {
     await fs.mkdir(TEST_DIR, { recursive: true })
+    // Copy fixtures to node_modules path for testing
+    const nodeModulesPath = path.join(TEST_DIR, 'node_modules/mdxld/types/schema.org')
+    await fs.mkdir(nodeModulesPath, { recursive: true })
+    const files = ['Article.mdx', 'Person.mdx', 'Organization.mdx']
+    for (const file of files) {
+      await fs.copyFile(
+        path.join(FIXTURES_DIR, file),
+        path.join(nodeModulesPath, file)
+      )
+    }
   })
 
   afterEach(async () => {
