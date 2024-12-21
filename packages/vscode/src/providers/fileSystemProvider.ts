@@ -4,6 +4,17 @@ import type { FSCollection } from '@mdxdb/fs/src/collection'
 import * as path from 'path'
 import { createProvider } from './providerFactory'
 
+interface MDXDocument extends Document {
+  id: string;
+  content: string;
+  data: Record<string, unknown>;
+  metadata: {
+    type: 'mdx';
+    path: string;
+    ts: number;
+  };
+}
+
 export class MDXFileSystemProvider implements vscode.FileSystemProvider {
   private db: Awaited<ReturnType<typeof createProvider>> | undefined
   private collection: FSCollection | undefined
@@ -19,7 +30,7 @@ export class MDXFileSystemProvider implements vscode.FileSystemProvider {
   private async initialize(): Promise<void> {
     const workspacePath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || '.'
     const config = vscode.workspace.getConfiguration('mdxdb')
-    const fsPath = config.get('fs.path') || '.'
+    const fsPath = config.get<string>('fs.path') || '.'
     const basePath = path.resolve(workspacePath, fsPath)
     
     this.db = await createProvider()
@@ -36,7 +47,11 @@ export class MDXFileSystemProvider implements vscode.FileSystemProvider {
       throw vscode.FileSystemError.Unavailable('Provider not initialized')
     }
     try {
-      const doc = await this.collection.get(uri.fsPath)
+      const docs = await this.collection.get(uri.fsPath)
+      const doc = docs[0]
+      if (!doc) {
+        throw vscode.FileSystemError.FileNotFound(uri)
+      }
       return {
         type: vscode.FileType.File,
         ctime: Date.now(),
@@ -53,8 +68,10 @@ export class MDXFileSystemProvider implements vscode.FileSystemProvider {
     if (!this.collection) {
       throw vscode.FileSystemError.Unavailable('Provider not initialized')
     }
-    const docs = await this.collection.list()
-    return docs.map((doc: { id: string }) => [path.basename(doc.id), vscode.FileType.File])
+    const docs = await this.collection.get(_uri.fsPath)
+    return docs
+      .filter((doc): doc is Document & { metadata: { id: string } } => Boolean(doc.metadata?.id))
+      .map(doc => [path.basename(doc.metadata.id), vscode.FileType.File])
   }
 
   async readFile(uri: vscode.Uri): Promise<Uint8Array> {
@@ -63,7 +80,11 @@ export class MDXFileSystemProvider implements vscode.FileSystemProvider {
       throw vscode.FileSystemError.Unavailable('Provider not initialized')
     }
     try {
-      const doc = await this.collection.get(uri.fsPath)
+      const docs = await this.collection.get(uri.fsPath)
+      const doc = docs[0]
+      if (!doc) {
+        throw vscode.FileSystemError.FileNotFound(uri)
+      }
       return new TextEncoder().encode(doc.content)
     } catch (_error) {
       throw vscode.FileSystemError.FileNotFound(uri)
@@ -75,12 +96,17 @@ export class MDXFileSystemProvider implements vscode.FileSystemProvider {
     if (!this.collection) {
       throw vscode.FileSystemError.Unavailable('Provider not initialized')
     }
-    const doc: Document = {
+    const doc: MDXDocument = {
       id: uri.fsPath,
       content: new TextDecoder().decode(content),
-      data: {}
+      data: {},
+      metadata: {
+        type: 'mdx',
+        path: uri.fsPath,
+        ts: Date.now()
+      }
     }
-    await this.collection.set(doc)
+    await this.collection.add(uri.fsPath, doc)
     this._onDidChangeFile.fire([{ type: vscode.FileChangeType.Changed, uri }])
   }
 
@@ -89,7 +115,7 @@ export class MDXFileSystemProvider implements vscode.FileSystemProvider {
     if (!this.collection) {
       throw vscode.FileSystemError.Unavailable('Provider not initialized')
     }
-    await this.collection.delete(uri.fsPath)
+    await this.collection.delete(uri.fsPath, uri.fsPath)
     this._onDidChangeFile.fire([{ type: vscode.FileChangeType.Deleted, uri }])
   }
 
@@ -98,10 +124,14 @@ export class MDXFileSystemProvider implements vscode.FileSystemProvider {
     if (!this.collection) {
       throw vscode.FileSystemError.Unavailable('Provider not initialized')
     }
-    const doc = await this.collection.get(oldUri.fsPath)
-    doc.id = newUri.fsPath
-    await this.collection.set(doc)
-    await this.collection.delete(oldUri.fsPath)
+    const docs = await this.collection.get(oldUri.fsPath)
+    const doc = docs[0]
+    if (!doc) {
+      throw vscode.FileSystemError.FileNotFound(oldUri)
+    }
+    doc.metadata = { ...doc.metadata, id: newUri.fsPath }
+    await this.collection.add(newUri.fsPath, doc)
+    await this.collection.delete(oldUri.fsPath, oldUri.fsPath)
     this._onDidChangeFile.fire([
       { type: vscode.FileChangeType.Deleted, uri: oldUri },
       { type: vscode.FileChangeType.Created, uri: newUri }
