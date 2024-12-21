@@ -52,7 +52,7 @@ export class FSCollection implements CollectionProvider<Document> {
               const content = await fs.readFile(path, 'utf-8')
               console.log('Successfully read file:', path)
               const docId = id.split('/').pop() || id
-              return { id: docId, content, data: {} }
+              return { content, data: {}, metadata: { id: docId } }
             }
           } catch (error) {
             console.log('Error reading file:', path, error)
@@ -68,7 +68,7 @@ export class FSCollection implements CollectionProvider<Document> {
       const filePath = nodePath.join(this.collectionPath, `${id}.mdx`)
       const content = await fs.readFile(filePath, 'utf-8')
       const docId = id.split('/').pop() || id
-      return { id: docId, content, data: {} }
+      return { content, data: {}, metadata: { id: docId } }
     } catch (error) {
       if ((error as { code?: string }).code === 'ENOENT') {
         return null
@@ -98,9 +98,9 @@ export class FSCollection implements CollectionProvider<Document> {
 
       const documents = await Promise.all(
         mdxFiles.map(async file => {
-          const id = nodePath.basename(file, '.mdx')
-          const doc = await this.readDocument(id)
-          return doc ? { id, content: doc } : null
+          const docId = nodePath.basename(file, '.mdx')
+          const doc = await this.readDocument(docId)
+          return doc ? { id: docId, content: doc } : null
         })
       )
 
@@ -115,8 +115,12 @@ export class FSCollection implements CollectionProvider<Document> {
   }
 
   async add(collection: string, document: Document): Promise<void> {
-    const id = document.id || webcrypto.randomUUID()
-    document.id = id
+    if (!document.metadata) {
+      document.metadata = { id: webcrypto.randomUUID() }
+    } else if (!document.metadata.id) {
+      document.metadata.id = webcrypto.randomUUID()
+    }
+    const id = document.metadata.id as string
     const fullPath = nodePath.join(collection, id)
     await this.writeDocument(fullPath, document)
   }
@@ -212,11 +216,16 @@ export class FSCollection implements CollectionProvider<Document> {
           console.debug(`No embedding found for document ${id}`)
           return {
             document: {
-              id,
               content: content.content,
-              data: content.data || {}
+              data: content.data || {},
+              metadata: {
+                id: id,
+                type: 'document',
+                ts: Date.now()
+              }
             },
-            score: 0
+            score: 0,
+            vector: undefined
           }
         }
 
@@ -227,11 +236,16 @@ export class FSCollection implements CollectionProvider<Document> {
         console.debug(`Document ${id} similarity: ${similarity}`)
         return {
           document: {
-            id,
             content: content.content,
-            data: content.data || {}
+            data: content.data || {},
+            metadata: {
+              id: id,
+              type: 'document',
+              ts: Date.now()
+            }
           },
-          score: similarity
+          score: similarity,
+          vector: options.includeVectors ? storedEmbedding.embedding : undefined
         }
       })
     )

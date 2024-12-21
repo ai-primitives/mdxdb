@@ -122,14 +122,16 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
 
     try {
       // Ensure document has metadata
-      if (!document.metadata) {
-        document.metadata = {}
-      }
-      
       const timestamp = Math.floor(Date.now() / 1000) // Convert to seconds for UInt32
 
-      // Generate ID if not provided
-      if (!document.metadata.id) {
+      // Initialize metadata with ID if not present
+      if (!document.metadata) {
+        document.metadata = {
+          id: this.generateId(collection, timestamp),
+          type: 'document',
+          ts: timestamp
+        }
+      } else if (!document.metadata.id) {
         document.metadata.id = this.generateId(collection, timestamp)
       }
 
@@ -233,9 +235,14 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
 
     // Ensure document has metadata with id
     if (!document.metadata) {
-      document.metadata = {}
+      document.metadata = {
+        id: id,
+        type: 'document',
+        ts: Math.floor(Date.now() / 1000)
+      }
+    } else {
+      document.metadata.id = id
     }
-    document.metadata.id = id
 
     try {
       // Get the current version of the document
