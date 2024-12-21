@@ -9,5 +9,9 @@ export type {
   FilterQuery,
   SearchOptions,
   SearchResult,
-  VectorSearchOptions
+  VectorSearchOptions,
+  FilterOperator,
+  MetadataFilter,
+  NestedFilterQuery
 } from './types'
+export { BaseDocument } from './document'

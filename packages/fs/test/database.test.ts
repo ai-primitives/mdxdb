@@ -1,6 +1,6 @@
 import { expect, test, beforeEach, afterEach } from 'vitest'
 import { FSDatabase } from '../src'
-import { DatabaseProvider, Document } from '@mdxdb/types'
+import { DatabaseProvider, Document } from '../../types/src/types'
 import * as fs from 'fs/promises'
 import * as path from 'path'
 

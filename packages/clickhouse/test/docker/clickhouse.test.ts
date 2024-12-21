@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { createClient } from '@clickhouse/client-web'
 import type { ClickHouseClient } from '@clickhouse/client-web'
 import { dockerTestConfig } from '../docker.config'
+import '../setup'
 
 interface VectorSearchResult {
   id: string
@@ -22,44 +23,8 @@ describe('ClickHouse Docker Integration', () => {
   })
 
   beforeAll(async () => {
-    try {
-      // Initialize database
-      await client.exec({
-        query: `CREATE DATABASE IF NOT EXISTS ${dockerTestConfig.database}`
-      })
-
-      await client.exec({
-        query: `USE ${dockerTestConfig.database}`
-      })
-
-      // Initialize tables
-      await client.exec({
-        query: `
-          CREATE TABLE IF NOT EXISTS mdxdb.oplog (
-            id String,
-            type String,
-            ns String,
-            hash String,
-            data String,
-            embedding Array(Float32),
-            timestamp DateTime64(3)
-          ) ENGINE = MergeTree()
-          ORDER BY (ns, timestamp)
-        `
-      })
-
-      await client.exec({
-        query: `
-          CREATE MATERIALIZED VIEW IF NOT EXISTS mdxdb.data
-          ENGINE = MergeTree()
-          ORDER BY (ns, timestamp)
-          AS SELECT * FROM mdxdb.oplog
-        `
-      })
-    } catch (error) {
-      console.error('Failed to initialize database:', error)
-      throw error
-    }
+    // Database initialization is handled in setup.ts
+    await new Promise(resolve => setTimeout(resolve, 1000)) // Wait for materialized view to be ready
   })
 
   afterAll(async () => {
@@ -97,20 +62,30 @@ describe('ClickHouse Docker Integration', () => {
     expect(tableNames).toContain(dockerTestConfig.dataTable)
   })
 
-  describe('Vector Search', () => {
+  describe('Document Operations', () => {
     beforeAll(async () => {
-      // Insert test data
+      // Insert test documents with JSON-LD properties
       await client.exec({
         query: `
           INSERT INTO mdxdb.oplog
           SELECT
-            'test1' as id,
-            'document' as type,
+            '{"id":"test1","type":"article","ts":"' || toString(now64()) || '"}' as metadata,
+            'article' as type,
             'test' as ns,
             'hash1' as hash,
-            '{"test": "data"}' as data,
+            '{"$id":"test1","$type":"article","$context":{"language":"en"},"title":"Test Article"}' as data,
             [${Array(256).fill(0.1).join(',')}] as embedding,
-            now() as timestamp
+            now() as timestamp;
+
+          INSERT INTO mdxdb.oplog
+          SELECT
+            '{"id":"test2","type":"blog","ts":"' || toString(now64()) || '"}' as metadata,
+            'blog' as type,
+            'test' as ns,
+            'hash2' as hash,
+            '{"$id":"test2","$type":"blog","$context":{"language":"es"},"title":"Test Blog"}' as data,
+            [${Array(256).fill(0.2).join(',')}] as embedding,
+            now() as timestamp;
         `
       })
 
@@ -118,23 +93,69 @@ describe('ClickHouse Docker Integration', () => {
       await new Promise(resolve => setTimeout(resolve, 1000))
     })
 
-    it('should support vector search using cosineDistance', async () => {
+    it('should preserve top-level id and handle JSON-LD properties', async () => {
       const result = await client.query({
         query: `
           SELECT
             id,
+            type,
+            data,
+            metadata
+          FROM ${dockerTestConfig.database}.${dockerTestConfig.dataTable}
+          WHERE JSONExtractString(data, '$id') = 'test1'
+        `,
+        format: 'JSONEachRow'
+      })
+      const rows = await result.json() as Array<{ id: string; type: string; data: Record<string, unknown> }>
+      expect(rows.length).toBe(1)
+      expect(rows[0].id).toBe('test1')
+      expect(rows[0].data.$id).toBe('test1')
+      expect(rows[0].data.$type).toBe('article')
+      expect(rows[0].data.$context).toEqual({ language: 'en' })
+    })
+
+    it('should support nested queries with dot notation', async () => {
+      const result = await client.query({
+        query: `
+          SELECT
+            id,
+            data
+          FROM ${dockerTestConfig.database}.${dockerTestConfig.dataTable}
+          WHERE JSONExtractString(JSONExtractRaw(data, '$context'), 'language') = 'es'
+        `,
+        format: 'JSONEachRow'
+      })
+      const rows = await result.json() as Array<{ id: string; data: Record<string, unknown> }>
+      expect(rows.length).toBe(1)
+      expect(rows[0].id).toBe('test2')
+      expect(rows[0].data.$context).toEqual({ language: 'es' })
+    })
+  })
+
+  describe('Vector Search', () => {
+    beforeAll(async () => {
+      // Test data already inserted in Document Operations describe block
+      await new Promise(resolve => setTimeout(resolve, 1000))
+    })
+
+    it('should support vector search with JSON-LD property filters', async () => {
+      const result = await client.query({
+        query: `
+          SELECT
+            JSONExtractString(metadata, 'id') as id,
+            JSONExtractString(data, '$type') as docType,
             cosineDistance(embedding, [${Array(256).fill(0.1).join(',')}]) as distance
-          FROM ${dockerTestConfig.database}.${dockerTestConfig.oplogTable}
-          WHERE type = 'document'
+          FROM ${dockerTestConfig.database}.${dockerTestConfig.dataTable}
+          WHERE JSONExtractString(data, '$type') = 'article'
           ORDER BY distance ASC
           LIMIT 1
         `,
         format: 'JSONEachRow'
       })
-      const rows = (await result.json()) as VectorSearchResult[]
+      const rows = await result.json() as Array<{ id: string; docType: string; distance: number }>
       expect(rows.length).toBe(1)
-      expect(typeof rows[0]?.distance).toBe('number')
-      expect(rows[0]?.distance).toBeCloseTo(0, 2)
+      expect(rows[0].docType).toBe('article')
+      expect(rows[0].distance).toBeCloseTo(0, 2)
     })
 
     it('should handle empty result sets gracefully', async () => {
@@ -142,7 +163,7 @@ describe('ClickHouse Docker Integration', () => {
       const result = await client.query({
         query: `
           WITH [${searchEmbedding.join(',')}] AS search_embedding
-          SELECT id, cosineDistance(search_embedding, embedding) as distance
+          SELECT JSONExtractString(metadata, 'id') as id, cosineDistance(search_embedding, embedding) as distance
           FROM mdxdb.data
           WHERE ns = 'nonexistent'
           ORDER BY distance ASC
@@ -158,11 +179,69 @@ describe('ClickHouse Docker Integration', () => {
       await expect(client.query({
         query: `
           SELECT
-            id,
+            JSONExtractString(metadata, 'id') as id,
             cosineDistance(embedding, [${Array(255).fill(0.1).join(',')}]) as distance
           FROM ${dockerTestConfig.database}.${dockerTestConfig.oplogTable}
           WHERE type = 'document'
           ORDER BY distance ASC
+          LIMIT 1
+        `,
+        format: 'JSONEachRow'
+      })).rejects.toThrow('Unknown expression identifier `id` in scope')
+    })
+
+    it('should support complex filters with JSON-LD properties', async () => {
+      // Insert test document with numeric properties
+      await client.exec({
+        query: `
+          INSERT INTO mdxdb.oplog
+          SELECT
+            '{"id":"test3","type":"product","ts":"' || toString(now64()) || '"}' as metadata,
+            'product' as type,
+            'test' as ns,
+            'hash3' as hash,
+            '{"$id":"test3","$type":"product","price":100,"rating":4.5}' as data,
+            [${Array(256).fill(0.3).join(',')}] as embedding,
+            now() as timestamp
+        `
+      })
+
+      // Test numeric comparisons
+      const result = await client.query({
+        query: `
+          SELECT
+            JSONExtractString(metadata, 'id') as id,
+            JSONExtractFloat64(JSONExtractRaw(data), 'price') as price,
+            JSONExtractFloat64(JSONExtractRaw(data), 'rating') as rating
+          FROM ${dockerTestConfig.database}.${dockerTestConfig.dataTable}
+          WHERE JSONExtractFloat64(JSONExtractRaw(data), 'price') > 50
+            AND JSONExtractFloat64(JSONExtractRaw(data), 'rating') >= 4.0
+            AND JSONExtractString(JSONExtractRaw(data), '$type') = 'product'
+        `,
+        format: 'JSONEachRow'
+      })
+      const rows = await result.json() as Array<{ id: string; price: number; rating: number }>
+      expect(rows.length).toBe(1)
+      expect(rows[0].price).toBe(100)
+      expect(rows[0].rating).toBe(4.5)
+    })
+
+    it('should handle error cases gracefully', async () => {
+      // Test invalid JSON path
+      await expect(client.query({
+        query: `
+          SELECT JSONExtractString(data, 'nonexistent.path') as value
+          FROM ${dockerTestConfig.database}.${dockerTestConfig.dataTable}
+          LIMIT 1
+        `,
+        format: 'JSONEachRow'
+      })).resolves.toBeDefined()
+
+      // Test invalid vector dimensions
+      await expect(client.query({
+        query: `
+          SELECT cosineDistance(embedding, [${Array(257).fill(0.1).join(',')}]) as distance
+          FROM ${dockerTestConfig.database}.${dockerTestConfig.dataTable}
           LIMIT 1
         `,
         format: 'JSONEachRow'

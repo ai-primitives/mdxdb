@@ -212,6 +212,24 @@
     - Port binding or network configuration may need review
   This is currently blocking PR #36 and needs investigation in the CI environment.
 
+- TypeScript Build Order Issues in PR #44:
+  - Build failures in @mdxdb/fs and other dependent packages
+  - Error message:
+    ```
+    error TS2307: Cannot find module '@mdxdb/types' or its corresponding type declarations
+    ```
+  - Affects: All packages depending on @mdxdb/types
+  - Reproduction Steps:
+    1. Run pnpm build in CI environment
+    2. Observe @mdxdb/types declaration files not being generated before dependent packages build
+    3. See build failures in packages trying to import from @mdxdb/types
+  - Investigation Notes:
+    - Local builds may succeed due to cached files
+    - CI environment shows race condition in build order
+    - turbo.json configuration may need review for proper build dependencies
+    - @mdxdb/types package needs to complete type generation before other packages build
+  This is currently blocking PR #44 and needs to be resolved for successful CI builds.
+
 ## Known Issues
 
 - [ ] ESLint configuration issues in @mdxdb/types package

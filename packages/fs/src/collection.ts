@@ -1,4 +1,5 @@
 import { CollectionProvider, Document, FilterQuery, SearchOptions, VectorSearchOptions, SearchResult } from '@mdxdb/types'
+import { FSDocument } from './document'
 import { promises as fs } from 'fs'
 import * as nodePath from 'path'
 import { EmbeddingsService } from './embeddings'
@@ -9,7 +10,7 @@ export interface FSCollectionOptions {
   openaiApiKey?: string
 }
 
-export class FSCollection implements CollectionProvider<Document> {
+export class FSCollection<T extends Document = Document> implements CollectionProvider<T> {
   private embeddingsService: EmbeddingsService
   private storageService: EmbeddingsStorageService
   private collectionPath: string
@@ -52,7 +53,21 @@ export class FSCollection implements CollectionProvider<Document> {
               const content = await fs.readFile(path, 'utf-8')
               console.log('Successfully read file:', path)
               const docId = id.split('/').pop() || id
-              return { content, data: {}, metadata: { id: docId } }
+              return new FSDocument(
+                docId,
+                content,
+                {
+                  $id: docId,
+                  $type: 'document' as string
+                },
+                {
+                  id: docId,
+                  type: 'document',
+                  ts: Date.now()
+                },
+                undefined,
+                [this.path]
+              )
             }
           } catch (error) {
             console.log('Error reading file:', path, error)
@@ -68,7 +83,32 @@ export class FSCollection implements CollectionProvider<Document> {
       const filePath = nodePath.join(this.collectionPath, `${id}.mdx`)
       const content = await fs.readFile(filePath, 'utf-8')
       const docId = id.split('/').pop() || id
-      return { content, data: {}, metadata: { id: docId } }
+      let parsedContent: Document | null = null
+      try {
+        parsedContent = JSON.parse(content)
+      } catch {
+        // If content is not JSON, treat it as raw content
+        parsedContent = null
+      }
+
+      const doc = new FSDocument(
+        docId,
+        parsedContent?.content || content,
+        {
+          $id: docId,
+          $type: (parsedContent?.metadata?.type as string) || 'document',
+          ...(parsedContent?.data || {})
+        },
+        {
+          id: (parsedContent?.metadata?.id as string) || docId,
+          type: (parsedContent?.metadata?.type as string) || 'document',
+          ts: Date.now(),
+          ...(parsedContent?.metadata || {})
+        },
+        undefined,
+        parsedContent?.collections || [this.path]
+      )
+      return doc
     } catch (error) {
       if ((error as { code?: string }).code === 'ENOENT') {
         return null
@@ -90,7 +130,7 @@ export class FSCollection implements CollectionProvider<Document> {
     await this.storageService.storeEmbedding(id, document.content, embedding)
   }
 
-  private async getAllDocuments(): Promise<Array<{ id: string; content: Document }>> {
+  private async getAllDocuments(): Promise<Array<{ id: string; content: T }>> {
     try {
       await fs.mkdir(this.collectionPath, { recursive: true })
       const files = await fs.readdir(this.collectionPath)
@@ -100,7 +140,7 @@ export class FSCollection implements CollectionProvider<Document> {
         mdxFiles.map(async file => {
           const docId = nodePath.basename(file, '.mdx')
           const doc = await this.readDocument(docId)
-          return doc ? { id: docId, content: doc } : null
+          return doc ? { id: docId, content: doc as T } : null
         })
       )
 
@@ -115,13 +155,39 @@ export class FSCollection implements CollectionProvider<Document> {
   }
 
   async add(collection: string, document: Document): Promise<void> {
+    // Initialize metadata if not present
     if (!document.metadata) {
-      document.metadata = { id: webcrypto.randomUUID() }
-    } else if (!document.metadata.id) {
-      document.metadata.id = webcrypto.randomUUID()
+      const newId = document.id || webcrypto.randomUUID()
+      document.metadata = {
+        id: newId,
+        type: 'document',
+        ts: Date.now()
+      }
+      document.id = newId
     }
-    const id = document.metadata.id
-    const fullPath = nodePath.join(collection, id)
+
+    // Ensure required metadata fields
+    document.metadata = {
+      ...document.metadata,
+      id: document.metadata.id || document.id || webcrypto.randomUUID(),
+      type: document.metadata.type || 'document',
+      ts: document.metadata.ts || Date.now()
+    }
+
+    // Sync id across document
+    document.id = document.metadata.id as string
+
+    // Initialize or update data
+    document.data = {
+      ...(document.data || {}),
+      $id: document.metadata.id,
+      $type: document.metadata.type
+    }
+
+    // Set collections
+    document.collections = document.collections || [collection]
+
+    const fullPath = nodePath.join(collection, document.id || '')
     await this.writeDocument(fullPath, document)
   }
 
@@ -147,9 +213,12 @@ export class FSCollection implements CollectionProvider<Document> {
       throw new Error(`Document with id ${id} not found in collection ${collection}`)
     }
     if (!document.metadata) {
-      document.metadata = { id }
+      document.id = id
+      document.metadata = { id: id, type: 'document' as string }
+      document.data = { $id: id, $type: 'document' as string }
     } else {
-      document.metadata.id = id
+      document.id = id
+      document.data.$id = id
     }
     const fullPath = nodePath.join(collection, id)
     const filePath = nodePath.join(this.collectionPath, `${fullPath}.mdx`)
@@ -162,6 +231,11 @@ export class FSCollection implements CollectionProvider<Document> {
     try {
       await fs.unlink(filePath)
       await this.storageService.deleteEmbedding(nodePath.join(collection, id))
+      // Ensure the file is actually deleted by checking its existence
+      const exists = await fs.access(filePath).then(() => true).catch(() => false)
+      if (exists) {
+        throw new Error(`Failed to delete document ${id} in collection ${collection}`)
+      }
     } catch (error) {
       if ((error as { code?: string }).code !== 'ENOENT') {
         throw error
@@ -169,7 +243,7 @@ export class FSCollection implements CollectionProvider<Document> {
     }
   }
 
-  async find(filter: FilterQuery<Document>): Promise<Document[]> {
+  async find(filter: FilterQuery<T>, options?: SearchOptions<T>): Promise<SearchResult<T>[]> {
     const docs = await this.getAllDocuments()
     const filtered = docs.filter(({ content }) => {
       return Object.entries(filter).every(([key, value]) => {
@@ -183,7 +257,7 @@ export class FSCollection implements CollectionProvider<Document> {
               case '$eq': return docValue === val
               case '$gt': return typeof docValue === 'number' && typeof val === 'number' && docValue > val
               case '$gte': return typeof docValue === 'number' && typeof val === 'number' && docValue >= val
-              case '$lt': return typeof docValue === 'number' && typeof val === 'number' && docValue < val
+              case '$lt': return typeof docValue === 'number' && typeof val === 'number' && docValue <= val
               case '$lte': return typeof docValue === 'number' && typeof val === 'number' && docValue <= val
               case '$in': return Array.isArray(val) && val.includes(docValue)
               case '$nin': return Array.isArray(val) && !val.includes(docValue)
@@ -194,10 +268,52 @@ export class FSCollection implements CollectionProvider<Document> {
         return content[key as keyof Document] === value
       })
     })
-    return filtered.map(doc => doc.content)
+
+    // Map to SearchResult<Document>[] with score and vector
+    const results = filtered.map(doc => {
+      const id = doc.content.id || ''
+      const document = new FSDocument(
+        id,
+        doc.content.content || '',
+        {
+          ...(doc.content.data || {}),
+          $id: id,
+          $type: (doc.content.metadata?.type || 'document') as string
+        },
+        {
+          ...(doc.content.metadata || {}),
+          // Ensure required fields are set and take precedence
+          id,
+          type: (doc.content.metadata?.type || 'document') as string,
+          ts: doc.content.metadata?.ts || Date.now()
+        },
+        doc.content.embeddings,
+        doc.content.collections || [this.path]
+      )
+
+      return {
+        document: document as T,
+        score: 1.0, // Default score for filter matches
+        vector: options?.includeVectors ? doc.content.embeddings : undefined
+      } as SearchResult<T>
+    })
+
+    // Apply search options
+    let finalResults = results
+    if (options?.limit !== undefined) {
+      finalResults = finalResults.slice(options.offset || 0, (options.offset || 0) + options.limit)
+    } else if (options?.offset !== undefined) {
+      finalResults = finalResults.slice(options.offset)
+    }
+
+    return finalResults.map(result => ({
+      document: result.document as T,
+      score: result.score,
+      vector: result.vector
+    })) as SearchResult<T>[]
   }
 
-  async search(query: string, options?: SearchOptions<Document>): Promise<SearchResult<Document>[]> {
+  async search(query: string, options?: SearchOptions<T>): Promise<SearchResult<T>[]> {
     const queryEmbedding = await this.embeddingsService.generateEmbedding(query)
     return this.vectorSearch({
       ...options,
@@ -206,7 +322,7 @@ export class FSCollection implements CollectionProvider<Document> {
     })
   }
 
-  async vectorSearch(options: VectorSearchOptions & SearchOptions<Document>): Promise<SearchResult<Document>[]> {
+  async vectorSearch(options: VectorSearchOptions & SearchOptions<T>): Promise<SearchResult<T>[]> {
     if (!options.vector) {
       throw new Error('Vector is required for vector search')
     }
@@ -220,15 +336,21 @@ export class FSCollection implements CollectionProvider<Document> {
         if (!storedEmbedding?.embedding) {
           console.debug(`No embedding found for document ${id}`)
           return {
-            document: {
-              content: content.content,
-              data: content.data || {},
-              metadata: {
+            document: new FSDocument(
+              id,
+              content.content,
+              {
+                ...(content.data || {}),
+                $id: id,
+                $type: 'document' as string,
+                $context: content.data?.$context as string | Record<string, unknown> | undefined
+              },
+              {
                 id: id,
                 type: 'document',
                 ts: Date.now()
               }
-            },
+            ) as T,
             score: 0,
             vector: undefined
           }
@@ -240,25 +362,38 @@ export class FSCollection implements CollectionProvider<Document> {
         )
         console.debug(`Document ${id} similarity: ${similarity}`)
         return {
-          document: {
-            content: content.content,
-            data: content.data || {},
-            metadata: {
+          document: new FSDocument(
+            id,
+            content.content,
+            {
+              ...(content.data || {}),
+              $id: id,
+              $type: 'document' as string,
+              $context: content.data?.$context as string | Record<string, unknown> | undefined
+            },
+            {
               id: id,
               type: 'document',
               ts: Date.now()
             }
-          },
+          ) as T,
           score: similarity,
           vector: options.includeVectors ? storedEmbedding.embedding : undefined
         }
       })
     )
 
-    return results
+    const sortedResults = results
       .filter(result => result.score >= threshold)
       .sort((a, b) => b.score - a.score)
       .slice(0, options.limit || 10)
+      .map(result => ({
+        document: result.document as T,
+        score: result.score,
+        vector: result.vector
+      }))
+    
+    return sortedResults as SearchResult<T>[]
   }
 
   async readSchemaOrgFile(filename: string): Promise<Document | null> {

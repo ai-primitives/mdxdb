@@ -8,12 +8,15 @@
     "moduleResolution": "Bundler",
     "noUnusedParameters": false,
     "noUnusedLocals": false,
+    "strict": true,
+    "declaration": true,
+    "declarationMap": true,
     "paths": {
-      "@mdxdb/types": ["../types/src"],
-      "@mdxdb/types/*": ["../types/src/*"]
+      "@mdxdb/types": ["../types/dist"],
+      "@mdxdb/types/*": ["../types/dist/*"]
     }
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "src/**/*.ts", "src/document.ts", "src/collection.ts"],
   "exclude": ["node_modules", "dist", "test"],
   "references": [
     { "path": "../types" }
