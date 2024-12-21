@@ -37,10 +37,56 @@
     "configuration": {
       "title": "MDXDB",
       "properties": {
+        "mdxdb.provider": {
+          "type": "string",
+          "default": "fs",
+          "enum": ["fs", "fetch", "clickhouse"],
+          "description": "Provider type for MDX file management"
+        },
         "mdxdb.fs.path": {
           "type": "string",
           "default": ".",
           "description": "Base path for file system provider"
+        },
+        "mdxdb.fetch.endpoint": {
+          "type": "string",
+          "default": "https://api.example.com",
+          "description": "Base URL for HTTP-based provider"
+        },
+        "mdxdb.fetch.token": {
+          "type": "string",
+          "default": "",
+          "description": "Authorization token for the HTTP endpoint"
+        },
+        "mdxdb.clickhouse.url": {
+          "type": "string",
+          "default": "http://localhost:8123",
+          "description": "ClickHouse server URL"
+        },
+        "mdxdb.clickhouse.database": {
+          "type": "string",
+          "default": "mdxdb",
+          "description": "Database name for ClickHouse"
+        },
+        "mdxdb.clickhouse.username": {
+          "type": "string",
+          "default": "default",
+          "description": "Username for ClickHouse authentication"
+        },
+        "mdxdb.clickhouse.password": {
+          "type": "string",
+          "default": "",
+          "description": "Password for ClickHouse authentication"
+        },
+        "mdxdb.clickhouse.oplogTable": {
+          "type": "string",
+          "default": "oplog",
+          "description": "Name of the oplog table in ClickHouse"
+        },
+        "mdxdb.clickhouse.dataTable": {
+          "type": "string",
+          "default": "data",
+          "description": "Name of the data table in ClickHouse"
         },
         "mdxdb.preview.debounceMs": {
           "type": "number",
@@ -65,20 +111,22 @@
     "test": "vscode-test"
   },
   "dependencies": {
-    "@mdxdb/fs": "^0.1.0",
-    "@mdxdb/types": "^0.1.0",
+    "@mdxdb/fs": "workspace:*",
+    "@mdxdb/types": "workspace:*",
+    "@mdxdb/fetch": "workspace:*",
+    "@mdxdb/clickhouse": "workspace:*",
     "@mdx-js/mdx": "^3.0.0",
     "json5": "^2.2.0",
     "vscode-languageclient": "^8.0.0"
   },
   "devDependencies": {
+    "@types/node": "20.x",
     "@types/vscode": "^1.96.0",
     "@types/mocha": "^10.0.10",
-    "@types/node": "20.x",
     "@typescript-eslint/eslint-plugin": "^8.17.0",
     "@typescript-eslint/parser": "^8.17.0",
     "eslint": "^9.16.0",
-    "typescript": "^5.7.2",
+    "typescript": "^5.0.0",
     "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.4.1"
   }
