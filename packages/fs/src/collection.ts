@@ -120,7 +120,7 @@ export class FSCollection implements CollectionProvider<Document> {
     } else if (!document.metadata.id) {
       document.metadata.id = webcrypto.randomUUID()
     }
-    const id = document.metadata.id as string
+    const id = document.metadata.id
     const fullPath = nodePath.join(collection, id)
     await this.writeDocument(fullPath, document)
   }
@@ -145,6 +145,11 @@ export class FSCollection implements CollectionProvider<Document> {
     const existingDoc = await this.readDocument(nodePath.join(collection, id))
     if (!existingDoc) {
       throw new Error(`Document with id ${id} not found in collection ${collection}`)
+    }
+    if (!document.metadata) {
+      document.metadata = { id }
+    } else {
+      document.metadata.id = id
     }
     const fullPath = nodePath.join(collection, id)
     const filePath = nodePath.join(this.collectionPath, `${fullPath}.mdx`)
