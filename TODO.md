@@ -195,6 +195,23 @@
   - Needs test files to be added or CI configuration updated
   This is blocking PR #12 and needs to be addressed before merging the CI permissions configuration.
 
+- ClickHouse Connection Issues in CI Environment:
+  - Connection failures to ClickHouse server in CI environment
+  - Error messages:
+    ```
+    Error: connect ECONNREFUSED ::1:8123
+    Error: connect ECONNREFUSED 127.0.0.1:8123
+    ```
+  - Affects: @mdxdb/clickhouse package tests
+  - Reproduction Steps:
+    1. Run tests in CI environment
+    2. Observe connection failures to both IPv4 and IPv6 localhost
+  - Investigation Notes:
+    - Local tests pass with proper Docker setup
+    - CI environment may have Docker container access or startup issues
+    - Port binding or network configuration may need review
+  This is currently blocking PR #36 and needs investigation in the CI environment.
+
 ## Known Issues
 
 - [ ] ESLint configuration issues in @mdxdb/types package

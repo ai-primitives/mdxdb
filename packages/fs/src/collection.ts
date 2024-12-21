@@ -24,16 +24,57 @@ export class FSCollection implements CollectionProvider<Document> {
     this.collectionPath = nodePath.join(basePath, path)
   }
 
-  private async readDocument(id: string): Promise<Document | null> {
+  protected async readDocument(id: string): Promise<Document | null> {
     try {
+      // Try node_modules first
+      if (id.startsWith('node_modules/')) {
+        const repoRoot = process.cwd().split('/packages/')[0]
+        const packageName = id.split('/')[1] // Get the package name (e.g., 'mdxld')
+        const restOfPath = id.split('/').slice(2).join('/') // Get everything after the package name
+
+        console.log('Current working directory:', process.cwd())
+        console.log('Repository root:', repoRoot)
+        console.log('Package name:', packageName)
+        console.log('Rest of path:', restOfPath)
+
+        const paths = [
+          // Try local node_modules
+          nodePath.join(process.cwd(), id),
+          // Try repo directory (for development)
+          nodePath.join(repoRoot, packageName, restOfPath),
+          // Try absolute path to repos directory
+          nodePath.join('/home/ubuntu/repos', packageName, restOfPath)
+        ]
+
+        console.log('Attempting to read from paths:', paths)
+        for (const path of paths) {
+          try {
+            console.log('Checking if file exists:', path)
+            const exists = await fs.access(path).then(() => true).catch(() => false)
+            console.log('File exists?', exists)
+
+            if (exists) {
+              console.log('Reading file:', path)
+              const content = await fs.readFile(path, 'utf-8')
+              console.log('Successfully read file:', path)
+              const docId = id.split('/').pop() || id
+              return { id: docId, content, data: {} }
+            }
+          } catch (error) {
+            console.log('Error reading file:', path, error)
+            if ((error as { code?: string }).code !== 'ENOENT') {
+              throw error
+            }
+          }
+        }
+        return null
+      }
+
+      // Fall back to collection path
       const filePath = nodePath.join(this.collectionPath, `${id}.mdx`)
       const content = await fs.readFile(filePath, 'utf-8')
       const docId = id.split('/').pop() || id
-      return {
-        id: docId,
-        content,
-        data: {}
-      }
+      return { id: docId, content, data: {} }
     } catch (error) {
       if ((error as { code?: string }).code === 'ENOENT') {
         return null
@@ -205,5 +246,15 @@ export class FSCollection implements CollectionProvider<Document> {
       .filter(result => result.score >= threshold)
       .sort((a, b) => b.score - a.score)
       .slice(0, options.limit || 10)
+  }
+
+  async readSchemaOrgFile(filename: string): Promise<Document | null> {
+    // Add .mdx extension if not present
+    if (!filename.endsWith('.mdx')) {
+      filename = `${filename}.mdx`
+    }
+    const fullPath = `node_modules/mdxld/types/schema.org/${filename}`
+    console.log('Reading schema.org file:', fullPath)
+    return this.readDocument(fullPath)
   }
 }
