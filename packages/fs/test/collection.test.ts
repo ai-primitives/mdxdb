@@ -33,7 +33,7 @@ describe('FSCollection', () => {
   describe('CRUD operations', () => {
     it('should create and read documents', async () => {
       const collection = new FSCollection(TEST_DIR, 'test')
-      const doc: Document = { id: 'test1', content: 'test content', data: {} }
+      const doc: Document = { metadata: { id: 'test1' }, content: 'test content', data: {} }
 
       await collection.add('test1', doc)
       const docs = await collection.get('test1')
@@ -46,8 +46,8 @@ describe('FSCollection', () => {
 
     it('should update documents', async () => {
       const collection = new FSCollection(TEST_DIR, 'test')
-      const doc: Document = { id: 'test1', content: 'test content', data: {} }
-      const updatedDoc: Document = { id: 'test1', content: 'updated content', data: {} }
+      const doc: Document = { metadata: { id: 'test1' }, content: 'test content', data: {} }
+      const updatedDoc: Document = { metadata: { id: 'test1' }, content: 'updated content', data: {} }
 
       await collection.add('test1', doc)
       await collection.update('test1', 'test1', updatedDoc)
@@ -61,7 +61,7 @@ describe('FSCollection', () => {
 
     it('should delete documents', async () => {
       const collection = new FSCollection(TEST_DIR, 'test')
-      const doc: Document = { id: 'test1', content: 'test content', data: {} }
+      const doc: Document = { metadata: { id: 'test1' }, content: 'test content', data: {} }
 
       await collection.add('test1', doc)
       await collection.delete('test1', 'test1')
@@ -73,7 +73,7 @@ describe('FSCollection', () => {
 
     it('should throw error when creating existing document', async () => {
       const collection = new FSCollection(TEST_DIR, 'test')
-      const doc: Document = { id: 'test1', content: 'test content', data: {} }
+      const doc: Document = { metadata: { id: 'test1' }, content: 'test content', data: {} }
 
       await collection.add('test1', doc)
       await expect(collection.add('test1', doc)).rejects.toThrow('already exists')
@@ -81,7 +81,7 @@ describe('FSCollection', () => {
 
     it('should throw error when updating non-existent document', async () => {
       const collection = new FSCollection(TEST_DIR, 'test')
-      const doc: Document = { id: 'test1', content: 'test content', data: {} }
+      const doc: Document = { metadata: { id: 'test1' }, content: 'test content', data: {} }
 
       await expect(collection.update('test1', 'test1', doc)).rejects.toThrow('not found')
     })
@@ -94,21 +94,21 @@ describe('FSCollection', () => {
       doc3: Array(256).fill(0.3)
     }
     const mockDocs = [
-      { id: 'doc1', content: 'test content 1', data: {} },
-      { id: 'doc2', content: 'test content 2', data: {} },
-      { id: 'doc3', content: 'different content', data: {} }
+      { metadata: { id: 'doc1' }, content: 'test content 1', data: {} },
+      { metadata: { id: 'doc2' }, content: 'test content 2', data: {} },
+      { metadata: { id: 'doc3' }, content: 'different content', data: {} }
     ]
 
     beforeEach(async () => {
       const collection = new FSCollection(TEST_DIR, 'test')
       for (const doc of mockDocs) {
-        const filePath = nodePath.join(TEST_DIR, 'test', `${doc.id}.mdx`)
+        const filePath = nodePath.join(TEST_DIR, 'test', `${doc.metadata.id}.mdx`)
         await fs.mkdir(nodePath.dirname(filePath), { recursive: true })
         await fs.writeFile(filePath, doc.content)
       }
 
       vi.mocked(EmbeddingsStorageService.prototype.getEmbedding).mockImplementation(async (id) => {
-        const doc = mockDocs.find(d => d.id === id)
+        const doc = mockDocs.find(d => d.metadata.id === id)
         if (!doc) return null
         return {
           id,
@@ -134,7 +134,7 @@ describe('FSCollection', () => {
       expect(results).toHaveLength(1)
       expect(results[0]).toMatchObject({
         document: {
-          id: 'doc1',
+          metadata: { id: 'doc1' },
           content: 'test content 1',
           data: {}
         },
@@ -153,7 +153,7 @@ describe('FSCollection', () => {
       expect(results).toHaveLength(2)
       expect(results[0]).toMatchObject({
         document: {
-          id: 'doc1',
+          metadata: { id: 'doc1' },
           content: 'test content 1',
           data: {}
         },
@@ -161,7 +161,7 @@ describe('FSCollection', () => {
       })
       expect(results[1]).toMatchObject({
         document: {
-          id: expect.any(String),
+          metadata: { id: expect.any(String) },
           content: expect.any(String),
           data: {}
         },
@@ -172,7 +172,7 @@ describe('FSCollection', () => {
     it('should sort results by similarity score', async () => {
       const collection = new FSCollection(TEST_DIR, 'test')
       vi.mocked(EmbeddingsService.prototype.calculateSimilarity).mockImplementation((vec1, vec2) => {
-        return mockDocs[0].id === 'doc1' ? 0.9 : 0.5
+        return mockDocs[0].metadata.id === 'doc1' ? 0.9 : 0.5
       })
 
       const results = await collection.vectorSearch({
@@ -182,7 +182,7 @@ describe('FSCollection', () => {
 
       expect(results[0]).toMatchObject({
         document: {
-          id: 'doc1',
+          metadata: { id: 'doc1' },
           content: 'test content 1',
           data: {}
         },

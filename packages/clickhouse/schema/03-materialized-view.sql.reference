@@ -6,7 +6,7 @@ SET allow_experimental_json_type = 1;
 
 -- Materialized view to stream data from oplog to data table
 CREATE MATERIALIZED VIEW IF NOT EXISTS mdxdb.dataMv
-TO mdxdb.data
+TO mdxdb.dataTable
 AS SELECT
     id,
     type,
@@ -20,4 +20,4 @@ AS SELECT
     hash,
     version,
     1 as sign
-FROM mdxdb.oplog;
+FROM mdxdb.opLog;

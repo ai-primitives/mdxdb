@@ -23,9 +23,10 @@ const vectorSearchSchema = z.object({
 })
 
 const documentSchema = z.object({
-  id: z.string().optional(),
   content: z.string(),
-  metadata: z.record(z.any()).optional(),
+  metadata: z.object({
+    id: z.string().optional()
+  }).optional(),
   data: z.record(z.any()).optional(),
   type: z.string().optional(),
   collections: z.array(z.string()).optional()
@@ -137,7 +138,7 @@ export const createApp = (config: ServerConfig) => {
 
     try {
       const docs = await provider.collections.get(name)
-      const doc = docs.find(d => d.id === id)
+      const doc = docs.find(d => d.metadata?.id === id)
       if (!doc) {
         return c.json({ error: 'Document not found' }, 404)
       }

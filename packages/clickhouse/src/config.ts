@@ -28,7 +28,7 @@ export const getConfig = (): Config => {
     username: process.env.CLICKHOUSE_USERNAME,
     password: process.env.CLICKHOUSE_PASSWORD,
     database: process.env.CLICKHOUSE_DATABASE,
-    oplogTable: process.env.CLICKHOUSE_OPLOG_TABLE,
-    dataTable: process.env.CLICKHOUSE_DATA_TABLE
+    oplogTable: process.env.CLICKHOUSE_OPLOG_TABLE || 'oplog',
+    dataTable: process.env.CLICKHOUSE_DATA_TABLE || 'data'
   });
 };

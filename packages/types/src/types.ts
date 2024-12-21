@@ -1,9 +1,20 @@
-import type { MDXLD } from 'mdxld'
+import type { MDXLD } from './mdxld'
 
 export interface Document extends MDXLD {
   embeddings?: number[]
   collections?: string[]
-  metadata?: Record<string, unknown>
+  metadata: {
+    id: string
+    type?: string
+    ns?: string
+    host?: string
+    path?: string[]
+    content?: string
+    data?: Record<string, unknown>
+    version?: number
+    hash?: Record<string, unknown>
+    ts?: number
+  }
 }
 
 export interface VectorSearchOptions {

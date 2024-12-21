@@ -2,8 +2,12 @@ export const getDatabaseSchema = (databaseName: string): string => `
 CREATE DATABASE IF NOT EXISTS ${databaseName}
 `;
 
-export const getTablesSchema = (databaseName: string): string => `
-CREATE TABLE IF NOT EXISTS ${databaseName}.oplog (
+export const getTablesSchema = (
+  databaseName: string,
+  oplogTableName: string = 'oplog',
+  dataTableName: string = 'data'
+): string => `
+CREATE TABLE IF NOT EXISTS ${databaseName}.${oplogTableName} (
     id String,
     type String,
     ns String,
@@ -18,7 +22,7 @@ CREATE TABLE IF NOT EXISTS ${databaseName}.oplog (
 ) ENGINE = MergeTree
 ORDER BY (id, version);
 
-CREATE TABLE IF NOT EXISTS ${databaseName}.data (
+CREATE TABLE IF NOT EXISTS ${databaseName}.${dataTableName} (
     id String,
     type String,
     ns String,
@@ -35,9 +39,13 @@ CREATE TABLE IF NOT EXISTS ${databaseName}.data (
 ORDER BY (id, version);
 `;
 
-export const getMaterializedViewSchema = (databaseName: string): string => `
-CREATE MATERIALIZED VIEW IF NOT EXISTS ${databaseName}.dataMv
-TO ${databaseName}.data
+export const getMaterializedViewSchema = (
+  databaseName: string,
+  oplogTableName: string = 'oplog',
+  dataTableName: string = 'data'
+): string => `
+CREATE MATERIALIZED VIEW IF NOT EXISTS ${databaseName}.${dataTableName}Mv
+TO ${databaseName}.${dataTableName}
 AS SELECT
     id,
     type,
@@ -50,7 +58,7 @@ AS SELECT
     hash,
     version,
     1 as sign
-FROM ${databaseName}.oplog;
+FROM ${databaseName}.${oplogTableName};
 `;
 
 export interface TableSchema {
