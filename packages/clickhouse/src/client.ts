@@ -97,7 +97,14 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
         const doc = new BaseDocument(
           String(row.id),
           String(row.content || ''),
-          typeof row.data === 'object' ? row.data as Record<string, unknown> : {},
+          typeof row.data === 'object' ? {
+            ...(row.data as Record<string, unknown>),
+            $id: String(row.id),
+            $type: String(row.type)
+          } : {
+            $id: String(row.id),
+            $type: String(row.type)
+          },
           {
             type: String(row.type),
             ns: String(row.ns),
