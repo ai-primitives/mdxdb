@@ -31,7 +31,7 @@ export class MDXFileSystemProvider implements vscode.FileSystemProvider {
     const workspacePath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || '.'
     const config = vscode.workspace.getConfiguration('mdxdb')
     const fsPath = config.get<string>('fs.path') || '.'
-    const basePath = path.resolve(workspacePath, fsPath)
+    const _basePath = path.resolve(workspacePath, fsPath)
     
     this.db = await createProvider()
     this.collection = this.db.collection('mdx') as FSCollection
