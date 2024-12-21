@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { FSCollection } from '../src/collection'
 import { CollectionProvider, Document } from '../../types/src/types'
+import { BaseDocument } from '../../types/src/document'
 import { promises as fs } from 'fs'
 import * as nodePath from 'path'
 import { EmbeddingsService } from '../src/embeddings'
@@ -33,16 +34,14 @@ describe('FSCollection', () => {
   describe('CRUD operations', () => {
     it('should create and read documents', async () => {
       const collection = new FSCollection(TEST_DIR, 'test')
-      const doc: Document = {
-        metadata: {
-          id: 'test1',
-          type: 'post',
-          ts: Date.now()
-        },
-        content: 'test content',
-        data: {},
-        collections: ['test1']
-      }
+      const doc = new BaseDocument(
+        'test1',
+        'test content',
+        { $id: 'test1', $type: 'post' },
+        { id: 'test1', type: 'post', ts: Date.now() },
+        undefined,
+        ['test1']
+      )
 
       await collection.add('test1', doc)
       const docs = await collection.get('test1')
@@ -55,26 +54,22 @@ describe('FSCollection', () => {
 
     it('should update documents', async () => {
       const collection = new FSCollection(TEST_DIR, 'test')
-      const doc: Document = {
-        metadata: {
-          id: 'test1',
-          type: 'post',
-          ts: Date.now()
-        },
-        content: 'test content',
-        data: {},
-        collections: ['test1']
-      }
-      const updatedDoc: Document = {
-        metadata: {
-          id: 'test1',
-          type: 'post',
-          ts: Date.now()
-        },
-        content: 'updated content',
-        data: {},
-        collections: ['test1']
-      }
+      const doc = new BaseDocument(
+        'test1',
+        'test content',
+        { $id: 'test1', $type: 'post' },
+        { id: 'test1', type: 'post', ts: Date.now() },
+        undefined,
+        ['test1']
+      )
+      const updatedDoc = new BaseDocument(
+        'test1',
+        'updated content',
+        { $id: 'test1', $type: 'post' },
+        { id: 'test1', type: 'post', ts: Date.now() },
+        undefined,
+        ['test1']
+      )
 
       await collection.add('test1', doc)
       await collection.update('test1', 'test1', updatedDoc)
@@ -88,16 +83,14 @@ describe('FSCollection', () => {
 
     it('should delete documents', async () => {
       const collection = new FSCollection(TEST_DIR, 'test')
-      const doc: Document = {
-        metadata: {
-          id: 'test1',
-          type: 'post',
-          ts: Date.now()
-        },
-        content: 'test content',
-        data: {},
-        collections: ['test1']
-      }
+      const doc = new BaseDocument(
+        'test1',
+        'test content',
+        { $id: 'test1', $type: 'post' },
+        { id: 'test1', type: 'post', ts: Date.now() },
+        undefined,
+        ['test1']
+      )
 
       await collection.add('test1', doc)
       await collection.delete('test1', 'test1')
@@ -109,16 +102,14 @@ describe('FSCollection', () => {
 
     it('should throw error when creating existing document', async () => {
       const collection = new FSCollection(TEST_DIR, 'test')
-      const doc: Document = {
-        metadata: {
-          id: 'test1',
-          type: 'post',
-          ts: Date.now()
-        },
-        content: 'test content',
-        data: {},
-        collections: ['test1']
-      }
+      const doc = new BaseDocument(
+        'test1',
+        'test content',
+        { $id: 'test1', $type: 'post' },
+        { id: 'test1', type: 'post', ts: Date.now() },
+        undefined,
+        ['test1']
+      )
 
       await collection.add('test1', doc)
       await expect(collection.add('test1', doc)).rejects.toThrow('already exists')
@@ -126,16 +117,14 @@ describe('FSCollection', () => {
 
     it('should throw error when updating non-existent document', async () => {
       const collection = new FSCollection(TEST_DIR, 'test')
-      const doc: Document = {
-        metadata: {
-          id: 'test1',
-          type: 'post',
-          ts: Date.now()
-        },
-        content: 'test content',
-        data: {},
-        collections: ['test1']
-      }
+      const doc = new BaseDocument(
+        'test1',
+        'test content',
+        { $id: 'test1', $type: 'post' },
+        { id: 'test1', type: 'post', ts: Date.now() },
+        undefined,
+        ['test1']
+      )
 
       await expect(collection.update('test1', 'test1', doc)).rejects.toThrow('not found')
     })
@@ -148,36 +137,30 @@ describe('FSCollection', () => {
       doc3: Array(256).fill(0.3)
     }
     const mockDocs = [
-      {
-        metadata: {
-          id: 'doc1',
-          type: 'post',
-          ts: Date.now()
-        },
-        content: 'test content 1',
-        data: {},
-        collections: ['test']
-      },
-      {
-        metadata: {
-          id: 'doc2',
-          type: 'post',
-          ts: Date.now()
-        },
-        content: 'test content 2',
-        data: {},
-        collections: ['test']
-      },
-      {
-        metadata: {
-          id: 'doc3',
-          type: 'post',
-          ts: Date.now()
-        },
-        content: 'different content',
-        data: {},
-        collections: ['test']
-      }
+      new BaseDocument(
+        'doc1',
+        'test content 1',
+        { $id: 'doc1', $type: 'post' },
+        { id: 'doc1', type: 'post', ts: Date.now() },
+        undefined,
+        ['test']
+      ),
+      new BaseDocument(
+        'doc2',
+        'test content 2',
+        { $id: 'doc2', $type: 'post' },
+        { id: 'doc2', type: 'post', ts: Date.now() },
+        undefined,
+        ['test']
+      ),
+      new BaseDocument(
+        'doc3',
+        'different content',
+        { $id: 'doc3', $type: 'post' },
+        { id: 'doc3', type: 'post', ts: Date.now() },
+        undefined,
+        ['test']
+      )
     ]
 
     beforeEach(async () => {
@@ -215,9 +198,10 @@ describe('FSCollection', () => {
       expect(results).toHaveLength(1)
       expect(results[0]).toMatchObject({
         document: {
-          metadata: { id: 'doc1' },
+          id: 'doc1',
           content: 'test content 1',
-          data: {}
+          data: { $id: 'doc1', $type: 'post' },
+          metadata: { id: 'doc1', type: 'post' }
         },
         score: 0.9
       })
@@ -234,17 +218,19 @@ describe('FSCollection', () => {
       expect(results).toHaveLength(2)
       expect(results[0]).toMatchObject({
         document: {
-          metadata: { id: 'doc1' },
+          id: 'doc1',
           content: 'test content 1',
-          data: {}
+          data: { $id: 'doc1', $type: 'post' },
+          metadata: { id: 'doc1', type: 'post' }
         },
         score: 0.9
       })
       expect(results[1]).toMatchObject({
         document: {
-          metadata: { id: expect.any(String) },
+          id: expect.any(String),
           content: expect.any(String),
-          data: {}
+          data: { $id: expect.any(String), $type: 'post' },
+          metadata: { id: expect.any(String), type: 'post' }
         },
         score: 0.5
       })
@@ -263,9 +249,10 @@ describe('FSCollection', () => {
 
       expect(results[0]).toMatchObject({
         document: {
-          metadata: { id: 'doc1' },
+          id: 'doc1',
           content: 'test content 1',
-          data: {}
+          data: { $id: 'doc1', $type: 'post' },
+          metadata: { id: 'doc1', type: 'post' }
         },
         score: 0.9
       })

@@ -14,3 +14,4 @@ export type {
   MetadataFilter,
   NestedFilterQuery
 } from './types'
+export { BaseDocument } from './document'

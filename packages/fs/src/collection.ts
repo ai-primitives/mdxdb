@@ -1,4 +1,4 @@
-import { CollectionProvider, Document, FilterQuery, SearchOptions, VectorSearchOptions, SearchResult } from '@mdxdb/types'
+import { CollectionProvider, Document, FilterQuery, SearchOptions, VectorSearchOptions, SearchResult, BaseDocument } from '@mdxdb/types'
 import { promises as fs } from 'fs'
 import * as nodePath from 'path'
 import { EmbeddingsService } from './embeddings'
@@ -52,20 +52,21 @@ export class FSCollection implements CollectionProvider<Document> {
               const content = await fs.readFile(path, 'utf-8')
               console.log('Successfully read file:', path)
               const docId = id.split('/').pop() || id
-              return {
-                id: docId,
+              return new BaseDocument(
+                docId,
                 content,
-                data: {
+                {
                   $id: docId,
                   $type: 'document'
                 },
-                metadata: {
+                {
                   id: docId,
                   type: 'document',
                   ts: Date.now()
                 },
-                collections: [this.path]
-              }
+                undefined,
+                [this.path]
+              )
             }
           } catch (error) {
             console.log('Error reading file:', path, error)
@@ -84,27 +85,28 @@ export class FSCollection implements CollectionProvider<Document> {
       let parsedContent: Document | null = null
       try {
         parsedContent = JSON.parse(content)
-      } catch (e) {
+      } catch {
         // If content is not JSON, treat it as raw content
         parsedContent = null
       }
 
-      const doc: Document = {
-        id: docId,
-        content: parsedContent?.content || content,
-        data: {
+      const doc = new BaseDocument(
+        docId,
+        parsedContent?.content || content,
+        {
           $id: docId,
           $type: parsedContent?.metadata?.type || 'document',
           ...(parsedContent?.data || {})
         },
-        metadata: {
+        {
           id: parsedContent?.metadata?.id || docId,
           type: parsedContent?.metadata?.type || 'document',
           ts: Date.now(),
           ...(parsedContent?.metadata || {})
         },
-        collections: parsedContent?.collections || [this.path]
-      }
+        undefined,
+        parsedContent?.collections || [this.path]
+      )
       return doc
     } catch (error) {
       if ((error as { code?: string }).code === 'ENOENT') {
@@ -291,21 +293,21 @@ export class FSCollection implements CollectionProvider<Document> {
         if (!storedEmbedding?.embedding) {
           console.debug(`No embedding found for document ${id}`)
           return {
-            document: {
-              id: id,
-              content: content.content,
-              data: {
+            document: new BaseDocument(
+              id,
+              content.content,
+              {
                 ...(content.data || {}),
                 $id: id,
                 $type: 'document',
                 $context: content.data?.$context
               },
-              metadata: {
+              {
                 id: id,
                 type: 'document',
                 ts: Date.now()
               }
-            },
+            ),
             score: 0,
             vector: undefined
           }
@@ -317,21 +319,21 @@ export class FSCollection implements CollectionProvider<Document> {
         )
         console.debug(`Document ${id} similarity: ${similarity}`)
         return {
-          document: {
-            id: id,
-            content: content.content,
-            data: {
+          document: new BaseDocument(
+            id,
+            content.content,
+            {
               ...(content.data || {}),
               $id: id,
               $type: 'document',
               $context: content.data?.$context
             },
-            metadata: {
+            {
               id: id,
               type: 'document',
               ts: Date.now()
             }
-          },
+          ),
           score: similarity,
           vector: options.includeVectors ? storedEmbedding.embedding : undefined
         }

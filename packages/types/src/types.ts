@@ -8,49 +8,41 @@ import type { MDXLD } from './mdxld'
  * Document interface representing a document in the database
  * @extends MDXLD Base interface for MDX content
  */
+/**
+ * Document interface representing a document in the database
+ * Extends MDXLD base interface and adds document-specific functionality
+ */
 export interface Document extends MDXLD {
-  /** Unique identifier for the document - required at root level for JSON-LD compatibility */
-  id: string
-  /** Document content - required by MDXLD */
-  content: string
-  /** Document data including JSON-LD properties - required by MDXLD */
-  data: {
-    /** JSON-LD identifier (duplicated from root id) */
-    $id: string
-    /** JSON-LD type */
-    $type: string
-    /** JSON-LD context */
-    $context?: string | Record<string, unknown>
-    /** Additional data properties */
-    [key: string]: unknown
-  }
-  /** Optional vector embeddings for similarity search */
-  embeddings?: number[]
-  /** Optional list of collection names this document belongs to */
-  collections?: string[]
-  /** Required metadata for document tracking */
-  metadata: {
-    /** Document identifier - matches root id for consistency */
-    id: string
-    /** Document type - matches data.$type */
-    type: string
-    /** Optional timestamp */
-    ts?: number
-    /** Optional namespace */
-    ns?: string
-    /** Optional host information */
-    host?: string
-    /** Optional path segments */
-    path?: string[]
-    /** Optional content description */
-    content?: string
-    /** Optional additional metadata */
-    data?: Record<string, unknown>
-    /** Optional version number */
-    version?: number
-    /** Optional hash information */
-    hash?: Record<string, unknown>
-  }
+  /**
+   * Get the document's unique identifier
+   * @returns The document's ID
+   */
+  getId(): string
+
+  /**
+   * Get the document's type
+   * @returns The document's type
+   */
+  getType(): string
+
+  /**
+   * Get the document's collections
+   * @returns Array of collection names this document belongs to
+   */
+  getCollections(): string[]
+
+  /**
+   * Check if document belongs to a collection
+   * @param collection Collection name to check
+   * @returns True if document belongs to collection
+   */
+  belongsToCollection(collection: string): boolean
+
+  /**
+   * Get document's vector embeddings
+   * @returns Vector embeddings if available
+   */
+  getEmbeddings(): number[] | undefined
 }
 
 export interface VectorSearchOptions {
