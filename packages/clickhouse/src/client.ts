@@ -3,6 +3,21 @@ import type { DatabaseProvider, Document, CollectionProvider, SearchOptions, Fil
 import { type Config } from './config'
 import { checkClickHouseVersion } from './utils'
 
+interface ClickHouseRow {
+  id: string
+  type: string
+  ns: string
+  host: string
+  path: string[]
+  content: string
+  data: Record<string, unknown>
+  embedding: number[]
+  version: number
+  hash: Record<string, unknown>
+  ts: number
+  sign: number
+}
+
 class ClickHouseCollectionProvider implements CollectionProvider<Document> {
   constructor(
     public readonly path: string,
@@ -65,18 +80,17 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
         }
       })
 
-      const rows = await result.json()
+      const rows = await result.json() as ClickHouseRow[]
       if (!Array.isArray(rows)) {
         throw new Error('Unexpected response format: expected array')
       }
 
       return rows.map(row => {
-        // Convert row to Document type
         const doc: Document = {
-          // Optional Document interface fields
+          content: String(row.content || ''),
+          data: typeof row.data === 'object' ? row.data as Record<string, unknown> : {},
           embeddings: Array.isArray(row.embedding) ? row.embedding.map(Number) : undefined,
           collections: [collection],
-          // All other fields go into metadata since we don't have access to MDXLD type
           metadata: {
             id: String(row.id),
             type: String(row.type),
@@ -84,9 +98,9 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
             host: String(row.host),
             path: Array.isArray(row.path) ? row.path.map(String) : [],
             content: String(row.content || ''),
-            data: typeof row.data === 'object' ? row.data : {},
+            data: typeof row.data === 'object' ? row.data as Record<string, unknown> : {},
             version: Number(row.version),
-            hash: typeof row.hash === 'object' ? row.hash : {},
+            hash: typeof row.hash === 'object' ? row.hash as Record<string, unknown> : {},
             ts: Number(row.ts)
           }
         }
@@ -226,7 +240,7 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
         }
       })
 
-      const currentRows = await currentResult.json()
+      const currentRows = await currentResult.json() as { version: number }[]
       if (!Array.isArray(currentRows) || currentRows.length === 0) {
         throw new Error(`Document not found: ${id}`)
       }
@@ -361,7 +375,7 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
         }
       })
 
-      const currentRows = await currentResult.json()
+      const currentRows = await currentResult.json() as { version: number }[]
       if (!Array.isArray(currentRows) || currentRows.length === 0) {
         throw new Error(`Document not found: ${id}`)
       }

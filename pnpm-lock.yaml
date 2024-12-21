@@ -179,8 +179,8 @@ importers:
         specifier: ^0.1.11
         version: 0.1.11(hono@4.6.14)(zod@3.24.1)
       '@mdxdb/clickhouse':
-        specifier: workspace:*
-        version: link:../clickhouse
+        specifier: ^0.0.1
+        version: 0.0.1(@clickhouse/client-web@1.9.1)
       '@mdxdb/fs':
         specifier: ^0.1.0
         version: 0.1.0(@mdx-js/mdx@3.1.0(acorn@8.14.0))(react@18.3.1)(solid-js@1.9.3)(svelte@4.2.19)(vue@3.5.13(typescript@5.5.4))(zod@3.24.1)
@@ -1122,6 +1122,12 @@ packages:
     peerDependencies:
       '@types/react': '>=16'
       react: '>=16'
+
+  '@mdxdb/clickhouse@0.0.1':
+    resolution: {integrity: sha512-AllzJ42cHP9ELJ/tNzp9XkKMVoN6n31Y9PYyyfho0xGZI2+PIYtAVeXlRnSRrULYdIdKGZ6NaJremjlbb1C3/A==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      '@clickhouse/client-web': ^1.9.1
 
   '@mdxdb/fs@0.1.0':
     resolution: {integrity: sha512-lSTEa6nWExCqxKDYqg/XzvKxzpu/TyEAPcHDhpuLqCjl0nyrwdafZkmF/S7lMx/OPkxXOfYFR1WtQdF4tru8EA==}
@@ -5041,6 +5047,12 @@ snapshots:
       '@types/mdx': 2.0.13
       '@types/react': 18.3.17
       react: 18.3.1
+
+  '@mdxdb/clickhouse@0.0.1(@clickhouse/client-web@1.9.1)':
+    dependencies:
+      '@clickhouse/client-web': 1.9.1
+      '@mdxdb/types': link:packages/types
+      zod: 3.24.1
 
   '@mdxdb/fs@0.1.0(@mdx-js/mdx@3.1.0(acorn@8.14.0))(react@18.3.1)(solid-js@1.9.3)(svelte@4.2.19)(vue@3.5.13(typescript@5.5.4))(zod@3.24.1)':
     dependencies:

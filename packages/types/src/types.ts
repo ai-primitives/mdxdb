@@ -1,4 +1,4 @@
-import type { MDXLD } from 'mdxld'
+import type { MDXLD } from './mdxld'
 
 export interface Document extends MDXLD {
   embeddings?: number[]
