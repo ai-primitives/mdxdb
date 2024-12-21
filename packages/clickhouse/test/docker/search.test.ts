@@ -1,7 +1,8 @@
-import { afterAll, beforeAll, describe, expect, test } from 'vitest'
+import { describe, expect, test, beforeAll, afterAll } from 'vitest'
 import { createClient } from '@clickhouse/client-web'
 import type { ClickHouseClient } from '@clickhouse/client-web'
 import { dockerTestConfig } from '../docker.config'
+import '../setup'
 
 interface TestRow {
   id: string
@@ -23,76 +24,22 @@ describe('ClickHouse Search Tests', () => {
   })
 
   beforeAll(async () => {
-    try {
-      // Initialize database
-      await client.exec({
-        query: `CREATE DATABASE IF NOT EXISTS ${dockerTestConfig.database}`
-      })
-
-      await client.exec({
-        query: `USE ${dockerTestConfig.database}`
-      })
-
-      // Initialize tables
-      await client.exec({
-        query: `
-          CREATE TABLE IF NOT EXISTS ${dockerTestConfig.database}.${dockerTestConfig.oplogTable} (
-            metadata JSON,
-            type String,
-            ns String,
-            host String,
-            path Array(String),
-            data JSON,
-            content String,
-            embedding Array(Float32),
-            ts UInt32,
-            hash JSON,
-            version UInt64
-          ) ENGINE = MergeTree()
-          ORDER BY (JSONExtractString(metadata, 'id'), version)
-        `
-      })
-
-      await client.exec({
-        query: `
-          CREATE MATERIALIZED VIEW IF NOT EXISTS ${dockerTestConfig.database}.${dockerTestConfig.dataTable}
-          ENGINE = VersionedCollapsingMergeTree(sign, version)
-          ORDER BY (JSONExtractString(metadata, 'id'), version)
-          AS SELECT
-            metadata,
-            type,
-            ns,
-            host,
-            path,
-            data,
-            content,
-            embedding,
-            ts,
-            hash,
-            version,
-            1 as sign
-          FROM ${dockerTestConfig.database}.${dockerTestConfig.oplogTable}
-        `
-      })
-
-      // Insert test data
-      await client.exec({
-        query: `
-          INSERT INTO ${dockerTestConfig.database}.${dockerTestConfig.oplogTable}
-          SELECT
-            '{"id":"test1","type":"document","ts":"' || toString(now64()) || '"}' as metadata,
-            'document' as type,
-            'test' as ns,
-            'hash1' as hash,
-            '{"content": "test document"}' as data,
-            [${Array(256).fill(0.1).join(',')}] as embedding,
-            now() as timestamp
-        `
-      })
-    } catch (error) {
-      console.error('Failed to initialize database:', error)
-      throw error
-    }
+    // Database initialization is handled in setup.ts
+    // Insert test data
+    await client.exec({
+      query: `
+        INSERT INTO ${dockerTestConfig.database}.${dockerTestConfig.oplogTable}
+        SELECT
+          '{"id":"test1","type":"document","ts":"' || toString(now64()) || '"}' as metadata,
+          'document' as type,
+          'test' as ns,
+          'hash1' as hash,
+          '{"content": "test document"}' as data,
+          [${Array(256).fill(0.1).join(',')}] as embedding,
+          now() as timestamp
+      `
+    })
+    await new Promise(resolve => setTimeout(resolve, 1000)) // Wait for materialized view to be ready
   })
 
   afterAll(async () => {

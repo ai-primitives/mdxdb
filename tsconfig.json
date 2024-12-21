@@ -16,6 +16,7 @@
     { "path": "packages/fs" },
     { "path": "packages/fetch" },
     { "path": "packages/server" },
-    { "path": "packages/ai" }
+    { "path": "packages/ai" },
+    { "path": "packages/clickhouse" }
   ]
 }

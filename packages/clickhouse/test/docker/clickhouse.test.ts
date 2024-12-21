@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { createClient } from '@clickhouse/client-web'
 import type { ClickHouseClient } from '@clickhouse/client-web'
 import { dockerTestConfig } from '../docker.config'
+import '../setup'
 
 interface VectorSearchResult {
   id: string
@@ -22,61 +23,8 @@ describe('ClickHouse Docker Integration', () => {
   })
 
   beforeAll(async () => {
-    try {
-      // Initialize database
-      await client.exec({
-        query: `CREATE DATABASE IF NOT EXISTS ${dockerTestConfig.database}`
-      })
-
-      await client.exec({
-        query: `USE ${dockerTestConfig.database}`
-      })
-
-      // Initialize tables
-      await client.exec({
-        query: `
-          CREATE TABLE IF NOT EXISTS mdxdb.oplog (
-            metadata JSON,
-            type String,
-            ns String,
-            host String,
-            path Array(String),
-            data JSON,
-            content String,
-            embedding Array(Float32),
-            ts UInt32,
-            hash JSON,
-            version UInt64
-          ) ENGINE = MergeTree()
-          ORDER BY (JSONExtractString(metadata, 'id'), version)
-        `
-      })
-
-      await client.exec({
-        query: `
-          CREATE MATERIALIZED VIEW IF NOT EXISTS mdxdb.data
-          ENGINE = VersionedCollapsingMergeTree(sign, version)
-          ORDER BY (JSONExtractString(metadata, 'id'), version)
-          AS SELECT
-            metadata,
-            type,
-            ns,
-            host,
-            path,
-            data,
-            content,
-            embedding,
-            ts,
-            hash,
-            version,
-            1 as sign
-          FROM mdxdb.oplog
-        `
-      })
-    } catch (error) {
-      console.error('Failed to initialize database:', error)
-      throw error
-    }
+    // Database initialization is handled in setup.ts
+    await new Promise(resolve => setTimeout(resolve, 1000)) // Wait for materialized view to be ready
   })
 
   afterAll(async () => {

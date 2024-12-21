@@ -867,7 +867,7 @@ class ClickHouseDatabaseProvider implements DatabaseProvider<Document> {
 export const createClickHouseClient = async (config: Config): Promise<DatabaseProvider<Document>> => {
   try {
     const client = createClient({
-      host: config.host,
+      host: `http://${config.host}:${config.port}`,
       username: config.username,
       password: config.password,
       database: config.database,

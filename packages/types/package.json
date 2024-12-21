@@ -5,9 +5,9 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
-    "build:types": "tsc --emitDeclarationOnly",
-    "build:packages": "tsc",
+    "build": "rm -rf dist && tsc --declaration --declarationMap",
+    "build:types": "rm -rf dist && tsc --emitDeclarationOnly --declaration --declarationMap",
+    "build:packages": "rm -rf dist && tsc --declaration --declarationMap",
     "test": "vitest run",
     "lint": "eslint 'src/**/*.ts' --ignore-pattern '*.d.ts'"
   },

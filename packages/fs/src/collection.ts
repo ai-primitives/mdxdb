@@ -1,4 +1,5 @@
-import { CollectionProvider, Document, FilterQuery, SearchOptions, VectorSearchOptions, SearchResult, BaseDocument } from '@mdxdb/types'
+import { CollectionProvider, Document, FilterQuery, SearchOptions, VectorSearchOptions, SearchResult } from '@mdxdb/types'
+import { FSDocument } from './document'
 import { promises as fs } from 'fs'
 import * as nodePath from 'path'
 import { EmbeddingsService } from './embeddings'
@@ -52,7 +53,7 @@ export class FSCollection implements CollectionProvider<Document> {
               const content = await fs.readFile(path, 'utf-8')
               console.log('Successfully read file:', path)
               const docId = id.split('/').pop() || id
-              return new BaseDocument(
+              return new FSDocument(
                 docId,
                 content,
                 {
@@ -90,7 +91,7 @@ export class FSCollection implements CollectionProvider<Document> {
         parsedContent = null
       }
 
-      const doc = new BaseDocument(
+      const doc = new FSDocument(
         docId,
         parsedContent?.content || content,
         {
@@ -293,7 +294,7 @@ export class FSCollection implements CollectionProvider<Document> {
         if (!storedEmbedding?.embedding) {
           console.debug(`No embedding found for document ${id}`)
           return {
-            document: new BaseDocument(
+            document: new FSDocument(
               id,
               content.content,
               {
@@ -319,7 +320,7 @@ export class FSCollection implements CollectionProvider<Document> {
         )
         console.debug(`Document ${id} similarity: ${similarity}`)
         return {
-          document: new BaseDocument(
+          document: new FSDocument(
             id,
             content.content,
             {

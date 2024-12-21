@@ -3,7 +3,7 @@
   "ui": "tui",
   "tasks": {
     "build": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["build:types", "build:packages"],
       "outputs": [
         "dist/**/*",
         "*.tsbuildinfo",
@@ -25,12 +25,12 @@
     },
     "build:types": {
       "dependsOn": ["^build:types"],
-      "cache": true,
+      "cache": false,
       "outputs": ["dist/**/*", "*.tsbuildinfo"]
     },
     "build:packages": {
-      "dependsOn": ["^build:packages", "^build:types"],
-      "cache": true,
+      "dependsOn": ["build:types"],
+      "cache": false,
       "outputs": ["dist/**/*", "*.tsbuildinfo"]
     }
   }

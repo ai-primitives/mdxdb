@@ -35,11 +35,15 @@ describe('ClickHouse Client', () => {
     expect(client).toBeDefined()
     // Verify client is created with correct URL format
     expect(createClient).toHaveBeenCalledWith({
-      host: `http://${config.host}:${config.port}`,
+      url: `http://${config.host}:${config.port}`,
       username: config.username,
       password: config.password,
       database: config.database,
-      clickhouse_settings: config.clickhouse_settings
+      clickhouse_settings: {
+        allow_experimental_json_type: 1,
+        allow_experimental_full_text_index: 1,
+        allow_experimental_vector_similarity_index: 1
+      }
     })
   })
 })
