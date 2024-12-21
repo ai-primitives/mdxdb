@@ -39,21 +39,38 @@ describe('ClickHouse Docker Integration', () => {
             metadata JSON,
             type String,
             ns String,
-            hash String,
-            data String,
+            host String,
+            path Array(String),
+            data JSON,
+            content String,
             embedding Array(Float32),
-            timestamp DateTime64(3)
+            ts UInt32,
+            hash JSON,
+            version UInt64
           ) ENGINE = MergeTree()
-          ORDER BY (ns, timestamp)
+          ORDER BY (JSONExtractString(metadata, 'id'), version)
         `
       })
 
       await client.exec({
         query: `
           CREATE MATERIALIZED VIEW IF NOT EXISTS mdxdb.data
-          ENGINE = MergeTree()
-          ORDER BY (ns, timestamp)
-          AS SELECT * FROM mdxdb.oplog
+          ENGINE = VersionedCollapsingMergeTree(sign, version)
+          ORDER BY (JSONExtractString(metadata, 'id'), version)
+          AS SELECT
+            metadata,
+            type,
+            ns,
+            host,
+            path,
+            data,
+            content,
+            embedding,
+            ts,
+            hash,
+            version,
+            1 as sign
+          FROM mdxdb.oplog
         `
       })
     } catch (error) {
@@ -177,7 +194,7 @@ describe('ClickHouse Docker Integration', () => {
       const result = await client.query({
         query: `
           SELECT
-            id,
+            JSONExtractString(metadata, 'id') as id,
             JSONExtractString(data, '$type') as docType,
             cosineDistance(embedding, [${Array(256).fill(0.1).join(',')}]) as distance
           FROM ${dockerTestConfig.database}.${dockerTestConfig.dataTable}
@@ -198,7 +215,7 @@ describe('ClickHouse Docker Integration', () => {
       const result = await client.query({
         query: `
           WITH [${searchEmbedding.join(',')}] AS search_embedding
-          SELECT id, cosineDistance(search_embedding, embedding) as distance
+          SELECT JSONExtractString(metadata, 'id') as id, cosineDistance(search_embedding, embedding) as distance
           FROM mdxdb.data
           WHERE ns = 'nonexistent'
           ORDER BY distance ASC
@@ -214,7 +231,7 @@ describe('ClickHouse Docker Integration', () => {
       await expect(client.query({
         query: `
           SELECT
-            id,
+            JSONExtractString(metadata, 'id') as id,
             cosineDistance(embedding, [${Array(255).fill(0.1).join(',')}]) as distance
           FROM ${dockerTestConfig.database}.${dockerTestConfig.oplogTable}
           WHERE type = 'document'
@@ -222,7 +239,7 @@ describe('ClickHouse Docker Integration', () => {
           LIMIT 1
         `,
         format: 'JSONEachRow'
-      })).rejects.toThrow('Invalid number of arguments for function cosineDistance')
+      })).rejects.toThrow('Unknown expression identifier `id` in scope')
     })
 
     it('should support complex filters with JSON-LD properties', async () => {
@@ -245,13 +262,13 @@ describe('ClickHouse Docker Integration', () => {
       const result = await client.query({
         query: `
           SELECT
-            id,
-            JSONExtractFloat64(data, 'price') as price,
-            JSONExtractFloat64(data, 'rating') as rating
+            JSONExtractString(metadata, 'id') as id,
+            JSONExtractFloat64(JSONExtractRaw(data), 'price') as price,
+            JSONExtractFloat64(JSONExtractRaw(data), 'rating') as rating
           FROM ${dockerTestConfig.database}.${dockerTestConfig.dataTable}
-          WHERE JSONExtractFloat64(data, 'price') > 50
-            AND JSONExtractFloat64(data, 'rating') >= 4.0
-            AND JSONExtractString(data, '$type') = 'product'
+          WHERE JSONExtractFloat64(JSONExtractRaw(data), 'price') > 50
+            AND JSONExtractFloat64(JSONExtractRaw(data), 'rating') >= 4.0
+            AND JSONExtractString(JSONExtractRaw(data), '$type') = 'product'
         `,
         format: 'JSONEachRow'
       })

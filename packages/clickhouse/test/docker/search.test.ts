@@ -40,21 +40,38 @@ describe('ClickHouse Search Tests', () => {
             metadata JSON,
             type String,
             ns String,
-            hash String,
-            data String,
+            host String,
+            path Array(String),
+            data JSON,
+            content String,
             embedding Array(Float32),
-            timestamp DateTime64(3)
+            ts UInt32,
+            hash JSON,
+            version UInt64
           ) ENGINE = MergeTree()
-          ORDER BY (ns, timestamp)
+          ORDER BY (JSONExtractString(metadata, 'id'), version)
         `
       })
 
       await client.exec({
         query: `
           CREATE MATERIALIZED VIEW IF NOT EXISTS ${dockerTestConfig.database}.${dockerTestConfig.dataTable}
-          ENGINE = MergeTree()
-          ORDER BY (ns, timestamp)
-          AS SELECT * FROM ${dockerTestConfig.database}.${dockerTestConfig.oplogTable}
+          ENGINE = VersionedCollapsingMergeTree(sign, version)
+          ORDER BY (JSONExtractString(metadata, 'id'), version)
+          AS SELECT
+            metadata,
+            type,
+            ns,
+            host,
+            path,
+            data,
+            content,
+            embedding,
+            ts,
+            hash,
+            version,
+            1 as sign
+          FROM ${dockerTestConfig.database}.${dockerTestConfig.oplogTable}
         `
       })
 
@@ -93,10 +110,10 @@ describe('ClickHouse Search Tests', () => {
     const result = await client.query({
       query: `
         SELECT
-          id,
-          JSONExtractString(data, 'content') as content
+          JSONExtractString(metadata, 'id') as id,
+          content
         FROM ${dockerTestConfig.database}.${dockerTestConfig.oplogTable}
-        WHERE JSONExtractString(data, 'content') = 'test document'
+        WHERE content = 'test document'
         LIMIT 1
       `,
       format: 'JSONEachRow'
@@ -109,9 +126,12 @@ describe('ClickHouse Search Tests', () => {
   test('full-text search works with LIKE operator', async () => {
     const result = await client.query({
       query: `
-        SELECT *
+        SELECT
+          JSONExtractString(metadata, 'id') as id,
+          content,
+          data
         FROM ${dockerTestConfig.database}.${dockerTestConfig.dataTable}
-        WHERE data LIKE '%test%'
+        WHERE content LIKE '%test%'
         LIMIT 1
       `,
       format: 'JSONEachRow'
