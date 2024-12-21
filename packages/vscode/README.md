@@ -30,9 +30,12 @@ VSCode extension for MDX file management with integrated AST viewing and preview
 
 ## Installation
 
-```bash
-npm install @mdxdb/vscode
-```
+1. Open Visual Studio Code
+2. Go to Extensions (Ctrl+Shift+X)
+3. Search for "@mdxdb/vscode"
+4. Click Install
+
+Or install directly from the [Visual Studio Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ai-primitives.mdxdb-vscode).
 
 ## Usage
 
@@ -46,7 +49,7 @@ npm install @mdxdb/vscode
 ```json
 {
   'mdxdb.fs.path': '.', // Base path for file system provider
-  'mdxdb.preview.refreshInterval': 1000, // Preview refresh rate in ms
+  'mdxdb.preview.debounceMs': 300, // Debounce time for preview updates
   'mdxdb.ast.format': 'json5' // AST output format
 }
 ```
