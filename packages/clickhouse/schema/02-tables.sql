@@ -7,7 +7,7 @@ SET allow_experimental_full_text_index = 1;
 SET allow_experimental_vector_similarity_index = 1;
 
 -- Oplog table with MergeTree engine for append-only operations
-CREATE TABLE IF NOT EXISTS mdxdb.oplog (
+CREATE TABLE IF NOT EXISTS mdxdb.opLog (
     id String,
     type String,
     ns String,
@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS mdxdb.oplog (
 ORDER BY (id, version);
 
 -- Data table with VersionedCollapsingMergeTree engine for delete support
-CREATE TABLE IF NOT EXISTS mdxdb.data (
+CREATE TABLE IF NOT EXISTS mdxdb.dataTable (
     id String,
     type String,
     ns String,
