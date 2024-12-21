@@ -1,14 +1,14 @@
 import * as vscode from 'vscode'
-import type { Document } from '@mdxdb/types'
+import type { Document, DatabaseProvider } from '@mdxdb/types'
 import type { FSCollection } from '@mdxdb/fs/src/collection'
 import * as path from 'path'
-import { createProvider } from './providerFactory'
 
 interface MDXDocument extends Document {
   id: string;
   content: string;
   data: Record<string, unknown>;
   metadata: {
+    id: string;
     type: 'mdx';
     path: string;
     ts: number;
@@ -16,33 +16,22 @@ interface MDXDocument extends Document {
 }
 
 export class MDXFileSystemProvider implements vscode.FileSystemProvider {
-  private db: Awaited<ReturnType<typeof createProvider>> | undefined
   private collection: FSCollection | undefined
   private _onDidChangeFile = new vscode.EventEmitter<vscode.FileChangeEvent[]>()
-  private initializationPromise: Promise<void>
 
   readonly onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._onDidChangeFile.event
 
-  constructor() {
-    this.initializationPromise = this.initialize()
-  }
-
-  private async initialize(): Promise<void> {
-    const workspacePath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || '.'
-    const config = vscode.workspace.getConfiguration('mdxdb')
-    const fsPath = config.get<string>('fs.path') || '.'
-    const _basePath = path.resolve(workspacePath, fsPath)
-    
-    this.db = await createProvider()
+  constructor(private db: DatabaseProvider<Document>) {
     this.collection = this.db.collection('mdx') as FSCollection
   }
 
-  watch(_uri: vscode.Uri, _options: { readonly recursive: boolean; readonly excludes: readonly string[] }): vscode.Disposable {
+  watch(uri: vscode.Uri, options: { readonly recursive: boolean; readonly excludes: readonly string[] }): vscode.Disposable {
+    // Log watch request for debugging
+    console.debug('File system watch requested:', { uri: uri.toString(), options })
     return { dispose: () => {} }
   }
 
   async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
-    await this.initializationPromise
     if (!this.collection) {
       throw vscode.FileSystemError.Unavailable('Provider not initialized')
     }
@@ -58,13 +47,13 @@ export class MDXFileSystemProvider implements vscode.FileSystemProvider {
         mtime: Date.now(),
         size: new TextEncoder().encode(doc.content).length,
       }
-    } catch (_error) {
+    } catch (error) {
+      console.error('Error in stat operation:', error)
       throw vscode.FileSystemError.FileNotFound(uri)
     }
   }
 
   async readDirectory(_uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
-    await this.initializationPromise
     if (!this.collection) {
       throw vscode.FileSystemError.Unavailable('Provider not initialized')
     }
@@ -75,7 +64,6 @@ export class MDXFileSystemProvider implements vscode.FileSystemProvider {
   }
 
   async readFile(uri: vscode.Uri): Promise<Uint8Array> {
-    await this.initializationPromise
     if (!this.collection) {
       throw vscode.FileSystemError.Unavailable('Provider not initialized')
     }
@@ -86,21 +74,23 @@ export class MDXFileSystemProvider implements vscode.FileSystemProvider {
         throw vscode.FileSystemError.FileNotFound(uri)
       }
       return new TextEncoder().encode(doc.content)
-    } catch (_error) {
+    } catch (error) {
+      console.error('Error in readFile operation:', error)
       throw vscode.FileSystemError.FileNotFound(uri)
     }
   }
 
-  async writeFile(uri: vscode.Uri, content: Uint8Array, _options: { readonly create: boolean; readonly overwrite: boolean }): Promise<void> {
-    await this.initializationPromise
+  async writeFile(uri: vscode.Uri, content: Uint8Array, options: { readonly create: boolean; readonly overwrite: boolean }): Promise<void> {
     if (!this.collection) {
       throw vscode.FileSystemError.Unavailable('Provider not initialized')
     }
+    console.debug('Writing file:', { uri: uri.toString(), create: options.create, overwrite: options.overwrite })
     const doc: MDXDocument = {
       id: uri.fsPath,
       content: new TextDecoder().decode(content),
       data: {},
       metadata: {
+        id: uri.fsPath,
         type: 'mdx',
         path: uri.fsPath,
         ts: Date.now()
@@ -110,20 +100,20 @@ export class MDXFileSystemProvider implements vscode.FileSystemProvider {
     this._onDidChangeFile.fire([{ type: vscode.FileChangeType.Changed, uri }])
   }
 
-  async delete(uri: vscode.Uri, _options: { readonly recursive: boolean }): Promise<void> {
-    await this.initializationPromise
+  async delete(uri: vscode.Uri, options: { readonly recursive: boolean }): Promise<void> {
     if (!this.collection) {
       throw vscode.FileSystemError.Unavailable('Provider not initialized')
     }
+    console.debug('Deleting file:', { uri: uri.toString(), recursive: options.recursive })
     await this.collection.delete(uri.fsPath, uri.fsPath)
     this._onDidChangeFile.fire([{ type: vscode.FileChangeType.Deleted, uri }])
   }
 
-  async rename(oldUri: vscode.Uri, newUri: vscode.Uri, _options: { readonly overwrite: boolean }): Promise<void> {
-    await this.initializationPromise
+  async rename(oldUri: vscode.Uri, newUri: vscode.Uri, options: { readonly overwrite: boolean }): Promise<void> {
     if (!this.collection) {
       throw vscode.FileSystemError.Unavailable('Provider not initialized')
     }
+    console.debug('Renaming file:', { oldUri: oldUri.toString(), newUri: newUri.toString(), overwrite: options.overwrite })
     const docs = await this.collection.get(oldUri.fsPath)
     const doc = docs[0]
     if (!doc) {

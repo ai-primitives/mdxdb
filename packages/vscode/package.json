@@ -17,11 +17,18 @@
   ],
   "main": "./out/extension.js",
   "contributes": {
-    "languages": [{
-      "id": "mdx",
-      "extensions": [".mdx"],
-      "aliases": ["MDX", "mdx"]
-    }],
+    "languages": [
+      {
+        "id": "mdx",
+        "extensions": [
+          ".mdx"
+        ],
+        "aliases": [
+          "MDX",
+          "mdx"
+        ]
+      }
+    ],
     "commands": [
       {
         "command": "mdxdb.openPreview",
@@ -40,7 +47,11 @@
         "mdxdb.provider": {
           "type": "string",
           "default": "fs",
-          "enum": ["fs", "fetch", "clickhouse"],
+          "enum": [
+            "fs",
+            "fetch",
+            "clickhouse"
+          ],
           "description": "Provider type for MDX file management"
         },
         "mdxdb.fs.path": {
@@ -96,12 +107,16 @@
         "mdxdb.ast.format": {
           "type": "string",
           "default": "json5",
-          "enum": ["json5", "json"],
+          "enum": [
+            "json5",
+            "json"
+          ],
           "description": "AST output format"
         }
       }
     }
   },
+  "type": "module",
   "scripts": {
     "vscode:prepublish": "pnpm run compile",
     "compile": "tsc -p ./",
@@ -111,25 +126,27 @@
     "test": "vscode-test"
   },
   "dependencies": {
-    "@mdxdb/fs": "workspace:*",
-    "@mdxdb/types": "workspace:*",
     "@mdx-js/mdx": "^3.0.0",
-    "json5": "^2.2.0",
+    "@mdxdb/fs": "^0.1.0",
+    "@mdxdb/types": "^0.1.0",
+    "json5": "^2.2.3",
     "vscode-languageclient": "^8.0.0"
   },
   "optionalDependencies": {
-    "@mdxdb/fetch": "workspace:*",
-    "@mdxdb/clickhouse": "workspace:*"
+    "@mdxdb/clickhouse": "workspace:*",
+    "@mdxdb/fetch": "workspace:*"
   },
   "devDependencies": {
-    "@types/node": "20.x",
-    "@types/vscode": "^1.96.0",
+    "@types/json5": "^2.2.0",
     "@types/mocha": "^10.0.10",
+    "@types/node": "20.x",
+    "@types/react": "^18.0.0",
+    "@types/vscode": "^1.96.0",
     "@typescript-eslint/eslint-plugin": "^8.17.0",
     "@typescript-eslint/parser": "^8.17.0",
-    "eslint": "^9.16.0",
-    "typescript": "^5.0.0",
     "@vscode/test-cli": "^0.0.10",
-    "@vscode/test-electron": "^2.4.1"
+    "@vscode/test-electron": "^2.4.1",
+    "eslint": "^9.16.0",
+    "typescript": "^5.0.0"
   }
 }
