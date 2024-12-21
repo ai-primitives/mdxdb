@@ -1,5 +1,6 @@
 import { createClient, type ClickHouseClient } from '@clickhouse/client-web'
 import type { DatabaseProvider, Document, CollectionProvider, SearchOptions, FilterQuery, VectorSearchOptions, SearchResult, FilterOperator } from '@mdxdb/types'
+import { BaseDocument } from '@mdxdb/types'
 import { type Config } from './config'
 import { checkClickHouseVersion } from './utils'
 
@@ -93,17 +94,11 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
         if (!data.$id) data.$id = String(row.id)
         if (!data.$type && row.type) data.$type = String(row.type)
         
-        const doc: Document = {
-          id: String(row.id), // Keep id at root level for JSON-LD compatibility
-          content: String(row.content || ''),
-          data: {
-            ...(typeof row.data === 'object' ? row.data as Record<string, unknown> : {}),
-            $id: String(row.id),
-            $type: String(row.type)
-          },
-          embeddings: Array.isArray(row.embedding) ? row.embedding.map(Number) : undefined,
-          collections: [collection],
-          metadata: {
+        const doc = new BaseDocument(
+          String(row.id),
+          String(row.content || ''),
+          typeof row.data === 'object' ? row.data as Record<string, unknown> : {},
+          {
             type: String(row.type),
             ns: String(row.ns),
             host: String(row.host),
@@ -113,8 +108,10 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
             version: Number(row.version),
             hash: typeof row.hash === 'object' ? row.hash as Record<string, unknown> : {},
             ts: Number(row.ts)
-          }
-        }
+          },
+          Array.isArray(row.embedding) ? row.embedding.map(Number) : undefined,
+          [collection]
+        )
         return doc
       })
     } catch (error) {
@@ -147,6 +144,7 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
       // Initialize metadata if not present
       if (!document.metadata) {
         document.metadata = {
+          id: document.id,
           type: 'document',
           ts: timestamp
         }
@@ -281,6 +279,7 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
     // Initialize metadata if not present
     if (!document.metadata) {
       document.metadata = {
+        id: document.id,
         type: 'document',
         ts: Math.floor(Date.now() / 1000)
       }
@@ -591,21 +590,16 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
       const rows = await result.json() as ClickHouseRow[]
       
       return rows.map(row => {
-        const data: Document['data'] = {
-          ...(typeof row.data === 'object' ? row.data as Record<string, unknown> : {}),
-          $id: String(row.id),
-          $type: String(row.type)
-        }
-        if (row.data && typeof row.data === 'object' && '$context' in row.data) {
-          data.$context = row.data.$context as string | Record<string, unknown>
-        }
-        return {
-          id: String(row.id),
-          content: String(row.content || ''),
-          data,
-          embeddings: Array.isArray(row.embedding) ? row.embedding.map(Number) : undefined,
-          collections: [this.path],
-          metadata: {
+        return new BaseDocument(
+          String(row.id),
+          String(row.content || ''),
+          {
+            ...(typeof row.data === 'object' ? row.data as Record<string, unknown> : {}),
+            $id: String(row.id),
+            $type: String(row.type)
+          },
+          {
+            id: String(row.id),
             type: String(row.type),
             ns: String(row.ns),
             host: String(row.host),
@@ -615,8 +609,10 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
             version: Number(row.version),
             hash: typeof row.hash === 'object' ? row.hash as Record<string, unknown> : {},
             ts: Number(row.ts)
-          }
-        }
+          },
+          Array.isArray(row.embedding) ? row.embedding.map(Number) : undefined,
+          [this.path]
+        )
       })
     } catch (error) {
       throw new Error(`Failed to find documents: ${error instanceof Error ? error.message : 'Unknown error'}`)
@@ -688,35 +684,33 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
       const rows = await result.json() as ClickHouseRow[]
       
       return rows.map(row => {
-        const data: Document['data'] = {
-          ...(typeof row.data === 'object' ? row.data as Record<string, unknown> : {}),
-          $id: String(row.id),
-          $type: String(row.type)
-        }
-        if (row.data && typeof row.data === 'object' && '$context' in row.data) {
-          data.$context = row.data.$context as string | Record<string, unknown>
-        }
-        return {
-          document: {
-            id: String(row.id),
-            content: String(row.content || ''),
-            data,
-            embeddings: Array.isArray(row.embedding) ? row.embedding.map(Number) : undefined,
-            collections: [this.path],
-            metadata: {
-              type: String(row.type),
-              ns: String(row.ns),
-              host: String(row.host),
-              path: Array.isArray(row.path) ? row.path.map(String) : [],
-              content: String(row.content || ''),
-              data: typeof row.data === 'object' ? row.data as Record<string, unknown> : {},
-              version: Number(row.version),
-              hash: typeof row.hash === 'object' ? row.hash as Record<string, unknown> : {},
-              ts: Number(row.ts)
-            }
+        const doc = new BaseDocument(
+          String(row.id),
+          String(row.content || ''),
+          {
+            ...(typeof row.data === 'object' ? row.data as Record<string, unknown> : {}),
+            $id: String(row.id),
+            $type: String(row.type)
           },
-          score: 1 // Basic match score for text search
-        }
+          {
+            id: String(row.id),
+            type: String(row.type),
+            ns: String(row.ns),
+            host: String(row.host),
+            path: Array.isArray(row.path) ? row.path.map(String) : [],
+            content: String(row.content || ''),
+            data: typeof row.data === 'object' ? row.data as Record<string, unknown> : {},
+            version: Number(row.version),
+            hash: typeof row.hash === 'object' ? row.hash as Record<string, unknown> : {},
+            ts: Number(row.ts)
+          },
+          Array.isArray(row.embedding) ? row.embedding.map(Number) : undefined,
+          [this.path]
+        )
+        return {
+          document: doc,
+          score: 1
+        } as SearchResult<Document>
       })
     } catch (error) {
       throw new Error(`Failed to search documents: ${error instanceof Error ? error.message : 'Unknown error'}`)
@@ -798,35 +792,33 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
       return rows
         .filter(row => row.score <= (options.threshold || 1))
         .map(row => {
-          const data: Document['data'] = {
-            ...(typeof row.data === 'object' ? row.data as Record<string, unknown> : {}),
-            $id: String(row.id),
-            $type: String(row.type)
-          }
-          if (row.data && typeof row.data === 'object' && '$context' in row.data) {
-            data.$context = row.data.$context as string | Record<string, unknown>
-          }
-          return {
-            document: {
-              id: String(row.id),
-              content: String(row.content || ''),
-              data,
-              embeddings: Array.isArray(row.embedding) ? row.embedding.map(Number) : undefined,
-              collections: [this.path],
-              metadata: {
-                type: String(row.type),
-                ns: String(row.ns),
-                host: String(row.host),
-                path: Array.isArray(row.path) ? row.path.map(String) : [],
-                content: String(row.content || ''),
-                data: typeof row.data === 'object' ? row.data as Record<string, unknown> : {},
-                version: Number(row.version),
-                hash: typeof row.hash === 'object' ? row.hash as Record<string, unknown> : {},
-                ts: Number(row.ts)
-              }
+          const doc = new BaseDocument(
+            String(row.id),
+            String(row.content || ''),
+            {
+              ...(typeof row.data === 'object' ? row.data as Record<string, unknown> : {}),
+              $id: String(row.id),
+              $type: String(row.type)
             },
+            {
+              id: String(row.id),
+              type: String(row.type),
+              ns: String(row.ns),
+              host: String(row.host),
+              path: Array.isArray(row.path) ? row.path.map(String) : [],
+              content: String(row.content || ''),
+              data: typeof row.data === 'object' ? row.data as Record<string, unknown> : {},
+              version: Number(row.version),
+              hash: typeof row.hash === 'object' ? row.hash as Record<string, unknown> : {},
+              ts: Number(row.ts)
+            },
+            Array.isArray(row.embedding) ? row.embedding.map(Number) : undefined,
+            [this.path]
+          )
+          return {
+            document: doc,
             score: row.score
-          }
+          } as SearchResult<Document>
         })
     } catch (error) {
       throw new Error(`Failed to perform vector search: ${error instanceof Error ? error.message : 'Unknown error'}`)
