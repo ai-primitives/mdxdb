@@ -25,11 +25,11 @@ describe('ClickHouse Docker Integration', () => {
     try {
       // Initialize database
       await client.exec({
-        query: 'CREATE DATABASE IF NOT EXISTS mdxdb'
+        query: `CREATE DATABASE IF NOT EXISTS ${dockerTestConfig.database}`
       })
 
       await client.exec({
-        query: 'USE mdxdb'
+        query: `USE ${dockerTestConfig.database}`
       })
 
       // Initialize tables
@@ -63,7 +63,7 @@ describe('ClickHouse Docker Integration', () => {
   })
 
   afterAll(async () => {
-    await client.exec({ query: 'DROP DATABASE IF EXISTS mdxdb' })
+    await client.exec({ query: `DROP DATABASE IF EXISTS ${dockerTestConfig.database}` })
     await client.close()
   })
 
@@ -78,7 +78,7 @@ describe('ClickHouse Docker Integration', () => {
 
   it('should have mdxdb database', async () => {
     const result = await client.query({
-      query: 'SHOW DATABASES LIKE \'mdxdb\'',
+      query: `SHOW DATABASES LIKE '${dockerTestConfig.database}'`,
       format: 'JSONEachRow'
     })
     const rows = (await result.json()) as Array<{ name: string }>
@@ -88,13 +88,13 @@ describe('ClickHouse Docker Integration', () => {
 
   it('should have required tables', async () => {
     const result = await client.query({
-      query: 'SHOW TABLES FROM mdxdb',
+      query: `SHOW TABLES FROM ${dockerTestConfig.database}`,
       format: 'JSONEachRow'
     })
     const rows = (await result.json()) as Array<{ name: string }>
     const tableNames = rows.map(row => row?.name).filter(Boolean)
-    expect(tableNames).toContain('oplog')
-    expect(tableNames).toContain('data')
+    expect(tableNames).toContain(dockerTestConfig.oplogTable)
+    expect(tableNames).toContain(dockerTestConfig.dataTable)
   })
 
   describe('Vector Search', () => {
@@ -124,7 +124,7 @@ describe('ClickHouse Docker Integration', () => {
           SELECT
             id,
             cosineDistance(embedding, [${Array(256).fill(0.1).join(',')}]) as distance
-          FROM mdxdb.oplog
+          FROM ${dockerTestConfig.database}.${dockerTestConfig.oplogTable}
           WHERE type = 'document'
           ORDER BY distance ASC
           LIMIT 1
@@ -160,7 +160,7 @@ describe('ClickHouse Docker Integration', () => {
           SELECT
             id,
             cosineDistance(embedding, [${Array(255).fill(0.1).join(',')}]) as distance
-          FROM mdxdb.oplog
+          FROM ${dockerTestConfig.database}.${dockerTestConfig.oplogTable}
           WHERE type = 'document'
           ORDER BY distance ASC
           LIMIT 1

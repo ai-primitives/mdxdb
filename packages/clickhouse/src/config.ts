@@ -9,8 +9,8 @@ export const configSchema = z.object({
   username: z.string().default('default'),
   password: z.string().default(''),
   database: z.string().default('default'),
-  oplogTable: z.string().default('opLog'),
-  dataTable: z.string().default('dataTable')
+  oplogTable: z.string().default('oplog'),
+  dataTable: z.string().default('data')
 });
 
 /**
@@ -28,7 +28,7 @@ export const getConfig = (): Config => {
     username: process.env.CLICKHOUSE_USERNAME,
     password: process.env.CLICKHOUSE_PASSWORD,
     database: process.env.CLICKHOUSE_DATABASE,
-    oplogTable: process.env.CLICKHOUSE_OPLOG_TABLE || 'opLog',
-    dataTable: process.env.CLICKHOUSE_DATA_TABLE || 'dataTable'
+    oplogTable: process.env.CLICKHOUSE_OPLOG_TABLE || 'oplog',
+    dataTable: process.env.CLICKHOUSE_DATA_TABLE || 'data'
   });
 };

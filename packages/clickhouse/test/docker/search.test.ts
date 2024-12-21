@@ -26,17 +26,17 @@ describe('ClickHouse Search Tests', () => {
     try {
       // Initialize database
       await client.exec({
-        query: 'CREATE DATABASE IF NOT EXISTS mdxdb'
+        query: `CREATE DATABASE IF NOT EXISTS ${dockerTestConfig.database}`
       })
 
       await client.exec({
-        query: 'USE mdxdb'
+        query: `USE ${dockerTestConfig.database}`
       })
 
       // Initialize tables
       await client.exec({
         query: `
-          CREATE TABLE IF NOT EXISTS mdxdb.oplog (
+          CREATE TABLE IF NOT EXISTS ${dockerTestConfig.database}.${dockerTestConfig.oplogTable} (
             id String,
             type String,
             ns String,
@@ -51,17 +51,17 @@ describe('ClickHouse Search Tests', () => {
 
       await client.exec({
         query: `
-          CREATE MATERIALIZED VIEW IF NOT EXISTS mdxdb.data
+          CREATE MATERIALIZED VIEW IF NOT EXISTS ${dockerTestConfig.database}.${dockerTestConfig.dataTable}
           ENGINE = MergeTree()
           ORDER BY (ns, timestamp)
-          AS SELECT * FROM mdxdb.oplog
+          AS SELECT * FROM ${dockerTestConfig.database}.${dockerTestConfig.oplogTable}
         `
       })
 
       // Insert test data
       await client.exec({
         query: `
-          INSERT INTO mdxdb.oplog
+          INSERT INTO ${dockerTestConfig.database}.${dockerTestConfig.oplogTable}
           SELECT
             'test1' as id,
             'document' as type,
@@ -81,7 +81,7 @@ describe('ClickHouse Search Tests', () => {
   afterAll(async () => {
     try {
       await client.exec({
-        query: 'TRUNCATE TABLE IF EXISTS mdxdb.data'
+        query: `TRUNCATE TABLE IF EXISTS ${dockerTestConfig.database}.${dockerTestConfig.dataTable}`
       })
       await client.close()
     } catch (error) {
@@ -95,7 +95,7 @@ describe('ClickHouse Search Tests', () => {
         SELECT
           id,
           JSONExtractString(data, 'content') as content
-        FROM mdxdb.oplog
+        FROM ${dockerTestConfig.database}.${dockerTestConfig.oplogTable}
         WHERE JSONExtractString(data, 'content') = 'test document'
         LIMIT 1
       `,
@@ -110,7 +110,7 @@ describe('ClickHouse Search Tests', () => {
     const result = await client.query({
       query: `
         SELECT *
-        FROM mdxdb.data
+        FROM ${dockerTestConfig.database}.${dockerTestConfig.dataTable}
         WHERE data LIKE '%test%'
         LIMIT 1
       `,
@@ -124,7 +124,7 @@ describe('ClickHouse Search Tests', () => {
     const result = await client.query({
       query: `
         SELECT *
-        FROM mdxdb.data
+        FROM ${dockerTestConfig.database}.${dockerTestConfig.dataTable}
         WHERE data LIKE '%nonexistent%'
         LIMIT 1
       `,
@@ -140,7 +140,7 @@ describe('ClickHouse Search Tests', () => {
       query: `
         SELECT *,
                cosineDistance(embedding, [${testVector.join(',')}]) as distance
-        FROM mdxdb.data
+        FROM ${dockerTestConfig.database}.${dockerTestConfig.dataTable}
         ORDER BY distance ASC
         LIMIT 1
       `,
@@ -174,7 +174,7 @@ describe('ClickHouse Search Tests', () => {
         SELECT
           id,
           cosineDistance(embedding, [${searchVector.join(',')}]) as distance
-        FROM mdxdb.oplog
+        FROM ${dockerTestConfig.database}.${dockerTestConfig.oplogTable}
         WHERE type = 'document'
         ORDER BY distance ASC
         LIMIT 2
