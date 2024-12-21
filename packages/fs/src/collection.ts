@@ -138,7 +138,7 @@ export class FSCollection implements CollectionProvider<Document> {
       })
     )
 
-    return documents.filter((doc): doc is Document => doc !== null)
+    return documents.filter((doc: Document | null): doc is Document => doc !== null)
   }
 
   async update(collection: string, id: string, document: Document): Promise<void> {
@@ -172,10 +172,10 @@ export class FSCollection implements CollectionProvider<Document> {
   async find(filter: FilterQuery<Document>): Promise<Document[]> {
     const docs = await this.getAllDocuments()
     const filtered = docs.filter(({ content }) => {
-      return Object.entries(filter).every(([key, value]) => {
+      return Object.entries(filter).every(([key, value]: [string, unknown]) => {
         if (typeof value === 'object' && value !== null) {
           const operators = value as Record<string, unknown>
-          return Object.entries(operators).every(([op, val]) => {
+          return Object.entries(operators).every(([op, val]: [string, unknown]) => {
             const docValue = content[key as keyof Document]
             if (docValue === undefined) return false
 
@@ -194,7 +194,7 @@ export class FSCollection implements CollectionProvider<Document> {
         return content[key as keyof Document] === value
       })
     })
-    return filtered.map(doc => doc.content)
+    return filtered.map(({ content }) => content)
   }
 
   async search(query: string, options?: SearchOptions<Document>): Promise<SearchResult<Document>[]> {
@@ -256,8 +256,8 @@ export class FSCollection implements CollectionProvider<Document> {
     )
 
     return results
-      .filter(result => result.score >= threshold)
-      .sort((a, b) => b.score - a.score)
+      .filter((result: SearchResult<Document>) => result.score >= threshold)
+      .sort((a: SearchResult<Document>, b: SearchResult<Document>) => b.score - a.score)
       .slice(0, options.limit || 10)
   }
 
