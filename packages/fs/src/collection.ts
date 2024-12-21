@@ -280,7 +280,7 @@ export class FSCollection implements CollectionProvider<Document> {
       },
       {
         ...doc.content.metadata,
-        type: doc.content.metadata?.type || 'document'
+        type: (doc.content.metadata?.type || 'document') as string
       },
       doc.content.embeddings,
       doc.content.collections
