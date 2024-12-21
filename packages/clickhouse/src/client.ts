@@ -840,7 +840,8 @@ class ClickHouseDatabaseProvider implements DatabaseProvider<Document> {
   private readonly config: Config
 
   constructor(client: ClickHouseClient, config: Config) {
-    this.namespace = `clickhouse://${config.url}`
+    const hostUrl = config.host.startsWith('http') ? config.host : `http://${config.host}:${config.port || 8123}`
+    this.namespace = `clickhouse://${hostUrl}`
     this.client = client
     this.config = config
     this.collections = new ClickHouseCollectionProvider('', client, config)
@@ -866,10 +867,11 @@ class ClickHouseDatabaseProvider implements DatabaseProvider<Document> {
 export const createClickHouseClient = async (config: Config): Promise<DatabaseProvider<Document>> => {
   try {
     const client = createClient({
-      host: config.url,
+      host: config.host,
       username: config.username,
       password: config.password,
-      database: config.database
+      database: config.database,
+      clickhouse_settings: config.clickhouse_settings
     })
 
     const provider = new ClickHouseDatabaseProvider(client, config)

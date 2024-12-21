@@ -18,28 +18,28 @@ vi.mock('@clickhouse/client-web', () => ({
 describe('ClickHouse Client', () => {
   it('should create client with valid config', async () => {
     const config: Config = {
-      protocol: 'http',
       host: 'localhost',
       port: 8123,
-      database: 'test_db',
       username: 'default',
       password: '',
+      database: 'test_db',
       oplogTable: 'oplog',
-      dataTable: 'data'
-    }
-    const client = await createClickHouseClient(config)
-    expect(client).toBeDefined()
-    expect(createClient).toHaveBeenCalledWith({
-      host: config.host,
-      port: config.port,
-      username: config.username,
-      password: config.password,
-      database: config.database,
+      dataTable: 'data',
       clickhouse_settings: {
         allow_experimental_json_type: 1,
         allow_experimental_full_text_index: 1,
         allow_experimental_vector_similarity_index: 1
       }
+    }
+    const client = await createClickHouseClient(config)
+    expect(client).toBeDefined()
+    // Verify client is created with correct URL format
+    expect(createClient).toHaveBeenCalledWith({
+      host: `http://${config.host}:${config.port}`,
+      username: config.username,
+      password: config.password,
+      database: config.database,
+      clickhouse_settings: config.clickhouse_settings
     })
   })
 })

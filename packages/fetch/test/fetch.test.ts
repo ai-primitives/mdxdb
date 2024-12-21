@@ -111,31 +111,31 @@ describe('FetchCollectionProvider', () => {
     server.use(
       http.post(`${baseUrl}/collections/posts/find`, async ({ request }) => {
         const data = await request.json() as { filter: FilterQuery<TestDocument>; options?: SearchOptions<TestDocument> }
-        expect(data.filter).toEqual({ metadata: { type: 'post' }, data: { title: 'Test' } })
+        expect(data.filter).toEqual({ metadata: { type: 'post' }, data: { title: 'Test', $type: 'post' } })
         const responseDoc = { ...mockDocument }
         delete (responseDoc as any).getId
         delete (responseDoc as any).getType
         delete (responseDoc as any).getCollections
         delete (responseDoc as any).belongsToCollection
         delete (responseDoc as any).getEmbeddings
-        return HttpResponse.json([responseDoc])
+        return HttpResponse.json([{ document: responseDoc, score: 1 }])
       })
     )
 
     const provider = new FetchProvider<TestDocument>({ namespace, baseUrl })
     const posts = provider.collection('posts')
-    const docs = await posts.find({ metadata: { type: 'post' }, data: { title: 'Test' } })
+    const docs = await posts.find({ metadata: { type: 'post' }, data: { title: 'Test', $type: 'post' } })
     const expectedDoc = { ...mockDocument }
     delete (expectedDoc as any).getId
     delete (expectedDoc as any).getType
     delete (expectedDoc as any).getCollections
     delete (expectedDoc as any).belongsToCollection
     delete (expectedDoc as any).getEmbeddings
-    expect(docs).toEqual([expectedDoc])
-    expect(docs[0]?.id).toBe('1')
-    expect(docs[0]?.metadata?.type).toBe('post')
-    expect(docs[0]?.data?.$id).toBe('1')
-    expect(docs[0]?.data?.$type).toBe('post')
+    expect(docs).toEqual([{ document: expectedDoc, score: 1 }])
+    expect(results[0]?.document?.id).toBe('1')
+    expect(results[0]?.document?.metadata?.type).toBe('post')
+    expect(results[0]?.document?.data?.$id).toBe('1')
+    expect(results[0]?.document?.data?.$type).toBe('post')
   })
 
   it('should search documents', async () => {
@@ -155,18 +155,18 @@ describe('FetchCollectionProvider', () => {
 
     const provider = new FetchProvider<TestDocument>({ namespace, baseUrl })
     const posts = provider.collection('posts')
-    const docs = await posts.search('test')
+    const results = await posts.search('test') as SearchResult<TestDocument>[]
     const expectedDoc = { ...mockDocument }
     delete (expectedDoc as any).getId
     delete (expectedDoc as any).getType
     delete (expectedDoc as any).getCollections
     delete (expectedDoc as any).belongsToCollection
     delete (expectedDoc as any).getEmbeddings
-    expect(docs).toEqual([{ document: expectedDoc, score: 1 }])
-    expect(docs[0]?.document?.id).toBe('1')
-    expect(docs[0]?.document?.metadata?.type).toBe('post')
-    expect(docs[0]?.document?.data?.$id).toBe('1')
-    expect(docs[0]?.document?.data?.$type).toBe('post')
+    expect(results).toEqual([{ document: expectedDoc, score: 1 }])
+    expect(results[0]?.document?.id).toBe('1')
+    expect(results[0]?.document?.metadata?.type).toBe('post')
+    expect(results[0]?.document?.data?.$id).toBe('1')
+    expect(results[0]?.document?.data?.$type).toBe('post')
   })
 
   it('should perform vector search', async () => {
@@ -187,18 +187,18 @@ describe('FetchCollectionProvider', () => {
 
     const provider = new FetchProvider<TestDocument>({ namespace, baseUrl })
     const posts = provider.collection('posts')
-    const docs = await posts.vectorSearch({ vector, threshold: 0.8 })
+    const results = await posts.vectorSearch({ vector, threshold: 0.8 }) as SearchResult<TestDocument>[]
     const expectedDoc = { ...mockDocument }
     delete (expectedDoc as any).getId
     delete (expectedDoc as any).getType
     delete (expectedDoc as any).getCollections
     delete (expectedDoc as any).belongsToCollection
     delete (expectedDoc as any).getEmbeddings
-    expect(docs).toEqual([{ document: expectedDoc, score: 1, vector }])
-    expect(docs[0]?.document?.id).toBe('1')
-    expect(docs[0]?.document?.metadata?.type).toBe('post')
-    expect(docs[0]?.document?.data?.$id).toBe('1')
-    expect(docs[0]?.document?.data?.$type).toBe('post')
+    expect(results).toEqual([{ document: expectedDoc, score: 1, vector }])
+    expect(results[0]?.document?.id).toBe('1')
+    expect(results[0]?.document?.metadata?.type).toBe('post')
+    expect(results[0]?.document?.data?.$id).toBe('1')
+    expect(results[0]?.document?.data?.$type).toBe('post')
   })
 
   it('should handle HTTP errors', async () => {
