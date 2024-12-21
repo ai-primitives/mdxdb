@@ -81,20 +81,31 @@ export class FSCollection implements CollectionProvider<Document> {
       const filePath = nodePath.join(this.collectionPath, `${id}.mdx`)
       const content = await fs.readFile(filePath, 'utf-8')
       const docId = id.split('/').pop() || id
-      return {
+      let parsedContent: Document | null = null
+      try {
+        parsedContent = JSON.parse(content)
+      } catch (e) {
+        // If content is not JSON, treat it as raw content
+        parsedContent = null
+      }
+
+      const doc: Document = {
         id: docId,
-        content,
+        content: parsedContent?.content || content,
         data: {
           $id: docId,
-          $type: 'document'
+          $type: parsedContent?.metadata?.type || 'document',
+          ...(parsedContent?.data || {})
         },
         metadata: {
-          id: docId,
-          type: 'document',
-          ts: Date.now()
+          id: parsedContent?.metadata?.id || docId,
+          type: parsedContent?.metadata?.type || 'document',
+          ts: Date.now(),
+          ...(parsedContent?.metadata || {})
         },
-        collections: [this.path]
+        collections: parsedContent?.collections || [this.path]
       }
+      return doc
     } catch (error) {
       if ((error as { code?: string }).code === 'ENOENT') {
         return null
@@ -141,17 +152,39 @@ export class FSCollection implements CollectionProvider<Document> {
   }
 
   async add(collection: string, document: Document): Promise<void> {
+    // Initialize metadata if not present
     if (!document.metadata) {
-      const newId = webcrypto.randomUUID()
+      const newId = document.id || webcrypto.randomUUID()
+      document.metadata = {
+        id: newId,
+        type: 'document',
+        ts: Date.now()
+      }
       document.id = newId
-      document.metadata = { id: newId, type: 'document' }
-      document.data = { $id: newId, $type: 'document' }
-    } else if (!document.id) {
-      document.id = webcrypto.randomUUID()
-      document.data.$id = document.id
     }
-    const id = document.id
-    const fullPath = nodePath.join(collection, id)
+
+    // Ensure required metadata fields
+    document.metadata = {
+      ...document.metadata,
+      id: document.metadata.id || document.id || webcrypto.randomUUID(),
+      type: document.metadata.type || 'document',
+      ts: document.metadata.ts || Date.now()
+    }
+
+    // Sync id across document
+    document.id = document.metadata.id
+
+    // Initialize or update data
+    document.data = {
+      ...(document.data || {}),
+      $id: document.metadata.id,
+      $type: document.metadata.type
+    }
+
+    // Set collections
+    document.collections = document.collections || [collection]
+
+    const fullPath = nodePath.join(collection, document.id)
     await this.writeDocument(fullPath, document)
   }
 
@@ -195,6 +228,11 @@ export class FSCollection implements CollectionProvider<Document> {
     try {
       await fs.unlink(filePath)
       await this.storageService.deleteEmbedding(nodePath.join(collection, id))
+      // Ensure the file is actually deleted by checking its existence
+      const exists = await fs.access(filePath).then(() => true).catch(() => false)
+      if (exists) {
+        throw new Error(`Failed to delete document ${id} in collection ${collection}`)
+      }
     } catch (error) {
       if ((error as { code?: string }).code !== 'ENOENT') {
         throw error
