@@ -9,8 +9,8 @@
     "build": "tsc",
     "build:types": "tsc --emitDeclarationOnly",
     "build:packages": "tsc",
-    "test": "vitest run",
-    "test:watch": "vitest",
+    "test": "vitest run --globalSetup ./test/setup.ts",
+    "test:watch": "vitest --globalSetup ./test/setup.ts",
     "lint": "eslint 'src/**/*.ts' --ignore-pattern '*.d.ts'"
   },
   "peerDependencies": {
@@ -22,7 +22,7 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
-    "@types/node": "^22.10.2",
+    "@types/node": "^20.11.0",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.21.0",
     "eslint": "^8.57.1",

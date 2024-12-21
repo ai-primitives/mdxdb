@@ -11,20 +11,60 @@ interface ClickHouseRow {
   path: string[]
   content: string
   data: Record<string, unknown>
-  embedding: number[]
   version: number
   hash: Record<string, unknown>
   ts: number
   sign: number
+  embedding?: number[]
 }
 
 export class ClickHouseCollectionProvider implements CollectionProvider<Document> {
-  constructor(
-    public readonly path: string,
-    private readonly client: ClickHouseClient,
-    private readonly config: Config
-  ) {
-    void this.config.database
+  public readonly path: string
+  public readonly client: ClickHouseClient
+  private readonly config: Config
+
+  constructor(config: Config) {
+    if (!config) {
+      throw new Error('Configuration object must be provided')
+    }
+
+    // Validate required configuration
+    const { database, host, port } = config
+    if (!database) {
+      throw new Error('Database name must be provided in config')
+    }
+    if (!host) {
+      throw new Error('Host must be provided in config')
+    }
+    if (!port) {
+      throw new Error('Port must be provided in config')
+    }
+
+    // Set configuration with defaults
+    this.config = {
+      ...config,
+      protocol: config.protocol ?? 'http',
+      username: config.username ?? 'default',
+      password: config.password ?? '',
+      dataTable: config.dataTable ?? 'data',
+      oplogTable: config.oplogTable ?? 'oplog'
+    }
+
+    // Parse URL or use individual components
+    const baseUrl = this.config.url || `${this.config.protocol}://${this.config.host}:${this.config.port}`
+    this.path = `${baseUrl}/${this.config.database}`
+    
+    try {
+      this.client = createClient({
+        host: baseUrl,
+        username: this.config.username,
+        password: this.config.password,
+        database: this.config.database,
+        request_timeout: 10000 // 10s timeout
+      })
+    } catch (error: unknown) {
+      throw new Error(`Failed to create ClickHouse client: ${error instanceof Error ? error.message : String(error)}`)
+    }
   }
 
   async create(collection: string): Promise<void> {
@@ -468,39 +508,42 @@ export class ClickHouseCollectionProvider implements CollectionProvider<Document
 
       // Helper function to handle operator conditions
       const handleOperator = (key: string, value: unknown, paramPrefix: string) => {
+        const [field, ...subFields] = key.split('.')
+        const jsonPath = subFields.length > 0 ? `.${subFields.join('.')}` : ''
+        
         if (typeof value === 'object' && value !== null) {
           Object.entries(value).forEach(([op, opValue], opIndex) => {
             const paramName = `${paramPrefix}_${opIndex}`
             switch (op) {
               case '$eq':
-                whereConditions.push(`data.${key} = {${paramName}:String}`)
+                whereConditions.push(`JSONExtractString(${field}${jsonPath}) = {${paramName}:String}`)
                 queryParams[paramName] = String(opValue)
                 break
               case '$gt':
-                whereConditions.push(`data.${key} > {${paramName}:String}`)
+                whereConditions.push(`JSONExtractString(${field}${jsonPath}) > {${paramName}:String}`)
                 queryParams[paramName] = String(opValue)
                 break
               case '$gte':
-                whereConditions.push(`data.${key} >= {${paramName}:String}`)
+                whereConditions.push(`JSONExtractString(${field}${jsonPath}) >= {${paramName}:String}`)
                 queryParams[paramName] = String(opValue)
                 break
               case '$lt':
-                whereConditions.push(`data.${key} < {${paramName}:String}`)
+                whereConditions.push(`JSONExtractString(${field}${jsonPath}) < {${paramName}:String}`)
                 queryParams[paramName] = String(opValue)
                 break
               case '$lte':
-                whereConditions.push(`data.${key} <= {${paramName}:String}`)
+                whereConditions.push(`JSONExtractString(${field}${jsonPath}) <= {${paramName}:String}`)
                 queryParams[paramName] = String(opValue)
                 break
               case '$in':
                 if (Array.isArray(opValue)) {
-                  whereConditions.push(`data.${key} IN {${paramName}:Array(String)}`)
+                  whereConditions.push(`JSONExtractString(${field}${jsonPath}) IN {${paramName}:Array(String)}`)
                   queryParams[paramName] = opValue.map(String)
                 }
                 break
               case '$nin':
                 if (Array.isArray(opValue)) {
-                  whereConditions.push(`data.${key} NOT IN {${paramName}:Array(String)}`)
+                  whereConditions.push(`JSONExtractString(${field}${jsonPath}) NOT IN {${paramName}:Array(String)}`)
                   queryParams[paramName] = opValue.map(String)
                 }
                 break
@@ -509,7 +552,7 @@ export class ClickHouseCollectionProvider implements CollectionProvider<Document
         } else {
           // Direct value comparison
           const paramName = paramPrefix
-          whereConditions.push(`data.${key} = {${paramName}:String}`)
+          whereConditions.push(`JSONExtractString(${field}${jsonPath}) = {${paramName}:String}`)
           queryParams[paramName] = String(value)
         }
       }
@@ -868,18 +911,48 @@ export class ClickHouseCollectionProvider implements CollectionProvider<Document
 export class ClickHouseDatabaseProvider implements DatabaseProvider<Document> {
   readonly namespace: string
   public collections: CollectionProvider<Document>
-  private readonly client: ClickHouseClient
-  private readonly config: Config
 
-  constructor(client: ClickHouseClient, config: Config) {
-    this.namespace = `clickhouse://${config.url}`
-    this.client = client
-    this.config = config
-    this.collections = new ClickHouseCollectionProvider('', client, config)
+  constructor(private readonly config: Config) {
+    const { host, port } = config.url
+      ? (() => {
+          const url = new URL(config.url)
+          return {
+            host: url.hostname,
+            port: url.port ? parseInt(url.port, 10) : 8123
+          }
+        })()
+      : {
+          host: config.host,
+          port: config.port
+        }
+
+    this.namespace = `clickhouse://${host}:${port}/${config.database}`
+    this.collections = new ClickHouseCollectionProvider(config)
   }
 
   async connect(): Promise<void> {
-    await checkClickHouseVersion(this.client)
+    let protocol: string
+    let host: string
+    let port: number
+
+    if (this.config.url) {
+      const url = new URL(this.config.url)
+      protocol = url.protocol.replace(':', '')
+      host = url.hostname
+      port = url.port ? parseInt(url.port, 10) : 8123
+    } else {
+      protocol = this.config.protocol
+      host = this.config.host
+      port = this.config.port
+    }
+
+    const client = createClient({
+      host: `${protocol}://${host}:${port}`,
+      username: this.config.username,
+      password: this.config.password,
+      database: this.config.database
+    })
+    await checkClickHouseVersion(client)
   }
 
   async disconnect(): Promise<void> {
@@ -890,21 +963,15 @@ export class ClickHouseDatabaseProvider implements DatabaseProvider<Document> {
     return []
   }
 
-  collection(name: string): CollectionProvider<Document> {
-    return new ClickHouseCollectionProvider(name, this.client, this.config)
+  collection(_name: string): CollectionProvider<Document> {
+    // Name parameter is required by interface but not used in this implementation
+    return new ClickHouseCollectionProvider(this.config)
   }
 }
 
 export const createClickHouseClient = async (config: Config): Promise<DatabaseProvider<Document>> => {
   try {
-    const client = createClient({
-      host: config.url,
-      username: config.username,
-      password: config.password,
-      database: config.database
-    })
-
-    const provider = new ClickHouseDatabaseProvider(client, config)
+    const provider = new ClickHouseDatabaseProvider(config)
     await provider.connect()
     return provider
   } catch (error) {

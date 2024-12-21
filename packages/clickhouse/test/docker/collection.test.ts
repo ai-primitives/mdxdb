@@ -1,12 +1,31 @@
 import { afterAll, beforeAll, describe, expect, test } from 'vitest'
 import { ClickHouseCollectionProvider } from '../../src/client'
 import { dockerTestConfig } from '../docker.config'
-import type { Document } from '@mdxdb/types'
+import type { Document, FilterQuery } from '@mdxdb/types'
+import { randomUUID as crypto_randomUUID } from 'crypto'
+import { createClient } from '@clickhouse/client'
 
 describe('ClickHouseCollectionProvider', () => {
   let provider: ClickHouseCollectionProvider
 
   beforeAll(async () => {
+    // Initialize provider with CI-compatible configuration
+    const maxRetries = 15
+    const retryInterval = 2000 // 2 seconds
+    
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        const response = await fetch(`${dockerTestConfig.protocol}://${dockerTestConfig.host}:${dockerTestConfig.port}/ping`)
+        if (response.ok) {
+          break
+        }
+      } catch (error) {
+        if (i === maxRetries - 1) {
+          throw new Error('ClickHouse server failed to start')
+        }
+        await new Promise(resolve => setTimeout(resolve, retryInterval))
+      }
+    }
     provider = new ClickHouseCollectionProvider({
       protocol: dockerTestConfig.protocol,
       host: dockerTestConfig.host,
@@ -15,7 +34,12 @@ describe('ClickHouseCollectionProvider', () => {
       username: dockerTestConfig.username,
       password: dockerTestConfig.password,
       dataTable: dockerTestConfig.dataTable,
-      oplogTable: dockerTestConfig.oplogTable
+      oplogTable: dockerTestConfig.oplogTable,
+      clickhouse_settings: {
+        allow_experimental_json_type: 1,
+        allow_experimental_full_text_index: 1,
+        allow_experimental_vector_similarity_index: 1
+      }
     })
 
     // Add test documents
@@ -26,7 +50,7 @@ describe('ClickHouseCollectionProvider', () => {
         embeddings: Array(256).fill(0.1),
         collections: ['test-collection'],
         metadata: {
-          id: 'test1',
+          id: crypto_randomUUID(),
           type: 'document',
           ns: 'test-collection',
           host: 'localhost',
@@ -44,7 +68,7 @@ describe('ClickHouseCollectionProvider', () => {
         embeddings: Array(256).fill(0.5),
         collections: ['test-collection'],
         metadata: {
-          id: 'test2',
+          id: crypto_randomUUID(),
           type: 'document',
           ns: 'test-collection',
           host: 'localhost',
@@ -59,21 +83,29 @@ describe('ClickHouseCollectionProvider', () => {
     ]
 
     for (const doc of testDocs) {
-      await provider.add(doc, { collection: 'test-collection' })
+      await provider.add('test-collection', doc)
     }
   })
 
   afterAll(async () => {
-    // Clean up test documents
-    await provider.client.exec({
-      query: `TRUNCATE TABLE IF EXISTS ${dockerTestConfig.database}.${dockerTestConfig.dataTable}`
-    })
+    // Clean up test documents using provider's delete method
+    try {
+      const docs = await provider.get('test-collection')
+      for (const doc of docs) {
+        // Ensure doc has required metadata before deletion
+        if (doc?.metadata?.id && typeof doc.metadata.id === 'string') {
+          await provider.delete('test-collection', doc.metadata.id)
+        }
+      }
+    } catch (error) {
+      console.error('Failed to clean up test documents:', error instanceof Error ? error.message : String(error))
+    }
   })
 
   describe('find', () => {
     test('should find documents by exact match', async () => {
       const docs = await provider.find(
-        { 'data.priority': 'high' },
+        { 'metadata.data.priority': 'high' } as FilterQuery<Document>,
         { collection: 'test-collection' }
       )
       expect(docs).toHaveLength(1)
@@ -82,7 +114,7 @@ describe('ClickHouseCollectionProvider', () => {
 
     test('should find documents using $in operator', async () => {
       const docs = await provider.find(
-        { 'data.priority': { $in: ['high', 'low'] } },
+        { 'metadata.data.priority': { $in: ['high', 'low'] } } as FilterQuery<Document>,
         { collection: 'test-collection' }
       )
       expect(docs).toHaveLength(2)
@@ -90,7 +122,7 @@ describe('ClickHouseCollectionProvider', () => {
 
     test('should find documents using comparison operators', async () => {
       const docs = await provider.find(
-        { 'metadata.version': { $gte: 1 } },
+        { 'metadata.version': { $gte: 1 } } as FilterQuery<Document>,
         { collection: 'test-collection' }
       )
       expect(docs).toHaveLength(2)
@@ -98,14 +130,14 @@ describe('ClickHouseCollectionProvider', () => {
 
     test('should return empty array for non-matching filter', async () => {
       const docs = await provider.find(
-        { 'data.priority': 'medium' },
+        { 'metadata.data.priority': 'medium' } as FilterQuery<Document>,
         { collection: 'test-collection' }
       )
       expect(docs).toHaveLength(0)
     })
 
     test('should throw error when collection is not provided', async () => {
-      await expect(provider.find({ 'data.priority': 'high' }, {})).rejects.toThrow(
+      await expect(provider.find({ 'metadata.data.priority': 'high' } as FilterQuery<Document>, {})).rejects.toThrow(
         'Collection name must be provided in options.collection'
       )
     })

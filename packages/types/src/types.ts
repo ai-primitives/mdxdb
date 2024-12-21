@@ -52,16 +52,34 @@ export interface DatabaseProvider<T extends Document = Document> {
   collection(name: string): CollectionProvider<T>
 }
 
+type DotPrefix<T extends string> = T extends '' ? '' : `.${T}`
+
+type DotNestedKeys<T> = (T extends object ?
+    { [K in Exclude<keyof T, symbol>]: `${K}${DotPrefix<DotNestedKeys<T[K]>>}` }[Exclude<keyof T, symbol>]
+    : '') extends infer D ? Extract<D, string> : never
+
 export type FilterQuery<T> = {
-  [K in keyof T]?: T[K] | {
-    $eq?: T[K],
-    $gt?: T[K],
-    $gte?: T[K],
-    $lt?: T[K],
-    $lte?: T[K],
-    $in?: T[K][],
-    $nin?: T[K][]
-  }
+  [P in DotNestedKeys<T> | keyof T]?: P extends keyof T
+    ? T[P] extends Record<string, any>
+      ? FilterQuery<T[P]>
+      : T[P] | {
+          $eq?: T[P],
+          $gt?: T[P],
+          $gte?: T[P],
+          $lt?: T[P],
+          $lte?: T[P],
+          $in?: T[P][],
+          $nin?: T[P][]
+        }
+    : unknown | {
+        $eq?: unknown,
+        $gt?: unknown,
+        $gte?: unknown,
+        $lt?: unknown,
+        $lte?: unknown,
+        $in?: unknown[],
+        $nin?: unknown[]
+      }
 }
 
 export interface SearchOptions<T extends Document = Document> {

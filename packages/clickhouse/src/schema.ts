@@ -7,6 +7,10 @@ export const getTablesSchema = (
   oplogTableName: string = 'oplog',
   dataTableName: string = 'data'
 ): string => `
+SET allow_experimental_json_type = 1;
+SET allow_experimental_full_text_index = 1;
+SET allow_experimental_vector_similarity_index = 1;
+
 CREATE TABLE IF NOT EXISTS ${databaseName}.${oplogTableName} (
     id String,
     type String,
@@ -18,7 +22,10 @@ CREATE TABLE IF NOT EXISTS ${databaseName}.${oplogTableName} (
     embedding Array(Float32),
     ts UInt32,
     hash JSON, -- Map containing id, ns, path, data, and content hashes
-    version UInt64
+    version UInt64,
+    sign Int8,
+    INDEX idx_content content TYPE full_text GRANULARITY 1,
+    INDEX idx_embedding embedding TYPE vector_similarity('hnsw', 'cosineDistance')
 ) ENGINE = MergeTree
 ORDER BY (id, version);
 
@@ -34,7 +41,9 @@ CREATE TABLE IF NOT EXISTS ${databaseName}.${dataTableName} (
     ts UInt32,
     hash JSON, -- Map containing id, ns, path, data, and content hashes
     version UInt64,
-    sign Int8
+    sign Int8,
+    INDEX idx_content content TYPE full_text GRANULARITY 1,
+    INDEX idx_embedding embedding TYPE vector_similarity('hnsw', 'cosineDistance')
 ) ENGINE = VersionedCollapsingMergeTree(sign, version)
 ORDER BY (id, version);
 `;

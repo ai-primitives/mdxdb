@@ -37,24 +37,44 @@ describe('ClickHouse Search Tests', () => {
       await client.exec({
         query: `
           CREATE TABLE IF NOT EXISTS ${dockerTestConfig.database}.${dockerTestConfig.oplogTable} (
-            id String,
+            id UUID DEFAULT generateUUIDv4(),
             type String,
             ns String,
-            hash String,
-            data String,
-            embedding Array(Float32),
-            timestamp DateTime64(3)
-          ) ENGINE = MergeTree()
-          ORDER BY (ns, timestamp)
+            host String,
+            path Array(String),
+            data JSON,
+            content String,
+            embedding Array(Float64),
+            ts UInt32,
+            hash JSON,
+            version UInt64,
+            sign Int8 DEFAULT 1,
+            INDEX idx_content content TYPE full_text GRANULARITY 1,
+            INDEX idx_embedding embedding TYPE vector_similarity('hnsw', 'cosineDistance')
+          ) ENGINE = ReplacingMergeTree(sign)
+          ORDER BY (id)
         `
       })
 
       await client.exec({
         query: `
-          CREATE MATERIALIZED VIEW IF NOT EXISTS ${dockerTestConfig.database}.${dockerTestConfig.dataTable}
-          ENGINE = MergeTree()
-          ORDER BY (ns, timestamp)
-          AS SELECT * FROM ${dockerTestConfig.database}.${dockerTestConfig.oplogTable}
+          CREATE TABLE IF NOT EXISTS ${dockerTestConfig.database}.${dockerTestConfig.dataTable} (
+            id UUID,
+            type String,
+            ns String,
+            host String,
+            path Array(String),
+            data JSON,
+            content String,
+            embedding Array(Float64),
+            ts UInt32,
+            hash JSON,
+            version UInt64,
+            sign Int8,
+            INDEX idx_content content TYPE full_text GRANULARITY 1,
+            INDEX idx_embedding embedding TYPE vector_similarity('hnsw', 'cosineDistance')
+          ) ENGINE = ReplacingMergeTree(sign)
+          ORDER BY (id)
         `
       })
 
@@ -63,13 +83,18 @@ describe('ClickHouse Search Tests', () => {
         query: `
           INSERT INTO ${dockerTestConfig.database}.${dockerTestConfig.oplogTable}
           SELECT
-            'test1' as id,
+            generateUUIDv4() as id,
             'document' as type,
             'test' as ns,
-            'hash1' as hash,
+            'localhost' as host,
+            ['test', 'docs'] as path,
             '{"content": "test document"}' as data,
+            'test document' as content,
             [${Array(256).fill(0.1).join(',')}] as embedding,
-            now() as timestamp
+            ${Math.floor(Date.now() / 1000)} as ts,
+            '{"content":"hash1"}' as hash,
+            1 as version,
+            1 as sign
         `
       })
     } catch (error) {
@@ -157,13 +182,18 @@ describe('ClickHouse Search Tests', () => {
       query: `
         INSERT INTO mdxdb.oplog
         SELECT
-          'test2' as id,
+          generateUUIDv4() as id,
           'document' as type,
           'test' as ns,
-          'hash2' as hash,
+          'localhost' as host,
+          ['test', 'docs'] as path,
           '{"content": "another test"}' as data,
-          [${Array(256).fill(0.5).join(',')}],
-          now() as timestamp
+          'another test' as content,
+          [${Array(256).fill(0.5).join(',')}] as embedding,
+          ${Math.floor(Date.now() / 1000)} as ts,
+          '{"content":"hash2"}' as hash,
+          1 as version,
+          1 as sign
       `
     })
 

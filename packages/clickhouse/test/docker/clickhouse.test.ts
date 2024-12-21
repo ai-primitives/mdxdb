@@ -36,24 +36,44 @@ describe('ClickHouse Docker Integration', () => {
       await client.exec({
         query: `
           CREATE TABLE IF NOT EXISTS mdxdb.oplog (
-            id String,
+            id UUID DEFAULT generateUUIDv4(),
             type String,
             ns String,
-            hash String,
-            data String,
-            embedding Array(Float32),
-            timestamp DateTime64(3)
-          ) ENGINE = MergeTree()
-          ORDER BY (ns, timestamp)
+            host String,
+            path Array(String),
+            data JSON,
+            content String,
+            embedding Array(Float64),
+            ts UInt32,
+            hash JSON,
+            version UInt64,
+            sign Int8 DEFAULT 1,
+            INDEX idx_content content TYPE full_text GRANULARITY 1,
+            INDEX idx_embedding embedding TYPE vector_similarity('hnsw', 'cosineDistance')
+          ) ENGINE = ReplacingMergeTree(sign)
+          ORDER BY (id)
         `
       })
 
       await client.exec({
         query: `
-          CREATE MATERIALIZED VIEW IF NOT EXISTS mdxdb.data
-          ENGINE = MergeTree()
-          ORDER BY (ns, timestamp)
-          AS SELECT * FROM mdxdb.oplog
+          CREATE TABLE IF NOT EXISTS mdxdb.data (
+            id UUID,
+            type String,
+            ns String,
+            host String,
+            path Array(String),
+            data JSON,
+            content String,
+            embedding Array(Float64),
+            ts UInt32,
+            hash JSON,
+            version UInt64,
+            sign Int8,
+            INDEX idx_content content TYPE full_text GRANULARITY 1,
+            INDEX idx_embedding embedding TYPE vector_similarity('hnsw', 'cosineDistance')
+          ) ENGINE = ReplacingMergeTree(sign)
+          ORDER BY (id)
         `
       })
     } catch (error) {

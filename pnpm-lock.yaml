@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@clickhouse/client':
+        specifier: ^1.10.0
+        version: 1.10.0
       mdxld:
         specifier: ^0.1.0
         version: 0.1.1
@@ -403,11 +406,18 @@ packages:
   '@bundled-es-modules/tough-cookie@0.1.6':
     resolution: {integrity: sha512-dvMHbL464C0zI+Yqxbz6kZ5TOEp7GLW+pry/RWndAR8MJQAXZ2rPmIs8tziTZjeIyhSNZgZbCePtfSbdWqStJw==}
 
+  '@clickhouse/client-common@1.10.0':
+    resolution: {integrity: sha512-dxXgJEGxwhOclflDH+GI8z7fQMh7KjJ/r0kSGE7yLKJlW0YHgbfxVufOkrEVg2QJMOmqi+YynkO4w1rXhetC0w==}
+
   '@clickhouse/client-common@1.9.1':
     resolution: {integrity: sha512-67iJoiwolWxfTgfWqBZMc3c+Lj9yxfWvNSVAP6KoANB10eZFnUvr8tAi+rdzQUZrrh3+xBVk/YhZ4NTuyCDHZg==}
 
   '@clickhouse/client-web@1.9.1':
     resolution: {integrity: sha512-p4JZhTdCr1hvtOPI/EVYyzz/tpjElJ/BZd6eOPn0yg4pCAXe1Iei2U+y/XKP2vxsVSyTTdrwVc6lqO2NA1UiMw==}
+
+  '@clickhouse/client@1.10.0':
+    resolution: {integrity: sha512-vyLkrE7iqWw3QPTet7no5Rd3qZFV4ujyo01FbspaTpME04F07AkBkRFJ/haUpf6GbZr/LsGIH5I4jy1vzGoRbQ==}
+    engines: {node: '>=16'}
 
   '@cloudflare/kv-asset-handler@0.3.4':
     resolution: {integrity: sha512-YLPHc8yASwjNkmcDMQMY35yiWjoKAKnhUbPRszBRS0YgH+IXtsMp61j+yTcnCE3oO2DgP0U3iejLC8FTtKDC8Q==}
@@ -4773,11 +4783,17 @@ snapshots:
       '@types/tough-cookie': 4.0.5
       tough-cookie: 4.1.4
 
+  '@clickhouse/client-common@1.10.0': {}
+
   '@clickhouse/client-common@1.9.1': {}
 
   '@clickhouse/client-web@1.9.1':
     dependencies:
       '@clickhouse/client-common': 1.9.1
+
+  '@clickhouse/client@1.10.0':
+    dependencies:
+      '@clickhouse/client-common': 1.10.0
 
   '@cloudflare/kv-asset-handler@0.3.4':
     dependencies:
