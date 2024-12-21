@@ -1,83 +1,71 @@
-# @mdxdb/vscode
+# mdxdb-vscode README
 
-[![npm version](https://badge.fury.io/js/%40mdxdb%2Fvscode.svg)](https://www.npmjs.com/package/@mdxdb/vscode)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
-VSCode extension for MDX file management with integrated AST viewing and preview capabilities.
+This is the README for your extension "mdxdb-vscode". After writing up a brief description, we recommend including the following sections.
 
 ## Features
 
-- MDX File Management
-  - List and browse MDX files in workspace
-  - View and edit MDX content with syntax highlighting
-  - Integrated file system provider support
+Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
 
-- AST Visualization
-  - View MDX Abstract Syntax Tree in JSON5 format
-  - Real-time AST updates as you edit
-  - Collapsible tree view for easy navigation
+For example if there is an image subfolder under your extension project workspace:
 
-- MDX Preview
-  - Live preview of rendered MDX content
-  - Support for React components
-  - Hot reload on content changes
+\!\[feature X\]\(images/feature-x.png\)
 
-- Content Type Support
-  - Structured Data: YAML frontmatter with optional schema validation
-  - Unstructured Content: Markdown editing and preview
-  - Executable Code: JavaScript/TypeScript import/export functionality
-  - UI Components: JSX/React component integration
+> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
 
-## Installation
+## Requirements
 
-1. Open Visual Studio Code
-2. Go to Extensions (Ctrl+Shift+X)
-3. Search for "@mdxdb/vscode"
-4. Click Install
+If you have any requirements or dependencies, add a section describing those and how to install and configure them.
 
-Or install directly from the [Visual Studio Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ai-primitives.mdxdb-vscode).
+## Extension Settings
 
-## Usage
+Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
 
-1. Open an MDX file in VSCode
-2. Use the MDX sidebar to browse files
-3. Toggle between edit, AST, and preview modes using the toolbar
-4. Edit content with real-time AST and preview updates
+For example:
 
-## Configuration
+This extension contributes the following settings:
 
-```json
-{
-  'mdxdb.fs.path': '.', // Base path for file system provider
-  'mdxdb.preview.debounceMs': 300, // Debounce time for preview updates
-  'mdxdb.ast.format': 'json5' // AST output format
-}
-```
+* `myExtension.enable`: Enable/disable this extension.
+* `myExtension.thing`: Set to `blah` to do something.
 
-## API
+## Known Issues
 
-```typescript
-import { MDXProvider } from '@mdxdb/vscode'
+Calling out known issues can help limit users opening duplicate issues against your extension.
 
-// Initialize provider
-const provider = new MDXProvider({
-  basePath: '.',
-  openaiApiKey: process.env.OPENAI_API_KEY
-})
+## Release Notes
 
-// List MDX files
-const files = await provider.listFiles()
+Users appreciate release notes as you update your extension.
 
-// Get file content
-const content = await provider.getContent('example.mdx')
+### 1.0.0
 
-// Get AST
-const ast = await provider.getAST('example.mdx')
-```
+Initial release of ...
 
-## Dependencies
+### 1.0.1
 
-- @mdxdb/fs: ^0.1.0
-- @mdxdb/types: ^0.1.0
-- vscode-languageclient: ^8.0.0
-- json5: ^2.2.0
+Fixed issue #.
+
+### 1.1.0
+
+Added features X, Y, and Z.
+
+---
+
+## Following extension guidelines
+
+Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
+
+* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
+
+## Working with Markdown
+
+You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
+
+* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
+* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
+* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
+
+## For more information
+
+* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
+* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
+
+**Enjoy!**
