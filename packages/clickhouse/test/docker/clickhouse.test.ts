@@ -104,7 +104,7 @@ describe('ClickHouse Docker Integration', () => {
         query: `
           INSERT INTO mdxdb.oplog
           SELECT
-            '{"id":"test1","type":"article","ts":' || toString(now64()) || '}' as metadata,
+            '{"id":"test1","type":"article","ts":"' || toString(now64()) || '"}' as metadata,
             'article' as type,
             'test' as ns,
             'hash1' as hash,
@@ -114,7 +114,7 @@ describe('ClickHouse Docker Integration', () => {
 
           INSERT INTO mdxdb.oplog
           SELECT
-            '{"id":"test2","type":"blog","ts":' || toString(now64()) || '}' as metadata,
+            '{"id":"test2","type":"blog","ts":"' || toString(now64()) || '"}' as metadata,
             'blog' as type,
             'test' as ns,
             'hash2' as hash,
@@ -222,7 +222,7 @@ describe('ClickHouse Docker Integration', () => {
           LIMIT 1
         `,
         format: 'JSONEachRow'
-      })).rejects.toThrow()
+      })).rejects.toThrow('Invalid number of arguments for function cosineDistance')
     })
 
     it('should support complex filters with JSON-LD properties', async () => {
@@ -231,7 +231,7 @@ describe('ClickHouse Docker Integration', () => {
         query: `
           INSERT INTO mdxdb.oplog
           SELECT
-            '{"id":"test3","type":"product","ts":' || toString(now64()) || '}' as metadata,
+            '{"id":"test3","type":"product","ts":"' || toString(now64()) || '"}' as metadata,
             'product' as type,
             'test' as ns,
             'hash3' as hash,

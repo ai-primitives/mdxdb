@@ -63,7 +63,7 @@ describe('ClickHouse Search Tests', () => {
         query: `
           INSERT INTO ${dockerTestConfig.database}.${dockerTestConfig.oplogTable}
           SELECT
-            '{"id":"test1","type":"document","ts":' || toString(now64()) || '}' as metadata,
+            '{"id":"test1","type":"document","ts":"' || toString(now64()) || '"}' as metadata,
             'document' as type,
             'test' as ns,
             'hash1' as hash,
@@ -157,7 +157,7 @@ describe('ClickHouse Search Tests', () => {
       query: `
         INSERT INTO mdxdb.oplog
         SELECT
-          '{"id":"test2","type":"document","ts":' || toString(now64()) || '}' as metadata,
+          '{"id":"test2","type":"document","ts":"' || toString(now64()) || '"}' as metadata,
           'document' as type,
           'test' as ns,
           'hash2' as hash,
