@@ -121,22 +121,31 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
     }
 
     try {
-      const metadata = document.metadata || {}
+      // Ensure document has metadata
+      if (!document.metadata) {
+        document.metadata = {}
+      }
+      
       const timestamp = Math.floor(Date.now() / 1000) // Convert to seconds for UInt32
+
+      // Generate ID if not provided
+      if (!document.metadata.id) {
+        document.metadata.id = this.generateId(collection, timestamp)
+      }
 
       // Extract document fields, using metadata for required fields
       const row = {
-        id: metadata.id || this.generateId(collection, timestamp),
-        type: metadata.type || 'document',
+        id: document.metadata.id,
+        type: document.metadata.type || 'document',
         ns: collection,
-        host: metadata.host || '',
-        path: Array.isArray(metadata.path) ? metadata.path : [],
-        data: metadata.data || {},
-        content: metadata.content || '',
+        host: document.metadata.host || '',
+        path: Array.isArray(document.metadata.path) ? document.metadata.path : [],
+        data: document.metadata.data || {},
+        content: document.content || '',
         embedding: Array.isArray(document.embeddings) ? document.embeddings : [],
         ts: timestamp,
-        hash: metadata.hash || {},
-        version: metadata.version || 1,
+        hash: document.metadata.hash || {},
+        version: document.metadata.version || 1,
         sign: 1
       }
 
@@ -222,6 +231,12 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
       throw new Error('Document must be a valid object')
     }
 
+    // Ensure document has metadata with id
+    if (!document.metadata) {
+      document.metadata = {}
+    }
+    document.metadata.id = id
+
     try {
       // Get the current version of the document
       const currentResult = await this.client.query({
@@ -235,7 +250,7 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
           LIMIT 1
         `,
         query_params: {
-          id,
+          id: document.metadata.id,
           collection
         }
       })
@@ -370,7 +385,7 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
           LIMIT 1
         `,
         query_params: {
-          id,
+          id: id,
           collection
         }
       })
