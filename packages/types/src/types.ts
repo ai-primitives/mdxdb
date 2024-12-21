@@ -137,6 +137,8 @@ export type FilterQuery<T> = NestedFilterQuery<T> & {
 } & {
   [key: `data.${string}`]: unknown
   [key: `data.${string}.${string}`]: unknown
+  [key: `metadata.${string}`]: unknown
+  [key: `metadata.${string}.${string}`]: unknown
 }
 
 export interface SearchOptions<T extends Document = Document> {
