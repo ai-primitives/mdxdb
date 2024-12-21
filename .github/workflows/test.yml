@@ -1,0 +1,72 @@
+name: Test
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      clickhouse:
+        image: clickhouse/clickhouse-server:latest
+        ports:
+          - 8123:8123
+        env:
+          CLICKHOUSE_DB: mdxdb_test
+          CLICKHOUSE_USER: default
+          CLICKHOUSE_PASSWORD: ''
+          CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+        options: >-
+          --health-cmd "wget --spider -q 'http://localhost:8123/ping' || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          --health-start-period 20s
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build types package
+        run: cd packages/types && pnpm build
+
+      - name: Build all packages
+        run: pnpm build
+
+      - name: Initialize ClickHouse
+        run: |
+          # Wait for ClickHouse to be ready
+          for i in {1..30}; do
+            if curl -s http://localhost:8123/ping; then
+              break
+            fi
+            sleep 1
+          done
+          
+          # Create database and tables
+          curl -s -X POST http://localhost:8123 --data-binary @packages/clickhouse/docker/init-db.sh
+
+      - name: Run Tests
+        run: pnpm test
+        env:
+          CI: true
+          CLICKHOUSE_HOST: localhost
+          CLICKHOUSE_PORT: 8123
+          CLICKHOUSE_DATABASE: mdxdb_test
+          CLICKHOUSE_USERNAME: default
+          CLICKHOUSE_PASSWORD: ''
+          CLICKHOUSE_DATA_TABLE: data
+          CLICKHOUSE_OPLOG_TABLE: oplog
+
+      - name: Run lint
+        run: pnpm run lint
