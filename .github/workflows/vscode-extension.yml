@@ -30,7 +30,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Build
+      - name: Build workspace dependencies
+        working-directory: /home/runner/work/mdxdb/mdxdb
+        run: pnpm -w build
+
+      - name: Build extension
         run: pnpm run compile
 
       - name: Lint
