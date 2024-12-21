@@ -28,22 +28,16 @@ export class FSCollection implements CollectionProvider<Document> {
     try {
       // Try node_modules first
       if (id.startsWith('node_modules/')) {
-        const repoRoot = process.cwd().split('/packages/')[0]
         const packageName = id.split('/')[1] // Get the package name (e.g., 'mdxld')
         const restOfPath = id.split('/').slice(2).join('/') // Get everything after the package name
 
-        console.log('Current working directory:', process.cwd())
-        console.log('Repository root:', repoRoot)
+        console.log('Base path:', this.basePath)
         console.log('Package name:', packageName)
         console.log('Rest of path:', restOfPath)
 
         const paths = [
-          // Try local node_modules
-          nodePath.join(process.cwd(), id),
-          // Try repo directory (for development)
-          nodePath.join(repoRoot, packageName, restOfPath),
-          // Try absolute path to repos directory
-          nodePath.join('/home/ubuntu/repos', packageName, restOfPath)
+          // Try node_modules in the base path
+          nodePath.join(this.basePath, id)
         ]
 
         console.log('Attempting to read from paths:', paths)
