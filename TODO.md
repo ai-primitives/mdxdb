@@ -23,24 +23,6 @@
   - [ ] Document interface with JSON-LD support
   - [ ] Collection and Database types
   - [ ] Vector search types and options
-- [ ] CSV/JSONL Import Feature
-  - [ ] CLI Setup
-    - [ ] Create bin directory and CLI entry point
-    - [ ] Add commander.js for CLI argument parsing
-    - [ ] Add import command implementation
-  - [ ] Import Implementation
-    - [ ] Add yaml package for frontmatter handling
-    - [ ] Implement CSV parser using csv-parse
-    - [ ] Implement JSONL parser using readline
-    - [ ] Add frontmatter generation from record fields
-    - [ ] Add MDX content generation from template/field
-  - [ ] Testing
-    - [ ] Add unit tests for parsers
-    - [ ] Add integration tests for import command
-    - [ ] Add example files for testing
-  - [ ] Documentation
-    - [ ] Add usage examples to README
-    - [ ] Add API documentation for programmatic usage
 - [ ] @mdxdb/fetch
   - [ ] HTTP/API provider implementation
   - [ ] RESTful endpoints integration
@@ -150,10 +132,11 @@
   - [ ] Use shared eslint-config from utilities
   - [ ] Ensure TypeScript rule compatibility
   - [ ] Maintain ESM support across packages
-- [ ] Package Dependencies
-  - [ ] Standardize TypeScript version (5.5.4)
-  - [ ] Use Vitest 2.1.8 with MSW integration
-  - [ ] Consistent ESLint package versions
+- [x] Package Dependencies
+  - [x] Standardize TypeScript version (5.5.4)
+  - [x] Use Vitest 2.1.8 with MSW integration
+  - [x] Consistent ESLint package versions
+  - [x] Synchronize all package versions to 0.1.0
 - [ ] Testing Requirements
   - [ ] Run tests with Vitest
   - [ ] Include MSW for API mocking

@@ -2,7 +2,7 @@
 
 A powerful MDX-based database that treats MDX documents as collections, with built-in support for JSON-LD, vector search, and multiple storage backends.
 
-[![npm version](https://badge.fury.io/js/@mdxdb%2Ftypes.svg)](https://www.npmjs.com/package/@mdxdb/types)
+[![npm version](https://badge.fury.io/js/@mdxdb%2Ftypes.svg)](https://www.npmjs.com/package/@mdxdb/types) [![Package Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](https://www.npmjs.com/package/@mdxdb/types)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Features
