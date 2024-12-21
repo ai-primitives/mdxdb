@@ -8,8 +8,7 @@ interface VectorSearchResult {
   distance: number
 }
 
-const isCI = process.env.CI === 'true'
-describe.skipIf(isCI)('ClickHouse Docker Integration', () => {
+describe('ClickHouse Docker Integration', () => {
   const client: ClickHouseClient = createClient({
     url: `${dockerTestConfig.protocol}://${dockerTestConfig.host}:${dockerTestConfig.port}`,
     database: dockerTestConfig.database,

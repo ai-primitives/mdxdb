@@ -15,6 +15,18 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
+    services:
+      clickhouse:
+        image: clickhouse/clickhouse-server@sha256:b3987d50b9003c336f3276d583cdba9eda836907e3bba54afbf780654f9e21fd
+        ports:
+          - 8123:8123
+          - 9000:9000
+        env:
+          CLICKHOUSE_USER: default
+          CLICKHOUSE_PASSWORD: ""
+          CLICKHOUSE_DB: mdxdb
+          CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+        options: --ulimit nofile=262144:262144
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v2
