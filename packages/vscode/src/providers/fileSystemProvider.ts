@@ -37,7 +37,7 @@ export class MDXFileSystemProvider implements vscode.FileSystemProvider {
     }
   }
 
-  async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
+  async readDirectory(_uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
     const docs = await this.collection.list()
     return docs.map((doc: { id: string }) => [path.basename(doc.id), vscode.FileType.File])
   }
