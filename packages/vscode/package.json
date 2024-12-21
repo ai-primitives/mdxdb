@@ -1,0 +1,85 @@
+{
+  "name": "@mdxdb/vscode",
+  "displayName": "MDXDB",
+  "description": "VSCode extension for MDX file management with AST viewer and preview capabilities",
+  "version": "0.0.1",
+  "publisher": "ai-primitives",
+  "engines": {
+    "vscode": "^1.96.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Other"
+  ],
+  "activationEvents": [
+    "onLanguage:mdx",
+    "workspaceContains:**/*.mdx"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [{
+      "id": "mdx",
+      "extensions": [".mdx"],
+      "aliases": ["MDX", "mdx"]
+    }],
+    "commands": [
+      {
+        "command": "mdxdb.openPreview",
+        "title": "Open MDX Preview",
+        "category": "MDXDB"
+      },
+      {
+        "command": "mdxdb.openAst",
+        "title": "Open MDX AST",
+        "category": "MDXDB"
+      }
+    ],
+    "configuration": {
+      "title": "MDXDB",
+      "properties": {
+        "mdxdb.fs.path": {
+          "type": "string",
+          "default": ".",
+          "description": "Base path for file system provider"
+        },
+        "mdxdb.preview.debounceMs": {
+          "type": "number",
+          "default": 300,
+          "description": "Debounce time for preview updates in milliseconds"
+        },
+        "mdxdb.ast.format": {
+          "type": "string",
+          "default": "json5",
+          "enum": ["json5", "json"],
+          "description": "AST output format"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "pnpm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "pnpm run compile && pnpm run lint",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "dependencies": {
+    "@mdxdb/fs": "^0.1.0",
+    "@mdxdb/types": "^0.1.0",
+    "@mdx-js/mdx": "^3.0.0",
+    "json5": "^2.2.0",
+    "vscode-languageclient": "^8.0.0"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.96.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "20.x",
+    "@typescript-eslint/eslint-plugin": "^8.17.0",
+    "@typescript-eslint/parser": "^8.17.0",
+    "eslint": "^9.16.0",
+    "typescript": "^5.7.2",
+    "@vscode/test-cli": "^0.0.10",
+    "@vscode/test-electron": "^2.4.1"
+  }
+}
