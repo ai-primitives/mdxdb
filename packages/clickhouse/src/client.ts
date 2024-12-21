@@ -25,6 +25,9 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
     private readonly client: ClickHouseClient,
     private readonly config: Config
   ) {
+    if (!config.host || !config.port) {
+      throw new Error('ClickHouse host and port must be configured')
+    }
     void this.config.database
   }
 

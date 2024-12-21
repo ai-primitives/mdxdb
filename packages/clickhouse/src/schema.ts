@@ -20,9 +20,10 @@ CREATE TABLE IF NOT EXISTS ${databaseName}.${oplogTableName} (
     ts UInt32,
     hash JSON, -- Map containing id, ns, path, data, and content hashes
     version UInt64,
+    sign Int8,
     INDEX idx_content content TYPE full_text GRANULARITY 1,
     INDEX idx_embedding embedding TYPE vector_similarity('hnsw', 'cosineDistance')
-) ENGINE = MergeTree
+) ENGINE = VersionedCollapsingMergeTree(sign, version)
 ORDER BY (id, version);
 
 CREATE TABLE IF NOT EXISTS ${databaseName}.${dataTableName} (
@@ -42,7 +43,8 @@ CREATE TABLE IF NOT EXISTS ${databaseName}.${dataTableName} (
     INDEX idx_content content TYPE full_text GRANULARITY 1,
     INDEX idx_embedding embedding TYPE vector_similarity('hnsw', 'cosineDistance')
 ) ENGINE = VersionedCollapsingMergeTree(sign, version)
-ORDER BY (id, version);
+PRIMARY KEY (id)
+ORDER BY (id, ns, type, version);
 `;
 
 export const getMaterializedViewSchema = (
@@ -50,7 +52,7 @@ export const getMaterializedViewSchema = (
   oplogTableName: string = 'oplog',
   dataTableName: string = 'data'
 ): string => `
-CREATE MATERIALIZED VIEW IF NOT EXISTS ${databaseName}.${dataTableName}Mv
+CREATE MATERIALIZED VIEW IF NOT EXISTS ${databaseName}.${dataTableName}_mv
 TO ${databaseName}.${dataTableName}
 AS SELECT
     id,
@@ -66,7 +68,8 @@ AS SELECT
     hash,
     version,
     CAST(1 AS Int8) as sign
-FROM ${databaseName}.${oplogTableName};
+FROM ${databaseName}.${oplogTableName}
+WHERE sign = 1;
 `;
 
 export interface TableSchema {

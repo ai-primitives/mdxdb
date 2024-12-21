@@ -10,7 +10,7 @@ export interface FSCollectionOptions {
   openaiApiKey?: string
 }
 
-export class FSCollection implements CollectionProvider<Document> {
+export class FSCollection<T extends Document = Document> implements CollectionProvider<T> {
   private embeddingsService: EmbeddingsService
   private storageService: EmbeddingsStorageService
   private collectionPath: string
@@ -130,7 +130,7 @@ export class FSCollection implements CollectionProvider<Document> {
     await this.storageService.storeEmbedding(id, document.content, embedding)
   }
 
-  private async getAllDocuments(): Promise<Array<{ id: string; content: Document }>> {
+  private async getAllDocuments(): Promise<Array<{ id: string; content: T }>> {
     try {
       await fs.mkdir(this.collectionPath, { recursive: true })
       const files = await fs.readdir(this.collectionPath)
@@ -140,7 +140,7 @@ export class FSCollection implements CollectionProvider<Document> {
         mdxFiles.map(async file => {
           const docId = nodePath.basename(file, '.mdx')
           const doc = await this.readDocument(docId)
-          return doc ? { id: docId, content: doc } : null
+          return doc ? { id: docId, content: doc as T } : null
         })
       )
 
@@ -243,7 +243,7 @@ export class FSCollection implements CollectionProvider<Document> {
     }
   }
 
-  async find(filter: FilterQuery<Document>, options?: SearchOptions<Document>): Promise<Document[]> {
+  async find(filter: FilterQuery<T>, options?: SearchOptions<T>): Promise<SearchResult<T>[]> {
     const docs = await this.getAllDocuments()
     const filtered = docs.filter(({ content }) => {
       return Object.entries(filter).every(([key, value]) => {
@@ -269,22 +269,34 @@ export class FSCollection implements CollectionProvider<Document> {
       })
     })
 
-    // Map to Document[] directly without SearchResult wrapper
-    const results = filtered.map(doc => new FSDocument(
-      doc.content.id || '',  // Ensure id is never undefined
-      doc.content.content,
-      {
-        ...doc.content.data,
-        $id: doc.content.id || '',
-        $type: (doc.content.metadata?.type || 'document') as string
-      },
-      {
-        ...doc.content.metadata,
-        type: (doc.content.metadata?.type || 'document') as string
-      },
-      doc.content.embeddings,
-      doc.content.collections
-    ))
+    // Map to SearchResult<Document>[] with score and vector
+    const results = filtered.map(doc => {
+      const id = doc.content.id || ''
+      const document = new FSDocument(
+        id,
+        doc.content.content || '',
+        {
+          ...(doc.content.data || {}),
+          $id: id,
+          $type: (doc.content.metadata?.type || 'document') as string
+        },
+        {
+          ...(doc.content.metadata || {}),
+          // Ensure required fields are set and take precedence
+          id,
+          type: (doc.content.metadata?.type || 'document') as string,
+          ts: doc.content.metadata?.ts || Date.now()
+        },
+        doc.content.embeddings,
+        doc.content.collections || [this.path]
+      )
+
+      return {
+        document: document as T,
+        score: 1.0, // Default score for filter matches
+        vector: options?.includeVectors ? doc.content.embeddings : undefined
+      } as SearchResult<T>
+    })
 
     // Apply search options
     let finalResults = results
@@ -294,10 +306,14 @@ export class FSCollection implements CollectionProvider<Document> {
       finalResults = finalResults.slice(options.offset)
     }
 
-    return finalResults
+    return finalResults.map(result => ({
+      document: result.document as T,
+      score: result.score,
+      vector: result.vector
+    })) as SearchResult<T>[]
   }
 
-  async search(query: string, options?: SearchOptions<Document>): Promise<SearchResult<Document>[]> {
+  async search(query: string, options?: SearchOptions<T>): Promise<SearchResult<T>[]> {
     const queryEmbedding = await this.embeddingsService.generateEmbedding(query)
     return this.vectorSearch({
       ...options,
@@ -306,7 +322,7 @@ export class FSCollection implements CollectionProvider<Document> {
     })
   }
 
-  async vectorSearch(options: VectorSearchOptions & SearchOptions<Document>): Promise<SearchResult<Document>[]> {
+  async vectorSearch(options: VectorSearchOptions & SearchOptions<T>): Promise<SearchResult<T>[]> {
     if (!options.vector) {
       throw new Error('Vector is required for vector search')
     }
@@ -334,7 +350,7 @@ export class FSCollection implements CollectionProvider<Document> {
                 type: 'document',
                 ts: Date.now()
               }
-            ),
+            ) as T,
             score: 0,
             vector: undefined
           }
@@ -360,17 +376,24 @@ export class FSCollection implements CollectionProvider<Document> {
               type: 'document',
               ts: Date.now()
             }
-          ),
+          ) as T,
           score: similarity,
           vector: options.includeVectors ? storedEmbedding.embedding : undefined
         }
       })
     )
 
-    return results
+    const sortedResults = results
       .filter(result => result.score >= threshold)
       .sort((a, b) => b.score - a.score)
       .slice(0, options.limit || 10)
+      .map(result => ({
+        document: result.document as T,
+        score: result.score,
+        vector: result.vector
+      }))
+    
+    return sortedResults as SearchResult<T>[]
   }
 
   async readSchemaOrgFile(filename: string): Promise<Document | null> {

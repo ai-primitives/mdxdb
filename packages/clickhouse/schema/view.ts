@@ -5,6 +5,7 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS ${config.database}.${config.dataTable}_mv
 TO ${config.database}.${config.dataTable}
 AS SELECT
   id,
+  metadata,
   type,
   ns,
   host,
@@ -15,7 +16,7 @@ AS SELECT
   ts,
   hash,
   version,
-  sign
+  CAST(1 AS Int8) as sign
 FROM ${config.database}.${config.oplogTable}
 WHERE sign = 1;
 `
