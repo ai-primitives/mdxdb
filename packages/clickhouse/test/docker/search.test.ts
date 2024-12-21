@@ -37,7 +37,7 @@ describe('ClickHouse Search Tests', () => {
       await client.exec({
         query: `
           CREATE TABLE IF NOT EXISTS ${dockerTestConfig.database}.${dockerTestConfig.oplogTable} (
-            id String,
+            metadata JSON,
             type String,
             ns String,
             hash String,
@@ -63,7 +63,7 @@ describe('ClickHouse Search Tests', () => {
         query: `
           INSERT INTO ${dockerTestConfig.database}.${dockerTestConfig.oplogTable}
           SELECT
-            'test1' as id,
+            '{"id":"test1","type":"document","ts":' || toString(now64()) || '}' as metadata,
             'document' as type,
             'test' as ns,
             'hash1' as hash,
@@ -157,7 +157,7 @@ describe('ClickHouse Search Tests', () => {
       query: `
         INSERT INTO mdxdb.oplog
         SELECT
-          'test2' as id,
+          '{"id":"test2","type":"document","ts":' || toString(now64()) || '}' as metadata,
           'document' as type,
           'test' as ns,
           'hash2' as hash,
@@ -172,7 +172,7 @@ describe('ClickHouse Search Tests', () => {
     const result = await client.query({
       query: `
         SELECT
-          id,
+          JSONExtractString(metadata, 'id') as id,
           cosineDistance(embedding, [${searchVector.join(',')}]) as distance
         FROM ${dockerTestConfig.database}.${dockerTestConfig.oplogTable}
         WHERE type = 'document'

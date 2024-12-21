@@ -1,19 +1,55 @@
 import type { MDXLD } from './mdxld'
 
+/**
+ * Document interface representing a document in the database
+ * @extends MDXLD Base interface for MDX content
+ */
+/**
+ * Document interface representing a document in the database
+ * @extends MDXLD Base interface for MDX content
+ */
 export interface Document extends MDXLD {
+  /** Unique identifier for the document - required at root level for JSON-LD compatibility */
+  id: string
+  /** Document content - required by MDXLD */
+  content: string
+  /** Document data including JSON-LD properties - required by MDXLD */
+  data: {
+    /** JSON-LD identifier (duplicated from root id) */
+    $id: string
+    /** JSON-LD type */
+    $type: string
+    /** JSON-LD context */
+    $context?: string | Record<string, unknown>
+    /** Additional data properties */
+    [key: string]: unknown
+  }
+  /** Optional vector embeddings for similarity search */
   embeddings?: number[]
+  /** Optional list of collection names this document belongs to */
   collections?: string[]
+  /** Required metadata for document tracking */
   metadata: {
+    /** Document identifier - matches root id for consistency */
     id: string
-    type?: string
-    ns?: string
-    host?: string
-    path?: string[]
-    content?: string
-    data?: Record<string, unknown>
-    version?: number
-    hash?: Record<string, unknown>
+    /** Document type - matches data.$type */
+    type: string
+    /** Optional timestamp */
     ts?: number
+    /** Optional namespace */
+    ns?: string
+    /** Optional host information */
+    host?: string
+    /** Optional path segments */
+    path?: string[]
+    /** Optional content description */
+    content?: string
+    /** Optional additional metadata */
+    data?: Record<string, unknown>
+    /** Optional version number */
+    version?: number
+    /** Optional hash information */
+    hash?: Record<string, unknown>
   }
 }
 
@@ -52,16 +88,63 @@ export interface DatabaseProvider<T extends Document = Document> {
   collection(name: string): CollectionProvider<T>
 }
 
-export type FilterQuery<T> = {
-  [K in keyof T]?: T[K] | {
-    $eq?: T[K],
-    $gt?: T[K],
-    $gte?: T[K],
-    $lt?: T[K],
-    $lte?: T[K],
-    $in?: T[K][],
-    $nin?: T[K][]
-  }
+export type FilterOperator<T> = {
+  $eq?: T
+  $gt?: T
+  $gte?: T
+  $lt?: T
+  $lte?: T
+  $in?: T[]
+  $nin?: T[]
+}
+
+export type MetadataFilter = {
+  type?: string | FilterOperator<string>
+  ns?: string | FilterOperator<string>
+  host?: string | FilterOperator<string>
+  path?: string[] | FilterOperator<string[]>
+  content?: string | FilterOperator<string>
+  data?: Record<string, unknown> | FilterOperator<Record<string, unknown>>
+  version?: number | FilterOperator<number>
+  hash?: Record<string, unknown> | FilterOperator<Record<string, unknown>>
+  ts?: number | FilterOperator<number>
+} & {
+  [key: string]: unknown
+}
+
+export type NestedFilterQuery<T> = {
+  [P in keyof T]?: T[P] extends Record<string, unknown>
+    ? FilterOperator<T[P]> | {
+        [K in keyof T[P]]?: T[P][K] extends Record<string, unknown>
+          ? FilterOperator<T[P][K]> | {
+              [L in keyof T[P][K]]?: T[P][K][L] | FilterOperator<T[P][K][L]>
+            }
+          : T[P][K] | FilterOperator<T[P][K]>
+      }
+    : T[P] | FilterOperator<T[P]>
+}
+
+export type FilterQuery<T> = NestedFilterQuery<T> & {
+  [P in keyof T]?: T[P] extends Record<string, unknown>
+    ? P extends 'metadata'
+      ? MetadataFilter
+      : P extends 'data'
+      ? {
+          [K in keyof T[P]]?: T[P][K] extends Record<string, unknown>
+            ? FilterOperator<T[P][K]> | {
+                [L in keyof T[P][K]]?: T[P][K][L] | FilterOperator<T[P][K][L]>
+              }
+            : T[P][K] | FilterOperator<T[P][K]>
+        }
+      : T[P] | FilterOperator<T[P]>
+    : T[P] | FilterOperator<T[P]>
+} & {
+  $and?: FilterQuery<T>[]
+  $or?: FilterQuery<T>[]
+  $not?: FilterQuery<T>
+} & {
+  [key: `data.${string}`]: unknown
+  [key: `data.${string}.${string}`]: unknown
 }
 
 export interface SearchOptions<T extends Document = Document> {

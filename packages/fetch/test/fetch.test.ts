@@ -78,30 +78,46 @@ describe('FetchCollectionProvider', () => {
   const namespace = 'test.example.com'
 
   interface TestDocument extends Document {
-    title: string
-    content: string
+    data: {
+      $id: string
+      $type: string
+      title: string
+      [key: string]: unknown
+    }
   }
 
   const mockDocument: TestDocument = {
     id: '1',
-    title: 'Test',
     content: 'Test content',
-    data: {}
+    data: {
+      $id: '1',
+      $type: 'post',
+      title: 'Test'
+    },
+    metadata: {
+      type: 'post'
+    },
+    embeddings: [],
+    collections: []
   }
 
   it('should find documents', async () => {
     server.use(
       http.post(`${baseUrl}/collections/posts/find`, async ({ request }) => {
         const data = await request.json() as { filter: FilterQuery<TestDocument>; options?: SearchOptions<TestDocument> }
-        expect(data.filter).toEqual({ title: 'Test' })
+        expect(data.filter).toEqual({ metadata: { type: 'post' }, title: 'Test' })
         return HttpResponse.json([mockDocument])
       })
     )
 
     const provider = new FetchProvider<TestDocument>({ namespace, baseUrl })
     const posts = provider.collection('posts')
-    const docs = await posts.find({ title: 'Test' })
+    const docs = await posts.find({ metadata: { type: 'post' }, 'data.title': 'Test' })
     expect(docs).toEqual([mockDocument])
+    expect(docs[0]?.id).toBe('1')
+    expect(docs[0]?.metadata?.type).toBe('post')
+    expect(docs[0]?.data?.$id).toBe('1')
+    expect(docs[0]?.data?.$type).toBe('post')
   })
 
   it('should search documents', async () => {
@@ -116,7 +132,11 @@ describe('FetchCollectionProvider', () => {
     const provider = new FetchProvider<TestDocument>({ namespace, baseUrl })
     const posts = provider.collection('posts')
     const docs = await posts.search('test')
-    expect(docs).toEqual([mockDocument])
+    expect(docs).toEqual([{ document: mockDocument, score: 1 }])
+    expect(docs[0]?.document?.id).toBe('1')
+    expect(docs[0]?.document?.metadata?.type).toBe('post')
+    expect(docs[0]?.document?.data?.$id).toBe('1')
+    expect(docs[0]?.document?.data?.$type).toBe('post')
   })
 
   it('should perform vector search', async () => {
@@ -132,7 +152,11 @@ describe('FetchCollectionProvider', () => {
     const provider = new FetchProvider<TestDocument>({ namespace, baseUrl })
     const posts = provider.collection('posts')
     const docs = await posts.vectorSearch({ vector, threshold: 0.8 })
-    expect(docs).toEqual([mockDocument])
+    expect(docs).toEqual([{ document: mockDocument, score: 1, vector }])
+    expect(docs[0]?.document?.id).toBe('1')
+    expect(docs[0]?.document?.metadata?.type).toBe('post')
+    expect(docs[0]?.document?.data?.$id).toBe('1')
+    expect(docs[0]?.document?.data?.$type).toBe('post')
   })
 
   it('should handle HTTP errors', async () => {

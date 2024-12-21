@@ -52,7 +52,20 @@ export class FSCollection implements CollectionProvider<Document> {
               const content = await fs.readFile(path, 'utf-8')
               console.log('Successfully read file:', path)
               const docId = id.split('/').pop() || id
-              return { content, data: {}, metadata: { id: docId } }
+              return {
+                id: docId,
+                content,
+                data: {
+                  $id: docId,
+                  $type: 'document'
+                },
+                metadata: {
+                  id: docId,
+                  type: 'document',
+                  ts: Date.now()
+                },
+                collections: [this.path]
+              }
             }
           } catch (error) {
             console.log('Error reading file:', path, error)
@@ -68,7 +81,20 @@ export class FSCollection implements CollectionProvider<Document> {
       const filePath = nodePath.join(this.collectionPath, `${id}.mdx`)
       const content = await fs.readFile(filePath, 'utf-8')
       const docId = id.split('/').pop() || id
-      return { content, data: {}, metadata: { id: docId } }
+      return {
+        id: docId,
+        content,
+        data: {
+          $id: docId,
+          $type: 'document'
+        },
+        metadata: {
+          id: docId,
+          type: 'document',
+          ts: Date.now()
+        },
+        collections: [this.path]
+      }
     } catch (error) {
       if ((error as { code?: string }).code === 'ENOENT') {
         return null
@@ -116,11 +142,15 @@ export class FSCollection implements CollectionProvider<Document> {
 
   async add(collection: string, document: Document): Promise<void> {
     if (!document.metadata) {
-      document.metadata = { id: webcrypto.randomUUID() }
-    } else if (!document.metadata.id) {
-      document.metadata.id = webcrypto.randomUUID()
+      const newId = webcrypto.randomUUID()
+      document.id = newId
+      document.metadata = { id: newId, type: 'document' }
+      document.data = { $id: newId, $type: 'document' }
+    } else if (!document.id) {
+      document.id = webcrypto.randomUUID()
+      document.data.$id = document.id
     }
-    const id = document.metadata.id
+    const id = document.id
     const fullPath = nodePath.join(collection, id)
     await this.writeDocument(fullPath, document)
   }
@@ -147,9 +177,12 @@ export class FSCollection implements CollectionProvider<Document> {
       throw new Error(`Document with id ${id} not found in collection ${collection}`)
     }
     if (!document.metadata) {
-      document.metadata = { id }
+      document.id = id
+      document.metadata = { id: id, type: 'document' }
+      document.data = { $id: id, $type: 'document' }
     } else {
-      document.metadata.id = id
+      document.id = id
+      document.data.$id = id
     }
     const fullPath = nodePath.join(collection, id)
     const filePath = nodePath.join(this.collectionPath, `${fullPath}.mdx`)
@@ -221,8 +254,14 @@ export class FSCollection implements CollectionProvider<Document> {
           console.debug(`No embedding found for document ${id}`)
           return {
             document: {
+              id: id,
               content: content.content,
-              data: content.data || {},
+              data: {
+                ...(content.data || {}),
+                $id: id,
+                $type: 'document',
+                $context: content.data?.$context
+              },
               metadata: {
                 id: id,
                 type: 'document',
@@ -241,8 +280,14 @@ export class FSCollection implements CollectionProvider<Document> {
         console.debug(`Document ${id} similarity: ${similarity}`)
         return {
           document: {
+            id: id,
             content: content.content,
-            data: content.data || {},
+            data: {
+              ...(content.data || {}),
+              $id: id,
+              $type: 'document',
+              $context: content.data?.$context
+            },
             metadata: {
               id: id,
               type: 'document',

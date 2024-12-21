@@ -8,7 +8,7 @@ export const getTablesSchema = (
   dataTableName: string = 'data'
 ): string => `
 CREATE TABLE IF NOT EXISTS ${databaseName}.${oplogTableName} (
-    id String,
+    metadata JSON,
     type String,
     ns String,
     host String,
@@ -20,10 +20,10 @@ CREATE TABLE IF NOT EXISTS ${databaseName}.${oplogTableName} (
     hash JSON, -- Map containing id, ns, path, data, and content hashes
     version UInt64
 ) ENGINE = MergeTree
-ORDER BY (id, version);
+ORDER BY (JSONExtractString(metadata, 'id'), version);
 
 CREATE TABLE IF NOT EXISTS ${databaseName}.${dataTableName} (
-    id String,
+    metadata JSON,
     type String,
     ns String,
     host String,
@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS ${databaseName}.${dataTableName} (
     version UInt64,
     sign Int8
 ) ENGINE = VersionedCollapsingMergeTree(sign, version)
-ORDER BY (id, version);
+ORDER BY (JSONExtractString(metadata, 'id'), version);
 `;
 
 export const getMaterializedViewSchema = (
@@ -47,7 +47,7 @@ export const getMaterializedViewSchema = (
 CREATE MATERIALIZED VIEW IF NOT EXISTS ${databaseName}.${dataTableName}Mv
 TO ${databaseName}.${dataTableName}
 AS SELECT
-    id,
+    metadata,
     type,
     ns,
     host,

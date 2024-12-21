@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { FSCollection } from '../src/collection'
-import { CollectionProvider, Document } from '@mdxdb/types'
+import { CollectionProvider, Document } from '../../types/src/types'
 import { promises as fs } from 'fs'
 import * as nodePath from 'path'
 import { EmbeddingsService } from '../src/embeddings'
@@ -33,7 +33,16 @@ describe('FSCollection', () => {
   describe('CRUD operations', () => {
     it('should create and read documents', async () => {
       const collection = new FSCollection(TEST_DIR, 'test')
-      const doc: Document = { metadata: { id: 'test1' }, content: 'test content', data: {} }
+      const doc: Document = {
+        metadata: {
+          id: 'test1',
+          type: 'post',
+          ts: Date.now()
+        },
+        content: 'test content',
+        data: {},
+        collections: ['test1']
+      }
 
       await collection.add('test1', doc)
       const docs = await collection.get('test1')
@@ -46,8 +55,26 @@ describe('FSCollection', () => {
 
     it('should update documents', async () => {
       const collection = new FSCollection(TEST_DIR, 'test')
-      const doc: Document = { metadata: { id: 'test1' }, content: 'test content', data: {} }
-      const updatedDoc: Document = { metadata: { id: 'test1' }, content: 'updated content', data: {} }
+      const doc: Document = {
+        metadata: {
+          id: 'test1',
+          type: 'post',
+          ts: Date.now()
+        },
+        content: 'test content',
+        data: {},
+        collections: ['test1']
+      }
+      const updatedDoc: Document = {
+        metadata: {
+          id: 'test1',
+          type: 'post',
+          ts: Date.now()
+        },
+        content: 'updated content',
+        data: {},
+        collections: ['test1']
+      }
 
       await collection.add('test1', doc)
       await collection.update('test1', 'test1', updatedDoc)
@@ -61,7 +88,16 @@ describe('FSCollection', () => {
 
     it('should delete documents', async () => {
       const collection = new FSCollection(TEST_DIR, 'test')
-      const doc: Document = { metadata: { id: 'test1' }, content: 'test content', data: {} }
+      const doc: Document = {
+        metadata: {
+          id: 'test1',
+          type: 'post',
+          ts: Date.now()
+        },
+        content: 'test content',
+        data: {},
+        collections: ['test1']
+      }
 
       await collection.add('test1', doc)
       await collection.delete('test1', 'test1')
@@ -73,7 +109,16 @@ describe('FSCollection', () => {
 
     it('should throw error when creating existing document', async () => {
       const collection = new FSCollection(TEST_DIR, 'test')
-      const doc: Document = { metadata: { id: 'test1' }, content: 'test content', data: {} }
+      const doc: Document = {
+        metadata: {
+          id: 'test1',
+          type: 'post',
+          ts: Date.now()
+        },
+        content: 'test content',
+        data: {},
+        collections: ['test1']
+      }
 
       await collection.add('test1', doc)
       await expect(collection.add('test1', doc)).rejects.toThrow('already exists')
@@ -81,22 +126,58 @@ describe('FSCollection', () => {
 
     it('should throw error when updating non-existent document', async () => {
       const collection = new FSCollection(TEST_DIR, 'test')
-      const doc: Document = { metadata: { id: 'test1' }, content: 'test content', data: {} }
+      const doc: Document = {
+        metadata: {
+          id: 'test1',
+          type: 'post',
+          ts: Date.now()
+        },
+        content: 'test content',
+        data: {},
+        collections: ['test1']
+      }
 
       await expect(collection.update('test1', 'test1', doc)).rejects.toThrow('not found')
     })
   })
 
   describe('Vector Search Operations', () => {
-    const mockEmbeddings = {
+    const mockEmbeddings: Record<string, number[]> = {
       doc1: Array(256).fill(0.1),
       doc2: Array(256).fill(0.2),
       doc3: Array(256).fill(0.3)
     }
     const mockDocs = [
-      { metadata: { id: 'doc1' }, content: 'test content 1', data: {} },
-      { metadata: { id: 'doc2' }, content: 'test content 2', data: {} },
-      { metadata: { id: 'doc3' }, content: 'different content', data: {} }
+      {
+        metadata: {
+          id: 'doc1',
+          type: 'post',
+          ts: Date.now()
+        },
+        content: 'test content 1',
+        data: {},
+        collections: ['test']
+      },
+      {
+        metadata: {
+          id: 'doc2',
+          type: 'post',
+          ts: Date.now()
+        },
+        content: 'test content 2',
+        data: {},
+        collections: ['test']
+      },
+      {
+        metadata: {
+          id: 'doc3',
+          type: 'post',
+          ts: Date.now()
+        },
+        content: 'different content',
+        data: {},
+        collections: ['test']
+      }
     ]
 
     beforeEach(async () => {
