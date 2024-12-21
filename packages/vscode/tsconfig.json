@@ -23,8 +23,8 @@
 	},
 	"include": ["src/**/*", "src/**/*.d.ts"],
 	"references": [
-		{ "path": "../types" },
-		{ "path": "../fs" }
+		{ "path": "../types/tsconfig.json" },
+		{ "path": "../fs/tsconfig.json" }
 	],
 	"exclude": [
 		"node_modules",
