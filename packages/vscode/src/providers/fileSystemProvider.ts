@@ -19,7 +19,7 @@ export class MDXFileSystemProvider implements vscode.FileSystemProvider {
     this.collection = this.db.collection('mdx')
   }
 
-  watch(uri: vscode.Uri, options: { readonly recursive: boolean; readonly excludes: readonly string[] }): vscode.Disposable {
+  watch(_uri: vscode.Uri, _options: { readonly recursive: boolean; readonly excludes: readonly string[] }): vscode.Disposable {
     return { dispose: () => {} }
   }
 
@@ -30,28 +30,28 @@ export class MDXFileSystemProvider implements vscode.FileSystemProvider {
         type: vscode.FileType.File,
         ctime: Date.now(),
         mtime: Date.now(),
-        size: Buffer.from(doc.content).length,
+        size: new TextEncoder().encode(doc.content).length,
       }
-    } catch (error) {
+    } catch (_error) {
       throw vscode.FileSystemError.FileNotFound(uri)
     }
   }
 
   async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
     const docs = await this.collection.list()
-    return docs.map(doc => [path.basename(doc.id), vscode.FileType.File])
+    return docs.map((doc: { id: string }) => [path.basename(doc.id), vscode.FileType.File])
   }
 
   async readFile(uri: vscode.Uri): Promise<Uint8Array> {
     try {
       const doc = await this.collection.get(uri.fsPath)
-      return Buffer.from(doc.content)
-    } catch (error) {
+      return new TextEncoder().encode(doc.content)
+    } catch (_error) {
       throw vscode.FileSystemError.FileNotFound(uri)
     }
   }
 
-  async writeFile(uri: vscode.Uri, content: Uint8Array, options: { readonly create: boolean; readonly overwrite: boolean }): Promise<void> {
+  async writeFile(uri: vscode.Uri, content: Uint8Array, _options: { readonly create: boolean; readonly overwrite: boolean }): Promise<void> {
     const doc: Document = {
       id: uri.fsPath,
       content: content.toString(),
@@ -61,12 +61,12 @@ export class MDXFileSystemProvider implements vscode.FileSystemProvider {
     this._onDidChangeFile.fire([{ type: vscode.FileChangeType.Changed, uri }])
   }
 
-  async delete(uri: vscode.Uri, options: { readonly recursive: boolean }): Promise<void> {
+  async delete(uri: vscode.Uri, _options: { readonly recursive: boolean }): Promise<void> {
     await this.collection.delete(uri.fsPath)
     this._onDidChangeFile.fire([{ type: vscode.FileChangeType.Deleted, uri }])
   }
 
-  async rename(oldUri: vscode.Uri, newUri: vscode.Uri, options: { readonly overwrite: boolean }): Promise<void> {
+  async rename(oldUri: vscode.Uri, newUri: vscode.Uri, _options: { readonly overwrite: boolean }): Promise<void> {
     const doc = await this.collection.get(oldUri.fsPath)
     doc.id = newUri.fsPath
     await this.collection.set(doc)
@@ -77,7 +77,7 @@ export class MDXFileSystemProvider implements vscode.FileSystemProvider {
     ])
   }
 
-  createDirectory(uri: vscode.Uri): void | Thenable<void> {
+  createDirectory(uri: vscode.Uri): void | Promise<void> {
     // Directories not supported in MDX database
     throw vscode.FileSystemError.NoPermissions(uri)
   }

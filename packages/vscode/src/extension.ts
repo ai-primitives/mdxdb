@@ -1,7 +1,10 @@
+/// <reference types="node" />
 import * as vscode from 'vscode'
 import { MDXFileSystemProvider } from './providers/fileSystemProvider'
 import * as JSON5 from 'json5'
 import { parseMDX } from './mdx'
+
+type Timeout = ReturnType<typeof setTimeout>
 
 let astPanel: vscode.WebviewPanel | undefined
 let previewPanel: vscode.WebviewPanel | undefined
@@ -67,9 +70,9 @@ export function activate(context: vscode.ExtensionContext) {
   )
 
   // Register document change handlers
-  let previewDebounceTimeout: NodeJS.Timeout
+  let previewDebounceTimeout: Timeout
   context.subscriptions.push(
-    vscode.workspace.onDidChangeTextDocument(event => {
+    vscode.workspace.onDidChangeTextDocument((event: vscode.TextDocumentChangeEvent) => {
       if (previewPanel && event.document === vscode.window.activeTextEditor?.document) {
         const debounceMs = vscode.workspace.getConfiguration('mdxdb').get('preview.debounceMs') || 300
         clearTimeout(previewDebounceTimeout)

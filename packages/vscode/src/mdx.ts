@@ -2,7 +2,7 @@ import { compile } from '@mdx-js/mdx'
 import { Document } from '@mdxdb/types'
 import * as JSON5 from 'json5'
 
-export async function parseMDX(content: string): Promise<{ ast: any; html: string }> {
+export async function parseMDX(content: string): Promise<{ ast: Record<string, unknown>; html: string }> {
   try {
     const compiled = await compile(content, {
       outputFormat: 'function-body',
@@ -25,7 +25,7 @@ export async function parseMDX(content: string): Promise<{ ast: any; html: strin
   }
 }
 
-export function parseDocument(doc: Document): { frontmatter: any; content: string } {
+export function parseDocument(doc: Document): { frontmatter: Record<string, unknown>; content: string } {
   const { data, content } = doc
   const frontmatter = { ...data }
 

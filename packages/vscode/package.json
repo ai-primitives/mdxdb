@@ -69,7 +69,6 @@
     "@mdxdb/types": "^0.1.0",
     "@mdx-js/mdx": "^3.0.0",
     "json5": "^2.2.0",
-    "@types/json5": "^2.2.0",
     "vscode-languageclient": "^8.0.0"
   },
   "devDependencies": {
