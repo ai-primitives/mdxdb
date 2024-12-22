@@ -16,6 +16,15 @@ A powerful MDX-based database that treats MDX documents as collections, with bui
 - 🔒 **Error Handling**: Comprehensive error handling with detailed error types
 - 📊 **Debugging**: Built-in logging and debugging support
 
+## Packages
+
+- **@mdxdb/types**: Core type definitions and interfaces used across all packages. Provides the foundational types for documents, collections, and database operations.
+- **@mdxdb/fs**: Filesystem-based database implementation. Provides local storage and retrieval of MDX documents with vector search capabilities.
+- **@mdxdb/fetch**: HTTP/API provider for remote MDX database operations. Enables interaction with MDX collections over HTTP.
+- **@mdxdb/clickhouse**: ClickHouse database provider implementation. Offers scalable vector search and document storage using ClickHouse.
+- **@mdxdb/server**: Server implementation for hosting MDX collections. Supports both Node.js and Cloudflare Workers environments.
+- **@mdxdb/ai**: AI-powered content generation and enhancement for MDX documents. Integrates with OpenAI for advanced features.
+
 ## Installation
 
 ```bash
@@ -258,6 +267,17 @@ npm run debug
 # Run tests with coverage
 npm run test:coverage
 ```
+
+## Package Dependencies
+
+The packages in this monorepo are designed to work together while maintaining modularity:
+
+- **@mdxdb/types**: No dependencies (core type definitions)
+- **@mdxdb/fs**: Depends on @mdxdb/types, @ai-sdk/openai, @ai-sdk/provider
+- **@mdxdb/fetch**: Depends on @mdxdb/types
+- **@mdxdb/clickhouse**: Depends on @mdxdb/types, @clickhouse/client-web
+- **@mdxdb/server**: Depends on @mdxdb/types, @mdxdb/clickhouse, @mdxdb/fs, hono
+- **@mdxdb/ai**: Depends on @mdxdb/types, openai
 
 ## License
 
