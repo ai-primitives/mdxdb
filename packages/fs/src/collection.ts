@@ -1,9 +1,9 @@
 import { CollectionProvider, Document, FilterQuery, SearchOptions, VectorSearchOptions, SearchResult } from '@mdxdb/types'
-import { FSDocument } from './document'
+import { FSDocument } from './document.js'
 import { promises as fs } from 'fs'
 import * as nodePath from 'path'
-import { EmbeddingsService } from './embeddings'
-import { EmbeddingsStorageService } from './storage'
+import { EmbeddingsService } from './embeddings.js'
+import { EmbeddingsStorageService } from './storage.js'
 import { webcrypto } from 'node:crypto'
 
 export interface FSCollectionOptions {
