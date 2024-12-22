@@ -1,6 +1,8 @@
 import { createClient, type ClickHouseClient } from '@clickhouse/client-web'
 import { BaseDocument } from '@mdxdb/types'
 import type { DatabaseProvider, Document, CollectionProvider, SearchOptions, FilterQuery, VectorSearchOptions, SearchResult, FilterOperator } from '@mdxdb/types'
+import { type Config } from './config.js'
+import { checkClickHouseVersion } from './utils.js'
 
 // Type alias for string filters (most common use case)
 type StringFilter = FilterOperator<string>
@@ -21,8 +23,6 @@ class ClickHouseDocument extends BaseDocument {
     }, metadata, embeddings, collections)
   }
 }
-import { type Config } from './config.js'
-import { checkClickHouseVersion } from './utils.js'
 
 interface ClickHouseRow {
   id: string
