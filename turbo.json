@@ -6,7 +6,7 @@
       "cache": false
     },
     "build": {
-      "dependsOn": ["build:types", "^build"],
+      "dependsOn": ["^build:types", "build:types"],
       "outputs": [
         "dist/**/*",
         "*.tsbuildinfo",
@@ -27,9 +27,9 @@
       "persistent": true
     },
     "build:types": {
-      "dependsOn": ["^build:types"],
+      "dependsOn": ["clean"],
       "cache": false,
-      "outputs": ["dist/**/*", "*.tsbuildinfo"],
+      "outputs": ["dist/**/*"],
       "inputs": ["src/**/*", "tsconfig.json", "package.json"]
     },
     "build:packages": {

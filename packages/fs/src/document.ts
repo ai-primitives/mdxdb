@@ -1,4 +1,4 @@
-import { Document } from '@mdxdb/types'
+import { Document } from '@mdxdb/types/document.js'
 
 export class FSDocument implements Document {
   constructor(

@@ -7,8 +7,8 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "paths": {
-      "@mdxdb/types": ["../types/src/index.js"],
-      "@mdxdb/types/*": ["../types/src/*.js"]
+      "@mdxdb/types": ["../types/src"],
+      "@mdxdb/types/*": ["../types/src/*"]
     },
     "rootDir": "src"
   },

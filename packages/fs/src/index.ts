@@ -1,4 +1,5 @@
-import { DatabaseProvider, CollectionProvider, Document } from '@mdxdb/types'
+import { Document } from '@mdxdb/types/document.js'
+import { DatabaseProvider, CollectionProvider } from '@mdxdb/types/types.js'
 import { promises as fs } from 'fs'
 import path from 'path'
 import { FSCollection } from './collection.js'

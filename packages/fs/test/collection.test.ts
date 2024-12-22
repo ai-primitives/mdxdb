@@ -48,9 +48,21 @@ describe('FSCollection', () => {
       const results = await collection.find({ metadata: { id: 'test1' } })
 
       expect(docs).toHaveLength(1)
-      expect(docs[0]).toMatchObject(doc)
+      expect(docs[0]).toMatchObject({
+        ...doc,
+        metadata: {
+          id: doc.metadata.id,
+          type: doc.metadata.type
+        }
+      })
       expect(results).toHaveLength(1)
-      expect(results[0].document).toMatchObject(doc)
+      expect(results[0].document).toMatchObject({
+        ...doc,
+        metadata: {
+          id: doc.metadata.id,
+          type: doc.metadata.type
+        }
+      })
       expect(results[0].score).toBe(1)
       expect(EmbeddingsService.prototype.generateEmbedding).toHaveBeenCalledWith('test content')
       expect(EmbeddingsStorageService.prototype.storeEmbedding).toHaveBeenCalled()
@@ -81,9 +93,21 @@ describe('FSCollection', () => {
       const results = await collection.find({ metadata: { id: 'test1' } })
 
       expect(docs).toHaveLength(1)
-      expect(docs[0]).toMatchObject(updatedDoc)
+      expect(docs[0]).toMatchObject({
+        ...updatedDoc,
+        metadata: {
+          id: updatedDoc.metadata.id,
+          type: updatedDoc.metadata.type
+        }
+      })
       expect(results).toHaveLength(1)
-      expect(results[0].document).toMatchObject(updatedDoc)
+      expect(results[0].document).toMatchObject({
+        ...updatedDoc,
+        metadata: {
+          id: updatedDoc.metadata.id,
+          type: updatedDoc.metadata.type
+        }
+      })
       expect(results[0].score).toBe(1)
       expect(EmbeddingsService.prototype.generateEmbedding).toHaveBeenCalledWith('updated content')
       expect(EmbeddingsStorageService.prototype.storeEmbedding).toHaveBeenCalled()

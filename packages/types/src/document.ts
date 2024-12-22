@@ -12,6 +12,21 @@ export interface Document extends MDXLD {
 }
 
 export class BaseDocument implements Document {
+  static create(
+    id: string,
+    content: string = '',
+    data: {
+      [key: string]: unknown
+      $id?: string
+      $type?: string
+      $context?: string | Record<string, unknown>
+    } = {},
+    metadata: Record<string, unknown> = {},
+    embeddings?: number[],
+    collections: string[] = []
+  ): BaseDocument {
+    return new BaseDocument(id, content, data, metadata, embeddings, collections)
+  }
   public readonly id: string
   public content: string
   public data: {
