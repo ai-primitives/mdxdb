@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@clickhouse/client-web": "^1.9.1",
-    "@mdxdb/types": "^0.1.0",
+    "@mdxdb/types": "workspace:*",
     "zod": "^3.24.1"
   },
   "devDependencies": {
