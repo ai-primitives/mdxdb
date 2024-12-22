@@ -1,5 +1,5 @@
 import type { ClickHouseClient } from '@clickhouse/client-web';
-import type { Config } from './config';
+import type { Config } from './config.js';
 
 interface SearchResult {
   id: string;

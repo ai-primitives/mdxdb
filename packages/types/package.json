@@ -2,20 +2,34 @@
   "name": "@mdxdb/types",
   "version": "0.1.0",
   "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./dist/*": {
+      "types": "./dist/*.d.ts",
+      "import": "./dist/*.js",
+      "require": "./dist/*.js",
+      "default": "./dist/*.js"
+    }
+  },
   "scripts": {
-    "build": "tsc --declaration --declarationMap",
-    "build:types": "tsc --emitDeclarationOnly --declaration --declarationMap",
-    "build:packages": "tsc --declaration --declarationMap",
+    "build": "pnpm run clean && tsc -p tsconfig.json",
+    "build:types": "tsc -p tsconfig.json --declaration --declarationMap",
     "clean": "rm -rf dist",
     "test": "vitest run",
     "lint": "eslint 'src/**/*.ts' --ignore-pattern '*.d.ts'"
   },
   "dependencies": {
+    "mdxld": "^0.1.0"
   },
   "devDependencies": {
-    "mdxld": "^0.1.0",
     "@eslint/js": "^8.57.0",
     "@types/node": "^20.10.0",
     "@typescript-eslint/eslint-plugin": "^8.18.1",

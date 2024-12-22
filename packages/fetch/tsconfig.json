@@ -5,7 +5,7 @@
     "rootDir": "src",
     "baseUrl": ".",
     "composite": true,
-    "moduleResolution": "Bundler",
+    "moduleResolution": "NodeNext",
     "paths": {
       "@mdxdb/types": ["../types/dist"],
       "@mdxdb/types/*": ["../types/dist/*"]

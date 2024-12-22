@@ -2,7 +2,14 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": "./src"
+    "rootDir": "./src",
+    "baseUrl": ".",
+    "composite": true,
+    "moduleResolution": "NodeNext",
+    "paths": {
+      "@mdxdb/types": ["../types/dist"],
+      "@mdxdb/types/*": ["../types/dist/*"]
+    }
   },
   "include": ["src/**/*"],
   "references": [

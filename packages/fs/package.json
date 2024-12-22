@@ -5,9 +5,9 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
-    "build:types": "tsc --emitDeclarationOnly",
-    "build:packages": "tsc",
+    "build": "tsc -p tsconfig.json",
+    "build:types": "tsc -p tsconfig.json",
+    "build:packages": "tsc -p tsconfig.json",
     "test": "vitest run --reporter=verbose",
     "test:watch": "vitest --reporter=verbose",
     "lint": "eslint 'src/**/*.{js,ts}' --ignore-pattern '*.d.ts'"
@@ -15,7 +15,7 @@
   "dependencies": {
     "@ai-sdk/openai": "^1.0.0",
     "@ai-sdk/provider": "^1.0.2",
-    "@mdxdb/types": "^0.1.0",
+    "@mdxdb/types": "workspace:*",
     "ai": "^2.2.0",
     "mdxld": "^0.1.3"
   },

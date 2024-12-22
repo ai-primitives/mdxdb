@@ -1,8 +1,8 @@
 import { describe, expect, test, beforeAll, afterAll } from 'vitest'
 import { createClient } from '@clickhouse/client-web'
 import type { ClickHouseClient } from '@clickhouse/client-web'
-import { dockerTestConfig } from '../docker.config'
-import '../setup'
+import { dockerTestConfig } from '../docker.config.js'
+import '../setup.js'
 
 interface TestRow {
   id: string
@@ -12,7 +12,7 @@ interface TestRow {
 
 describe('ClickHouse Search Tests', () => {
   const client: ClickHouseClient = createClient({
-    url: `${dockerTestConfig.protocol}://${dockerTestConfig.host}:${dockerTestConfig.port}`,
+    url: `http://${dockerTestConfig.host}:${dockerTestConfig.port}`,
     database: dockerTestConfig.database,
     username: dockerTestConfig.username,
     password: dockerTestConfig.password,

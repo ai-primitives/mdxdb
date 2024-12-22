@@ -1,17 +1,20 @@
-export type { MDXLD } from 'mdxld'
+// Export all types
+export type { MDXLD } from './mdxld.js'
+export type { Document } from './document.js'
+export { BaseDocument } from './document.js'
 export type {
-  Document,
+  FilterOperator,
+  MetadataFilter,
+  NestedFilterQuery,
+  FilterQuery
+} from './filter.js'
+export type {
   DatabaseProvider,
   CollectionProvider,
   NamespaceOptions,
   DatabaseOptions,
   CollectionOptions,
-  FilterQuery,
   SearchOptions,
   SearchResult,
-  VectorSearchOptions,
-  FilterOperator,
-  MetadataFilter,
-  NestedFilterQuery
-} from './types'
-export { BaseDocument } from './document'
+  VectorSearchOptions
+} from './types.js'

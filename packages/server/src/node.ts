@@ -1,6 +1,6 @@
 import { serve } from '@hono/node-server'
-import { createApp } from './core'
-import type { ServerConfig } from './core'
+import { createApp } from './core.js'
+import type { ServerConfig } from './core.js'
 import { createClickHouseClient } from '@mdxdb/clickhouse'
 import { createDatabase } from '@mdxdb/fs'
 

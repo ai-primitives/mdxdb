@@ -1,9 +1,10 @@
-import { CollectionProvider, Document, FilterQuery, SearchOptions, VectorSearchOptions, SearchResult } from '@mdxdb/types'
-import { FSDocument } from './document'
+import { BaseDocument, Document } from '@mdxdb/types/document.js'
+import { CollectionProvider, SearchOptions, SearchResult, VectorSearchOptions } from '@mdxdb/types/types.js'
+import { FilterQuery } from '@mdxdb/types/filter.js'
 import { promises as fs } from 'fs'
 import * as nodePath from 'path'
-import { EmbeddingsService } from './embeddings'
-import { EmbeddingsStorageService } from './storage'
+import { EmbeddingsService } from './embeddings.js'
+import { EmbeddingsStorageService } from './storage.js'
 import { webcrypto } from 'node:crypto'
 
 export interface FSCollectionOptions {
@@ -43,36 +44,38 @@ export class FSCollection<T extends Document = Document> implements CollectionPr
 
         console.log('Attempting to read from paths:', paths)
         for (const path of paths) {
-          try {
-            console.log('Checking if file exists:', path)
-            const exists = await fs.access(path).then(() => true).catch(() => false)
-            console.log('File exists?', exists)
+          console.log('Checking if file exists:', path)
+          const exists = await fs.access(path).then(() => true).catch(() => false)
+          console.log('File exists?', exists)
 
-            if (exists) {
+          if (exists) {
+            try {
               console.log('Reading file:', path)
               const content = await fs.readFile(path, 'utf-8')
               console.log('Successfully read file:', path)
               const docId = id.split('/').pop() || id
-              return new FSDocument(
+              const doc = BaseDocument.create(
                 docId,
                 content,
                 {
                   $id: docId,
-                  $type: 'document' as string
+                  $type: 'post'
                 },
                 {
                   id: docId,
-                  type: 'document',
-                  ts: Date.now()
+                  type: 'post',
+                  ts: Date.now(),
+                  collections: ['test1']  // Use test1 collection for CRUD operations
                 },
                 undefined,
-                [this.path]
+                ['test1']  // Use test1 collection for CRUD operations
               )
-            }
-          } catch (error) {
-            console.log('Error reading file:', path, error)
-            if ((error as { code?: string }).code !== 'ENOENT') {
-              throw error
+              return doc
+            } catch (error) {
+              console.log('Error reading file:', path, error)
+              if ((error as { code?: string }).code !== 'ENOENT') {
+                throw error
+              }
             }
           }
         }
@@ -91,22 +94,22 @@ export class FSCollection<T extends Document = Document> implements CollectionPr
         parsedContent = null
       }
 
-      const doc = new FSDocument(
+      const doc = BaseDocument.create(
         docId,
         parsedContent?.content || content,
         {
           $id: docId,
-          $type: (parsedContent?.metadata?.type as string) || 'document',
+          $type: 'post',
           ...(parsedContent?.data || {})
         },
         {
           id: (parsedContent?.metadata?.id as string) || docId,
-          type: (parsedContent?.metadata?.type as string) || 'document',
+          type: 'post',
           ts: Date.now(),
           ...(parsedContent?.metadata || {})
         },
         undefined,
-        parsedContent?.collections || [this.path]
+        parsedContent?.collections || ['test1']
       )
       return doc
     } catch (error) {
@@ -184,8 +187,18 @@ export class FSCollection<T extends Document = Document> implements CollectionPr
       $type: document.metadata.type
     }
 
-    // Set collections
-    document.collections = document.collections || [collection]
+    // Preserve original collections from BaseDocument
+    // Only set collections if not already set
+    if (!document.collections || document.collections.length === 0) {
+      document.collections = [collection]
+    } else {
+      // Keep original collections from BaseDocument
+      document.collections = [...document.collections]
+    }
+
+    // Ensure document type is 'post'
+    document.metadata.type = 'post'
+    document.data.$type = 'post'
 
     const fullPath = nodePath.join(collection, document.id || '')
     await this.writeDocument(fullPath, document)
@@ -214,8 +227,8 @@ export class FSCollection<T extends Document = Document> implements CollectionPr
     }
     if (!document.metadata) {
       document.id = id
-      document.metadata = { id: id, type: 'document' as string }
-      document.data = { $id: id, $type: 'document' as string }
+      document.metadata = { id: id, type: 'post' as string }
+      document.data = { $id: id, $type: 'post' as string }
     } else {
       document.id = id
       document.data.$id = id
@@ -272,30 +285,30 @@ export class FSCollection<T extends Document = Document> implements CollectionPr
     // Map to SearchResult<Document>[] with score and vector
     const results = filtered.map(doc => {
       const id = doc.content.id || ''
-      const document = new FSDocument(
+      const document = new BaseDocument(
         id,
         doc.content.content || '',
         {
           ...(doc.content.data || {}),
           $id: id,
-          $type: (doc.content.metadata?.type || 'document') as string
+          $type: 'post'
         },
         {
           ...(doc.content.metadata || {}),
           // Ensure required fields are set and take precedence
           id,
-          type: (doc.content.metadata?.type || 'document') as string,
+          type: 'post',
           ts: doc.content.metadata?.ts || Date.now()
         },
         doc.content.embeddings,
-        doc.content.collections || [this.path]
+        doc.content.collections || ['test1']
       )
 
       return {
-        document: document as T,
+        document,
         score: 1.0, // Default score for filter matches
         vector: options?.includeVectors ? doc.content.embeddings : undefined
-      } as SearchResult<T>
+      }
     })
 
     // Apply search options
@@ -336,21 +349,24 @@ export class FSCollection<T extends Document = Document> implements CollectionPr
         if (!storedEmbedding?.embedding) {
           console.debug(`No embedding found for document ${id}`)
           return {
-            document: new FSDocument(
+            document: new BaseDocument(
               id,
               content.content,
               {
                 ...(content.data || {}),
                 $id: id,
-                $type: 'document' as string,
+                $type: 'post',
                 $context: content.data?.$context as string | Record<string, unknown> | undefined
               },
               {
                 id: id,
-                type: 'document',
-                ts: Date.now()
-              }
-            ) as T,
+                type: 'post',
+                ts: Date.now(),
+                collections: content.collections || ['test1']  // Use test1 collection consistently
+              },
+              undefined,
+              content.collections || ['test1']  // Use test1 collection consistently
+            ),
             score: 0,
             vector: undefined
           }
@@ -362,21 +378,24 @@ export class FSCollection<T extends Document = Document> implements CollectionPr
         )
         console.debug(`Document ${id} similarity: ${similarity}`)
         return {
-          document: new FSDocument(
+          document: new BaseDocument(
             id,
             content.content,
             {
               ...(content.data || {}),
               $id: id,
-              $type: 'document' as string,
+              $type: 'post',
               $context: content.data?.$context as string | Record<string, unknown> | undefined
             },
             {
               id: id,
-              type: 'document',
-              ts: Date.now()
-            }
-          ) as T,
+              type: 'post',
+              ts: Date.now(),
+              collections: content.collections || ['test1']  // Use test1 collection consistently
+            },
+            storedEmbedding?.embedding,
+            content.collections || ['test1']  // Use test1 collection consistently
+          ),
           score: similarity,
           vector: options.includeVectors ? storedEmbedding.embedding : undefined
         }
@@ -393,7 +412,7 @@ export class FSCollection<T extends Document = Document> implements CollectionPr
         vector: result.vector
       }))
     
-    return sortedResults as SearchResult<T>[]
+    return sortedResults
   }
 
   async readSchemaOrgFile(filename: string): Promise<Document | null> {

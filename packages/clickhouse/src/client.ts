@@ -1,8 +1,28 @@
 import { createClient, type ClickHouseClient } from '@clickhouse/client-web'
-import type { DatabaseProvider, Document, CollectionProvider, SearchOptions, FilterQuery, VectorSearchOptions, SearchResult, FilterOperator } from '@mdxdb/types'
 import { BaseDocument } from '@mdxdb/types'
-import { type Config } from './config'
-import { checkClickHouseVersion } from './utils'
+import type { DatabaseProvider, Document, CollectionProvider, SearchOptions, FilterQuery, VectorSearchOptions, SearchResult, FilterOperator } from '@mdxdb/types'
+import { type Config } from './config.js'
+import { checkClickHouseVersion } from './utils.js'
+
+// Type alias for string filters (most common use case)
+type StringFilter = FilterOperator<string>
+
+class ClickHouseDocument extends BaseDocument {
+  constructor(
+    id: string,
+    content: string,
+    data: Record<string, unknown>,
+    metadata: { type?: string } & Record<string, unknown>,
+    embeddings?: number[],
+    collections: string[] = []
+  ) {
+    super(id, content, {
+      ...data,
+      $id: id,
+      $type: String(metadata.type || 'document')
+    }, metadata, embeddings, collections)
+  }
+}
 
 interface ClickHouseRow {
   id: string
@@ -20,11 +40,14 @@ interface ClickHouseRow {
 }
 
 class ClickHouseCollectionProvider implements CollectionProvider<Document> {
+  readonly path: string
+
   constructor(
-    public readonly path: string,
+    path: string,
     private readonly client: ClickHouseClient,
     private readonly config: Config
   ) {
+    this.path = path
     if (!config.host || !config.port) {
       throw new Error('ClickHouse host and port must be configured')
     }
@@ -89,41 +112,31 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
         throw new Error('Unexpected response format: expected array')
       }
 
-      return rows.map(row => {
-        // Prepare data field with JSON-LD properties if present
-        const data = typeof row.data === 'object' ? row.data as Record<string, unknown> : {}
-        
-        // Add JSON-LD properties to data if not present
-        if (!data.$id) data.$id = String(row.id)
-        if (!data.$type && row.type) data.$type = String(row.type)
-        
-        const doc = new BaseDocument(
-          String(row.id),
-          String(row.content || ''),
-          typeof row.data === 'object' ? {
-            ...(row.data as Record<string, unknown>),
-            $id: String(row.id),
-            $type: String(row.type)
-          } : {
-            $id: String(row.id),
-            $type: String(row.type)
-          },
-          {
-            type: String(row.type),
-            ns: String(row.ns),
-            host: String(row.host),
-            path: Array.isArray(row.path) ? row.path.map(String) : [],
-            content: String(row.content || ''),
-            data: typeof row.data === 'object' ? row.data as Record<string, unknown> : {},
-            version: Number(row.version),
-            hash: typeof row.hash === 'object' ? row.hash as Record<string, unknown> : {},
-            ts: Number(row.ts)
-          },
-          Array.isArray(row.embedding) ? row.embedding.map(Number) : undefined,
-          [collection]
-        )
-        return doc
-      })
+      return rows.map(row => new ClickHouseDocument(
+        String(row.id),
+        String(row.content || ''),
+        typeof row.data === 'object' ? {
+          ...(row.data as Record<string, unknown>),
+          $id: String(row.id),
+          $type: String(row.type)
+        } : {
+          $id: String(row.id),
+          $type: String(row.type)
+        },
+        {
+          type: String(row.type),
+          ns: String(row.ns),
+          host: String(row.host),
+          path: Array.isArray(row.path) ? row.path.map(String) : [],
+          content: String(row.content || ''),
+          data: typeof row.data === 'object' ? row.data as Record<string, unknown> : {},
+          version: Number(row.version),
+          hash: typeof row.hash === 'object' ? row.hash as Record<string, unknown> : {},
+          ts: Number(row.ts)
+        },
+        Array.isArray(row.embedding) ? row.embedding.map(Number) : undefined,
+        [collection]
+      ))
     } catch (error) {
       throw new Error(`Failed to get documents from collection ${collection}: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
@@ -510,7 +523,7 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
     }
   }
 
-  async find(filter: FilterQuery<Document>, options?: SearchOptions<Document>): Promise<Document[]> {
+  async find(filter: FilterQuery<Document>, options?: SearchOptions<Document>): Promise<SearchResult<Document>[]> {
     try {
       const conditions: string[] = ['sign = 1']
       const params: Record<string, unknown> = {}
@@ -546,14 +559,14 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
           if ('$eq' in metadata || '$gt' in metadata || '$lt' in metadata) {
             // Handle FilterOperator case
             if ('type' in metadata) {
-              const typeFilter = metadata.type as FilterOperator<string>
+              const typeFilter = metadata.type as StringFilter
               if (typeFilter.$eq) {
                 conditions.push('type = {type:String}')
                 params.type = typeFilter.$eq
               }
             }
             if ('ns' in metadata) {
-              const nsFilter = metadata.ns as FilterOperator<string>
+              const nsFilter = metadata.ns as StringFilter
               if (nsFilter.$eq) {
                 conditions.push('ns = {ns:String}')
                 params.ns = nsFilter.$eq
@@ -600,7 +613,7 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
       const rows = await result.json() as ClickHouseRow[]
       
       return rows.map(row => {
-        return new BaseDocument(
+        const doc = new ClickHouseDocument(
           String(row.id),
           String(row.content || ''),
           {
@@ -623,6 +636,11 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
           Array.isArray(row.embedding) ? row.embedding.map(Number) : undefined,
           [this.path]
         )
+        return {
+          document: doc,
+          score: 1.0,
+          vector: Array.isArray(row.embedding) ? row.embedding.map(Number) : undefined
+        }
       })
     } catch (error) {
       throw new Error(`Failed to find documents: ${error instanceof Error ? error.message : 'Unknown error'}`)
@@ -654,7 +672,7 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
           // Check if metadata is a FilterOperator
           if ('$eq' in metadata || '$gt' in metadata || '$lt' in metadata) {
             if ('type' in metadata) {
-              const typeFilter = metadata.type as FilterOperator<string>
+              const typeFilter = metadata.type as StringFilter
               if (typeFilter.$eq) {
                 conditions.push('type = {type:String}')
                 params.type = typeFilter.$eq
@@ -694,7 +712,7 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
       const rows = await result.json() as ClickHouseRow[]
       
       return rows.map(row => {
-        const doc = new BaseDocument(
+        const doc = new ClickHouseDocument(
           String(row.id),
           String(row.content || ''),
           {
@@ -718,9 +736,9 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
           [this.path]
         )
         return {
-          document: doc,
+          document: doc as Document,
           score: 1
-        } as SearchResult<Document>
+        }
       })
     } catch (error) {
       throw new Error(`Failed to search documents: ${error instanceof Error ? error.message : 'Unknown error'}`)
@@ -749,7 +767,7 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
           // Check if metadata is a FilterOperator
           if ('$eq' in metadata || '$gt' in metadata || '$lt' in metadata) {
             if ('type' in metadata) {
-              const typeFilter = metadata.type as FilterOperator<string>
+              const typeFilter = metadata.type as StringFilter
               if (typeFilter.$eq) {
                 conditions.push('type = {type:String}')
                 params.type = typeFilter.$eq
@@ -802,7 +820,7 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
       return rows
         .filter(row => row.score <= (options.threshold || 1))
         .map(row => {
-          const doc = new BaseDocument(
+          const doc = new ClickHouseDocument(
             String(row.id),
             String(row.content || ''),
             {
@@ -826,9 +844,9 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
             [this.path]
           )
           return {
-            document: doc,
+            document: doc as Document,
             score: row.score
-          } as SearchResult<Document>
+          }
         })
     } catch (error) {
       throw new Error(`Failed to perform vector search: ${error instanceof Error ? error.message : 'Unknown error'}`)

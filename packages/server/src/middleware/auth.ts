@@ -1,6 +1,6 @@
 import type { Context, Next } from 'hono'
 import { jwt } from 'hono/jwt'
-import type { AppEnv } from '../core'
+import type { AppEnv } from '../core.js'
 
 export const authMiddleware = (c: Context<AppEnv>, next: Next) => {
   const jwtMiddleware = jwt({

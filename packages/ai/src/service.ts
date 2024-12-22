@@ -1,5 +1,5 @@
 import OpenAI from 'openai'
-import type { AIServiceConfig, GenerateOptions, EnhanceOptions, ErrorResolutionOptions, GenerateResult, EnhanceResult, ErrorResolutionResult } from './types'
+import type { AIServiceConfig, GenerateOptions, EnhanceOptions, ErrorResolutionOptions, GenerateResult, EnhanceResult, ErrorResolutionResult } from './types.js'
 
 export class MDXAIService {
   private openai: OpenAI

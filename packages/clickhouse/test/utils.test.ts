@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { deriveNamespace, checkClickHouseVersion } from '../src/utils'
+import { deriveNamespace, checkClickHouseVersion } from '../src/utils.js'
 import type { ClickHouseClient } from '@clickhouse/client-web'
 
 describe('ClickHouse Utils', () => {

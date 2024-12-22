@@ -51,8 +51,7 @@ export const getMaterializedViewSchema = (
   databaseName: string,
   oplogTableName: string = 'oplog',
   dataTableName: string = 'data'
-): string => `
-CREATE MATERIALIZED VIEW IF NOT EXISTS ${databaseName}.${dataTableName}_mv
+): string => `CREATE MATERIALIZED VIEW IF NOT EXISTS ${databaseName}.dataMv
 TO ${databaseName}.${dataTableName}
 AS SELECT
     id,
@@ -69,8 +68,7 @@ AS SELECT
     version,
     CAST(1 AS Int8) as sign
 FROM ${databaseName}.${oplogTableName}
-WHERE sign = 1;
-`;
+WHERE sign = 1;`;
 
 export interface TableSchema {
   name: string

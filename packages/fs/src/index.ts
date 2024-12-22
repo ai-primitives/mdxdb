@@ -1,9 +1,10 @@
-import { DatabaseProvider, CollectionProvider, Document } from '@mdxdb/types'
+import { Document } from '@mdxdb/types/document.js'
+import { DatabaseProvider, CollectionProvider } from '@mdxdb/types/types.js'
 import { promises as fs } from 'fs'
 import path from 'path'
-import { FSCollection } from './collection'
-import { EmbeddingsService } from './embeddings'
-import { EmbeddingsStorageService } from './storage'
+import { FSCollection } from './collection.js'
+import { EmbeddingsService } from './embeddings.js'
+import { EmbeddingsStorageService } from './storage.js'
 
 const collectionsSymbol = Symbol('collections')
 
