@@ -5,7 +5,7 @@
     "rootDir": "src",
     "baseUrl": ".",
     "composite": true,
-    "moduleResolution": "Node",
+    "moduleResolution": "NodeNext",
     "noUnusedParameters": false,
     "noUnusedLocals": false,
     "strict": true,
