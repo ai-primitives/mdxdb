@@ -1,7 +1,7 @@
 /**
  * Base implementation of Document interface
  */
-import { MDXLD } from './mdxld'
+import { MDXLD } from './mdxld.js'
 
 export interface Document extends MDXLD {
   getId(): string

@@ -13,5 +13,5 @@ export type {
   FilterOperator,
   MetadataFilter,
   NestedFilterQuery
-} from './types'
-export { BaseDocument } from './document'
+} from './types.js'
+export { BaseDocument } from './document.js'

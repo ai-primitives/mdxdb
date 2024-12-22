@@ -1,4 +1,4 @@
-import type { MDXLD } from './mdxld'
+import type { MDXLD } from './mdxld.js'
 
 /**
  * Document interface representing a document in the database
