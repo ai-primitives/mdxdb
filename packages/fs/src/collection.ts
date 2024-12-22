@@ -144,7 +144,7 @@ export class FSCollection<T extends Document = Document> implements CollectionPr
         })
       )
 
-      return documents.filter((doc): doc is { id: string; content: Document } => doc !== null)
+      return documents.filter((doc): doc is { id: string; content: T } => doc !== null)
     } catch (error) {
       throw new Error(`Failed to read documents: ${error}`)
     }
@@ -191,7 +191,7 @@ export class FSCollection<T extends Document = Document> implements CollectionPr
     await this.writeDocument(fullPath, document)
   }
 
-  async get(collection: string): Promise<Document[]> {
+  async get(collection: string): Promise<T[]> {
     const collectionPath = nodePath.join(this.collectionPath, collection)
     await fs.mkdir(collectionPath, { recursive: true })
     const files = await fs.readdir(collectionPath)
@@ -204,7 +204,7 @@ export class FSCollection<T extends Document = Document> implements CollectionPr
       })
     )
 
-    return documents.filter((doc: Document | null): doc is Document => doc !== null)
+    return documents.filter((doc: Document | null): doc is T => doc !== null) as T[]
   }
 
   async update(collection: string, id: string, document: Document): Promise<void> {
