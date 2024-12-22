@@ -200,21 +200,12 @@ export class FSCollection<T extends Document = Document> implements CollectionPr
     const documents = await Promise.all(
       mdxFiles.map(async file => {
         const id = nodePath.basename(file, '.mdx')
-        return this.readDocument(nodePath.join(collection, id))
+        const doc = await this.readDocument(nodePath.join(collection, id))
+        return doc as T | null
       })
     )
 
-    return documents
-      .filter((doc: { id: string; content: Document | null }): doc is { id: string; content: FSDocument } => 
-        doc !== null && 
-        doc.content instanceof FSDocument && 
-        'id' in doc.content && 
-        'content' in doc.content
-      )
-      .map((doc: { id: string; content: FSDocument }): { id: string; content: T } => ({ 
-        id: doc.id, 
-        content: doc.content as T // Safe cast since FSDocument extends Document
-      }))
+    return documents.filter((doc): doc is T => doc !== null)
   }
 
   async update(collection: string, id: string, document: Document): Promise<void> {
