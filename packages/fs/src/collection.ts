@@ -204,7 +204,17 @@ export class FSCollection<T extends Document = Document> implements CollectionPr
       })
     )
 
-    return documents.filter((doc: Document | null): doc is T => doc !== null) as T[]
+    return documents
+      .filter((doc: { id: string; content: Document | null }): doc is { id: string; content: FSDocument } => 
+        doc !== null && 
+        doc.content instanceof FSDocument && 
+        'id' in doc.content && 
+        'content' in doc.content
+      )
+      .map((doc: { id: string; content: FSDocument }): { id: string; content: T } => ({ 
+        id: doc.id, 
+        content: doc.content as T // Safe cast since FSDocument extends Document
+      }))
   }
 
   async update(collection: string, id: string, document: Document): Promise<void> {
@@ -292,10 +302,10 @@ export class FSCollection<T extends Document = Document> implements CollectionPr
       )
 
       return {
-        document: document as T,
+        document,
         score: 1.0, // Default score for filter matches
         vector: options?.includeVectors ? doc.content.embeddings : undefined
-      } as SearchResult<T>
+      }
     })
 
     // Apply search options
@@ -350,7 +360,7 @@ export class FSCollection<T extends Document = Document> implements CollectionPr
                 type: 'document',
                 ts: Date.now()
               }
-            ) as T,
+            ),
             score: 0,
             vector: undefined
           }
@@ -376,7 +386,7 @@ export class FSCollection<T extends Document = Document> implements CollectionPr
               type: 'document',
               ts: Date.now()
             }
-          ) as T,
+          ),
           score: similarity,
           vector: options.includeVectors ? storedEmbedding.embedding : undefined
         }
@@ -393,7 +403,7 @@ export class FSCollection<T extends Document = Document> implements CollectionPr
         vector: result.vector
       }))
     
-    return sortedResults as SearchResult<T>[]
+    return sortedResults
   }
 
   async readSchemaOrgFile(filename: string): Promise<Document | null> {

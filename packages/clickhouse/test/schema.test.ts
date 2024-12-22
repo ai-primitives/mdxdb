@@ -3,7 +3,7 @@ import {
   getDatabaseSchema,
   getTablesSchema,
   getMaterializedViewSchema
-} from '../src/schema'
+} from '../src/schema.js'
 
 describe('ClickHouse Schema', () => {
   const dbName = 'mdxdb_test'

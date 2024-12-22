@@ -2,11 +2,10 @@
   "$schema": "https://json.schemastore.org/tsconfig",
   "display": "Default",
   "compilerOptions": {
-    "target": "es2022",
+    "target": "ESNext",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "jsx": "react-jsx",
+    "lib": ["ESNext"],
     "strict": true,
     "declaration": true,
     "declarationMap": true,
@@ -17,7 +16,10 @@
     "isolatedModules": true,
     "incremental": true,
     "noUnusedLocals": true,
-    "noUnusedParameters": true
+    "noUnusedParameters": true,
+    "noEmit": false,
+    "emitDeclarationOnly": false,
+    "composite": true
   },
   "exclude": ["node_modules"]
 }

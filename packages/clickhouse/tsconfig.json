@@ -4,12 +4,15 @@
     "outDir": "dist",
     "baseUrl": ".",
     "composite": true,
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "paths": {
-      "@mdxdb/types": ["../types/src"]
+      "@mdxdb/types": ["../types/src/index.js"],
+      "@mdxdb/types/*": ["../types/src/*.js"]
     },
-    "rootDir": "."
+    "rootDir": "src"
   },
-  "include": ["src/**/*.ts", "test/**/*.ts"],
-  "exclude": ["dist", "node_modules"],
+  "include": ["src/**/*.ts"],
+  "exclude": ["dist", "node_modules", "test"],
   "references": [{ "path": "../types" }]
 }

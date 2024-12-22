@@ -5,9 +5,9 @@ import { z } from 'zod'
 import type { Context, Env, MiddlewareHandler } from 'hono'
 import type { JwtVariables } from 'hono/jwt'
 import type { DatabaseProvider, Document } from '@mdxdb/types'
-import { compileToESM } from './compiler'
-import { deployToCloudflare, type DeploymentOptions } from './deployment'
-import { authMiddleware } from './middleware/auth'
+import { compileToESM } from './compiler.js'
+import { deployToCloudflare, type DeploymentOptions } from './deployment.js'
+import { authMiddleware } from './middleware/auth.js'
 
 // Request validation schemas
 const searchSchema = z.object({
@@ -138,7 +138,7 @@ export const createApp = (config: ServerConfig) => {
 
     try {
       const docs = await provider.collections.get(name)
-      const doc = docs.find(d => d.metadata?.id === id)
+      const doc = docs.find((d: Document) => d.metadata?.id === id)
       if (!doc) {
         return c.json({ error: 'Document not found' }, 404)
       }

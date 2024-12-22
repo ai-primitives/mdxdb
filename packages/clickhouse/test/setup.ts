@@ -1,10 +1,10 @@
 import { afterAll, beforeAll } from 'vitest'
 import { createClient } from '@clickhouse/client-web'
-import { dockerTestConfig } from './docker.config'
+import { dockerTestConfig } from './docker.config.js'
 
 beforeAll(async () => {
   const client = createClient({
-    url: `${dockerTestConfig.protocol}://${dockerTestConfig.host}:${dockerTestConfig.port}`,
+    url: `http://${dockerTestConfig.host}:${dockerTestConfig.port}`,
     username: dockerTestConfig.username,
     password: dockerTestConfig.password,
     clickhouse_settings: {
@@ -92,7 +92,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   const client = createClient({
-    url: `${dockerTestConfig.protocol}://${dockerTestConfig.host}:${dockerTestConfig.port}`,
+    url: `http://${dockerTestConfig.host}:${dockerTestConfig.port}`,
     username: dockerTestConfig.username,
     password: dockerTestConfig.password
   })

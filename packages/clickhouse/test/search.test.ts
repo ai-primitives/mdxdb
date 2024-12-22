@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { searchSimilar } from '../src/search';
+import { searchSimilar } from '../src/search.js';
 import type { ClickHouseClient, QueryParams } from '@clickhouse/client-web';
-import type { Config } from '../src/config';
+import type { Config } from '../src/config.js';
 
 interface MockResult {
   id: string;

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
-import { createClickHouseClient } from '../src'
-import type { Config } from '../src/config'
+import { createClickHouseClient } from '../src/index.js'
+import type { Config } from '../src/config.js'
 import { createClient } from '@clickhouse/client-web'
 
 vi.mock('@clickhouse/client-web', () => ({

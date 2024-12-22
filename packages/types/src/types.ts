@@ -1,13 +1,6 @@
 import type { MDXLD } from './mdxld.js'
+import type { FilterQuery } from './filter.js'
 
-/**
- * Document interface representing a document in the database
- * @extends MDXLD Base interface for MDX content
- */
-/**
- * Document interface representing a document in the database
- * @extends MDXLD Base interface for MDX content
- */
 /**
  * Document interface representing a document in the database
  * Extends MDXLD base interface and adds document-specific functionality
@@ -78,67 +71,6 @@ export interface DatabaseProvider<T extends Document = Document> {
   disconnect(): Promise<void>
   list(): Promise<string[]>
   collection(name: string): CollectionProvider<T>
-}
-
-export type FilterOperator<T> = {
-  $eq?: T
-  $gt?: T
-  $gte?: T
-  $lt?: T
-  $lte?: T
-  $in?: T[]
-  $nin?: T[]
-}
-
-export type MetadataFilter = {
-  type?: string | FilterOperator<string>
-  ns?: string | FilterOperator<string>
-  host?: string | FilterOperator<string>
-  path?: string[] | FilterOperator<string[]>
-  content?: string | FilterOperator<string>
-  data?: Record<string, unknown> | FilterOperator<Record<string, unknown>>
-  version?: number | FilterOperator<number>
-  hash?: Record<string, unknown> | FilterOperator<Record<string, unknown>>
-  ts?: number | FilterOperator<number>
-} & {
-  [key: string]: unknown
-}
-
-export type NestedFilterQuery<T> = {
-  [P in keyof T]?: T[P] extends Record<string, unknown>
-    ? FilterOperator<T[P]> | {
-        [K in keyof T[P]]?: T[P][K] extends Record<string, unknown>
-          ? FilterOperator<T[P][K]> | {
-              [L in keyof T[P][K]]?: T[P][K][L] | FilterOperator<T[P][K][L]>
-            }
-          : T[P][K] | FilterOperator<T[P][K]>
-      }
-    : T[P] | FilterOperator<T[P]>
-}
-
-export type FilterQuery<T> = NestedFilterQuery<T> & {
-  [P in keyof T]?: T[P] extends Record<string, unknown>
-    ? P extends 'metadata'
-      ? MetadataFilter
-      : P extends 'data'
-      ? {
-          [K in keyof T[P]]?: T[P][K] extends Record<string, unknown>
-            ? FilterOperator<T[P][K]> | {
-                [L in keyof T[P][K]]?: T[P][K][L] | FilterOperator<T[P][K][L]>
-              }
-            : T[P][K] | FilterOperator<T[P][K]>
-        }
-      : T[P] | FilterOperator<T[P]>
-    : T[P] | FilterOperator<T[P]>
-} & {
-  $and?: FilterQuery<T>[]
-  $or?: FilterQuery<T>[]
-  $not?: FilterQuery<T>
-} & {
-  [key: `data.${string}`]: unknown
-  [key: `data.${string}.${string}`]: unknown
-  [key: `metadata.${string}`]: unknown
-  [key: `metadata.${string}.${string}`]: unknown
 }
 
 export interface SearchOptions<T extends Document = Document> {
