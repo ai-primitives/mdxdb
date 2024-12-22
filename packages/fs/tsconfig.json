@@ -5,7 +5,7 @@
     "rootDir": "src",
     "baseUrl": ".",
     "composite": true,
-    "moduleResolution": "Bundler",
+    "moduleResolution": "Node",
     "noUnusedParameters": false,
     "noUnusedLocals": false,
     "strict": true,

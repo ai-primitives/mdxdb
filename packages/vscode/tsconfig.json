@@ -1,6 +1,6 @@
 {
 	"compilerOptions": {
-		"module": "Node16",
+		"module": "ES2022",
 		"moduleResolution": "node",
 		"target": "ES2022",
 		"outDir": "out",
@@ -9,13 +9,27 @@
 			"DOM",
 			"DOM.Iterable"
 		],
-		"types": ["node", "vscode"],
+		"types": ["node", "vscode", "mocha", "react"],
 		"sourceMap": true,
 		"rootDir": "src",
 		"strict": true,   /* enable all strict type-checking options */
+		"jsx": "react-jsx",
+		"allowJs": true,
+		"esModuleInterop": true,
 		/* Additional Checks */
-		// "noImplicitReturns": true, /* Report error when not all code paths in function return a value. */
-		// "noFallthroughCasesInSwitch": true, /* Report errors for fallthrough cases in switch statement. */
-		// "noUnusedParameters": true,  /* Report errors on unused parameters. */
-	}
+		"noImplicitReturns": true, /* Report error when not all code paths in function return a value. */
+		"noFallthroughCasesInSwitch": true, /* Report errors for fallthrough cases in switch statement. */
+		"noUnusedParameters": true  /* Report errors on unused parameters. */
+	},
+	"include": ["src/**/*", "src/**/*.d.ts"],
+	"references": [
+		{ "path": "../types/tsconfig.json" },
+		{ "path": "../fs/tsconfig.json" }
+	],
+	"exclude": [
+		"node_modules",
+		".vscode-test",
+		"**/*.mjs",
+		"../../utilities/**/*"
+	]
 }

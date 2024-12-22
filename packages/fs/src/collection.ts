@@ -204,7 +204,7 @@ export class FSCollection<T extends Document = Document> implements CollectionPr
       })
     )
 
-    return documents.filter((doc): doc is Document => doc !== null)
+    return documents.filter((doc: Document | null): doc is Document => doc !== null)
   }
 
   async update(collection: string, id: string, document: Document): Promise<void> {
@@ -246,10 +246,10 @@ export class FSCollection<T extends Document = Document> implements CollectionPr
   async find(filter: FilterQuery<T>, options?: SearchOptions<T>): Promise<SearchResult<T>[]> {
     const docs = await this.getAllDocuments()
     const filtered = docs.filter(({ content }) => {
-      return Object.entries(filter).every(([key, value]) => {
+      return Object.entries(filter).every(([key, value]: [string, unknown]) => {
         if (typeof value === 'object' && value !== null) {
           const operators = value as Record<string, unknown>
-          return Object.entries(operators).every(([op, val]) => {
+          return Object.entries(operators).every(([op, val]: [string, unknown]) => {
             const docValue = content[key as keyof Document]
             if (docValue === undefined) return false
 

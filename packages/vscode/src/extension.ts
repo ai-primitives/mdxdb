@@ -1,6 +1,7 @@
 /// <reference types="node" />
 import * as vscode from 'vscode'
 import { MDXFileSystemProvider } from './providers/fileSystemProvider'
+import { createProvider } from './providers/providerFactory'
 import * as JSON5 from 'json5'
 import { parseMDX } from './mdx'
 
@@ -8,10 +9,13 @@ type Timeout = ReturnType<typeof setTimeout>
 
 let astPanel: vscode.WebviewPanel | undefined
 let previewPanel: vscode.WebviewPanel | undefined
-const fileSystemProvider = new MDXFileSystemProvider()
 
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
   console.log('MDXDB extension is now active!')
+
+  // Initialize file system provider
+  const provider = await createProvider()
+  const fileSystemProvider = new MDXFileSystemProvider(provider)
 
   // Register MDX file system provider
   const mdxScheme = 'mdxdb'
@@ -78,7 +82,7 @@ export function activate(context: vscode.ExtensionContext) {
         clearTimeout(previewDebounceTimeout)
         previewDebounceTimeout = setTimeout(() => {
           updatePreview(event.document)
-        }, debounceMs)
+        }, Number(debounceMs))
       }
 
       if (astPanel && event.document === vscode.window.activeTextEditor?.document) {
