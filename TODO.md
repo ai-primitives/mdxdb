@@ -137,6 +137,42 @@
 - [ ] Add API documentation
 - [ ] Add examples directory with usage examples
 
+### Package Documentation
+- [ ] Root Documentation
+  - [x] Add package overview section to root README
+  - [x] Document package inter-dependencies
+  - [ ] Update root TODO with package-specific tasks
+- [ ] @mdxdb/types Documentation
+  - [ ] Create package README.md
+  - [ ] Document type interfaces and exports
+  - [ ] Add package-specific TODO.md
+  - [ ] Include usage examples
+- [ ] @mdxdb/fs Documentation
+  - [ ] Create package README.md
+  - [ ] Document filesystem provider implementation
+  - [ ] Add package-specific TODO.md
+  - [ ] Include configuration examples
+- [ ] @mdxdb/fetch Documentation
+  - [ ] Create package README.md
+  - [ ] Document HTTP/API provider usage
+  - [ ] Add package-specific TODO.md
+  - [ ] Include API endpoint examples
+- [ ] @mdxdb/clickhouse Documentation
+  - [ ] Create package README.md
+  - [ ] Document ClickHouse provider setup
+  - [ ] Add package-specific TODO.md
+  - [ ] Include schema and query examples
+- [ ] @mdxdb/server Documentation
+  - [ ] Create package README.md
+  - [ ] Document server implementation
+  - [ ] Add package-specific TODO.md
+  - [ ] Include deployment examples
+- [ ] @mdxdb/ai Documentation
+  - [ ] Create package README.md
+  - [ ] Document AI integration features
+  - [ ] Add package-specific TODO.md
+  - [ ] Include OpenAI configuration examples
+
 ## CI/CD
 
 - [ ] Fix GitHub Actions configuration
