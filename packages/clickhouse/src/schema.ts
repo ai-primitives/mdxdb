@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS ${databaseName}.${oplogTableName} (
     sign Int8,
     INDEX idx_content content TYPE full_text GRANULARITY 1,
     INDEX idx_embedding embedding TYPE vector_similarity('hnsw', 'cosineDistance')
-) ENGINE = MergeTree()
+) ENGINE = VersionedCollapsingMergeTree(sign, version)
 ORDER BY (id, version);
 
 CREATE TABLE IF NOT EXISTS ${databaseName}.${dataTableName} (
@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS ${databaseName}.${dataTableName} (
     sign Int8,
     INDEX idx_content content TYPE full_text GRANULARITY 1,
     INDEX idx_embedding embedding TYPE vector_similarity('hnsw', 'cosineDistance')
-) ENGINE = MergeTree()
+) ENGINE = VersionedCollapsingMergeTree(sign, version)
 PRIMARY KEY (id)
 ORDER BY (id, ns, type, version);
 `;
