@@ -4,7 +4,19 @@
     "outDir": "dist",
     "rootDir": "src",
     "baseUrl": ".",
-    "composite": true
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "noImplicitAny": true
   },
   "include": ["src/**/*.ts", "src/**/*.d.ts", "src/mdxld.ts"],
   "exclude": ["dist", "node_modules"]

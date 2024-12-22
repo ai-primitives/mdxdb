@@ -73,7 +73,7 @@ class FetchCollectionProvider<T extends Document = Document> implements Collecti
     })
   }
 
-  async find(filter: FilterQuery<T>, options?: SearchOptions<T>): Promise<T[]> {
+  async find(filter: FilterQuery<T>, options?: SearchOptions<T>): Promise<SearchResult<T>[]> {
     const response = await this._fetchWithRetry(`collections/${this.path}/find`, {
       method: 'POST',
       headers: this._headers,
@@ -105,6 +105,18 @@ const providerState = new WeakMap<FetchProvider<Document>, {
   options: Required<Omit<FetchProviderOptions, 'namespace'>>
   fetchWithRetry: (_path: string, _init?: RequestInit, _retryCount?: number) => Promise<Response>
 }>()
+
+// Type guard to ensure type safety when accessing provider state
+function getProviderState<T extends Document>(provider: FetchProvider<T>) {
+  const state = providerState.get(provider as FetchProvider<Document>)
+  if (!state) {
+    throw new Error('Provider state not initialized')
+  }
+  return state as {
+    options: Required<Omit<FetchProviderOptions, 'namespace'>>
+    fetchWithRetry: (_path: string, _init?: RequestInit, _retryCount?: number) => Promise<Response>
+  }
+}
 
 export class FetchProvider<T extends Document = Document> implements DatabaseProvider<T> {
   readonly namespace: string
@@ -156,7 +168,7 @@ export class FetchProvider<T extends Document = Document> implements DatabasePro
         }
       }
     }
-    providerState.set(this, state)
+    providerState.set(this as unknown as FetchProvider<Document>, state)
     this.collections = new FetchCollectionProvider<T>(
       '',
       state.options.headers,
@@ -173,13 +185,13 @@ export class FetchProvider<T extends Document = Document> implements DatabasePro
   }
 
   async list(): Promise<string[]> {
-    const state = providerState.get(this)!
+    const state = getProviderState(this)
     const response = await state.fetchWithRetry('collections')
     return response.json()
   }
 
   collection(name: string): CollectionProvider<T> {
-    const state = providerState.get(this)!
+    const state = getProviderState(this)
     return new FetchCollectionProvider<T>(
       name,
       state.options.headers,

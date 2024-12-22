@@ -1,5 +1,6 @@
 import { createClient, type ClickHouseClient } from '@clickhouse/client-web'
-import type { DatabaseProvider, Document, CollectionProvider, SearchOptions, FilterQuery, VectorSearchOptions, SearchResult } from '@mdxdb/types'
+import type { DatabaseProvider, Document, CollectionProvider, SearchOptions, FilterQuery, VectorSearchOptions, SearchResult, FilterOperator } from '@mdxdb/types'
+import { BaseDocument } from '@mdxdb/types'
 import { type Config } from './config'
 import { checkClickHouseVersion } from './utils'
 
@@ -24,6 +25,9 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
     private readonly client: ClickHouseClient,
     private readonly config: Config
   ) {
+    if (!config.host || !config.port) {
+      throw new Error('ClickHouse host and port must be configured')
+    }
     void this.config.database
   }
 
@@ -59,7 +63,7 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
       const result = await this.client.query({
         query: `
           SELECT 
-            id,
+            metadata,
             type,
             ns,
             host,
@@ -86,13 +90,25 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
       }
 
       return rows.map(row => {
-        const doc: Document = {
-          content: String(row.content || ''),
-          data: typeof row.data === 'object' ? row.data as Record<string, unknown> : {},
-          embeddings: Array.isArray(row.embedding) ? row.embedding.map(Number) : undefined,
-          collections: [collection],
-          metadata: {
-            id: String(row.id),
+        // Prepare data field with JSON-LD properties if present
+        const data = typeof row.data === 'object' ? row.data as Record<string, unknown> : {}
+        
+        // Add JSON-LD properties to data if not present
+        if (!data.$id) data.$id = String(row.id)
+        if (!data.$type && row.type) data.$type = String(row.type)
+        
+        const doc = new BaseDocument(
+          String(row.id),
+          String(row.content || ''),
+          typeof row.data === 'object' ? {
+            ...(row.data as Record<string, unknown>),
+            $id: String(row.id),
+            $type: String(row.type)
+          } : {
+            $id: String(row.id),
+            $type: String(row.type)
+          },
+          {
             type: String(row.type),
             ns: String(row.ns),
             host: String(row.host),
@@ -102,8 +118,10 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
             version: Number(row.version),
             hash: typeof row.hash === 'object' ? row.hash as Record<string, unknown> : {},
             ts: Number(row.ts)
-          }
-        }
+          },
+          Array.isArray(row.embedding) ? row.embedding.map(Number) : undefined,
+          [collection]
+        )
         return doc
       })
     } catch (error) {
@@ -124,30 +142,56 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
       // Ensure document has metadata
       const timestamp = Math.floor(Date.now() / 1000) // Convert to seconds for UInt32
 
-      // Initialize metadata with ID if not present
+      // Initialize required fields
+      document.id = document.id || this.generateId(collection, timestamp)
+      document.content = document.content || ''
+      document.data = {
+        ...document.data,
+        $id: document.id,
+        $type: document.metadata?.type || 'document'
+      }
+      
+      // Initialize metadata if not present
       if (!document.metadata) {
         document.metadata = {
-          id: this.generateId(collection, timestamp),
+          id: document.id,
           type: 'document',
           ts: timestamp
         }
-      } else if (!document.metadata.id) {
-        document.metadata.id = this.generateId(collection, timestamp)
       }
 
       // Extract document fields, using metadata for required fields
-      const row = {
-        id: document.metadata.id,
-        type: document.metadata.type || 'document',
+      const metadata = {
+        type: document.metadata?.type || 'document',
         ns: collection,
-        host: document.metadata.host || '',
-        path: Array.isArray(document.metadata.path) ? document.metadata.path : [],
-        data: document.metadata.data || {},
+        host: document.metadata?.host || '',
+        path: Array.isArray(document.metadata?.path) ? document.metadata.path : [],
+        data: document.metadata?.data || {},
+        content: document.content || '',
+        hash: document.metadata?.hash || {},
+        ts: timestamp
+      }
+
+      // Prepare data with JSON-LD properties
+      const data = {
+        ...(document.data || {}),
+        $id: document.id || this.generateId(collection, timestamp), // Add $id to data for querying
+        $type: document.metadata?.type || 'document'
+      }
+
+      const row = {
+        id: document.id || this.generateId(collection, timestamp), // Keep id at root level
+        metadata: JSON.stringify(metadata),
+        type: metadata.type,
+        ns: collection,
+        host: metadata.host,
+        path: metadata.path,
+        data,
         content: document.content || '',
         embedding: Array.isArray(document.embeddings) ? document.embeddings : [],
         ts: timestamp,
-        hash: document.metadata.hash || {},
-        version: document.metadata.version || 1,
+        hash: metadata.hash,
+        version: document.metadata?.version || 1,
         sign: 1
       }
 
@@ -233,15 +277,22 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
       throw new Error('Document must be a valid object')
     }
 
-    // Ensure document has metadata with id
+    // Update required fields
+    document.id = id
+    document.content = document.content || ''
+    document.data = {
+      ...document.data,
+      $id: id,
+      $type: document.metadata?.type || 'document'
+    }
+    
+    // Initialize metadata if not present
     if (!document.metadata) {
       document.metadata = {
-        id: id,
+        id: document.id,
         type: 'document',
         ts: Math.floor(Date.now() / 1000)
       }
-    } else {
-      document.metadata.id = id
     }
 
     try {
@@ -257,7 +308,7 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
           LIMIT 1
         `,
         query_params: {
-          id: document.metadata.id,
+          id,
           collection
         }
       })
@@ -273,14 +324,21 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
 
       const metadata = document.metadata || {}
       
+      // Prepare data with JSON-LD properties
+      const data = {
+        ...(metadata?.data || {}),
+        $id: id, // Add $id to data for querying
+        $type: metadata?.type || 'document'
+      }
+
       // Prepare the new document version
       const row = {
-        id,
-        type: metadata.type || 'document',
+        id, // Keep id at root level
+        type: metadata?.type || 'document',
         ns: collection,
-        host: metadata.host || '',
-        path: Array.isArray(metadata.path) ? metadata.path : [],
-        data: metadata.data || {},
+        host: metadata?.host || '',
+        path: Array.isArray(metadata?.path) ? metadata.path : [],
+        data,
         content: metadata.content || '',
         embedding: Array.isArray(document.embeddings) ? document.embeddings : [],
         ts: timestamp,
@@ -453,23 +511,328 @@ class ClickHouseCollectionProvider implements CollectionProvider<Document> {
   }
 
   async find(filter: FilterQuery<Document>, options?: SearchOptions<Document>): Promise<Document[]> {
-    void this.client
-    void filter
-    void options
-    throw new Error('Method not implemented for find operation')
+    try {
+      const conditions: string[] = ['sign = 1']
+      const params: Record<string, unknown> = {}
+
+      if (filter) {
+        // Handle top-level properties
+        if (filter.id) {
+          conditions.push('id = {id:String}')
+          params.id = filter.id
+        }
+
+        // Handle data field JSON-LD properties
+        if (filter.data) {
+          const data = filter.data as Record<string, unknown>
+          if (data.$id) {
+            conditions.push('JSONExtractString(data, \'$id\') = {dataId:String}')
+            params.dataId = data.$id
+          }
+          if (data.$type) {
+            conditions.push('JSONExtractString(data, \'$type\') = {dataType:String}')
+            params.dataType = data.$type
+          }
+          if (data.$context) {
+            conditions.push('JSONExtractString(data, \'$context\') = {dataContext:String}')
+            params.dataContext = data.$context
+          }
+        }
+
+        // Handle metadata fields
+        if (filter.metadata) {
+          const metadata = filter.metadata
+          // Check if metadata is a FilterOperator
+          if ('$eq' in metadata || '$gt' in metadata || '$lt' in metadata) {
+            // Handle FilterOperator case
+            if ('type' in metadata) {
+              const typeFilter = metadata.type as FilterOperator<string>
+              if (typeFilter.$eq) {
+                conditions.push('type = {type:String}')
+                params.type = typeFilter.$eq
+              }
+            }
+            if ('ns' in metadata) {
+              const nsFilter = metadata.ns as FilterOperator<string>
+              if (nsFilter.$eq) {
+                conditions.push('ns = {ns:String}')
+                params.ns = nsFilter.$eq
+              }
+            }
+          } else {
+            // Handle regular metadata object case
+            if ('type' in metadata && metadata.type) {
+              conditions.push('type = {type:String}')
+              params.type = metadata.type
+            }
+            if ('ns' in metadata && metadata.ns) {
+              conditions.push('ns = {ns:String}')
+              params.ns = metadata.ns
+            }
+          }
+        }
+      }
+
+      const query = `
+        SELECT 
+          id,
+          type,
+          ns,
+          host,
+          path,
+          data,
+          content,
+          embedding,
+          ts,
+          hash,
+          version
+        FROM ${this.config.database}.${this.config.dataTable}
+        WHERE ${conditions.join(' AND ')}
+        ${options?.limit ? `LIMIT ${options.limit}` : ''}
+        ${options?.offset ? `OFFSET ${options.offset}` : ''}
+      `
+
+      const result = await this.client.query({
+        query,
+        query_params: params
+      })
+
+      const rows = await result.json() as ClickHouseRow[]
+      
+      return rows.map(row => {
+        return new BaseDocument(
+          String(row.id),
+          String(row.content || ''),
+          {
+            ...(typeof row.data === 'object' ? row.data as Record<string, unknown> : {}),
+            $id: String(row.id),
+            $type: String(row.type)
+          },
+          {
+            id: String(row.id),
+            type: String(row.type),
+            ns: String(row.ns),
+            host: String(row.host),
+            path: Array.isArray(row.path) ? row.path.map(String) : [],
+            content: String(row.content || ''),
+            data: typeof row.data === 'object' ? row.data as Record<string, unknown> : {},
+            version: Number(row.version),
+            hash: typeof row.hash === 'object' ? row.hash as Record<string, unknown> : {},
+            ts: Number(row.ts)
+          },
+          Array.isArray(row.embedding) ? row.embedding.map(Number) : undefined,
+          [this.path]
+        )
+      })
+    } catch (error) {
+      throw new Error(`Failed to find documents: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
   }
 
   async search(query: string, options?: SearchOptions<Document>): Promise<SearchResult<Document>[]> {
-    void this.client
-    void query
-    void options
-    throw new Error('Method not implemented for search operation')
+    try {
+      const conditions: string[] = ['sign = 1']
+      const params: Record<string, unknown> = {
+        query: `%${query}%`
+      }
+
+      // Add text search conditions including JSON-LD properties
+      conditions.push(`(
+        content ILIKE {query:String} OR
+        JSONExtractString(data, '$type') ILIKE {query:String} OR
+        JSONExtractString(data, '$context') ILIKE {query:String}
+      )`)
+
+      // Add filter conditions if provided
+      if (options?.filter) {
+        if (options.filter.id) {
+          conditions.push('id = {id:String}')
+          params.id = options.filter.id
+        }
+        if (options.filter.metadata) {
+          const metadata = options.filter.metadata
+          // Check if metadata is a FilterOperator
+          if ('$eq' in metadata || '$gt' in metadata || '$lt' in metadata) {
+            if ('type' in metadata) {
+              const typeFilter = metadata.type as FilterOperator<string>
+              if (typeFilter.$eq) {
+                conditions.push('type = {type:String}')
+                params.type = typeFilter.$eq
+              }
+            }
+          } else if ('type' in metadata && metadata.type) {
+            conditions.push('type = {type:String}')
+            params.type = metadata.type
+          }
+        }
+      }
+
+      const searchQuery = `
+        SELECT 
+          id,
+          type,
+          ns,
+          host,
+          path,
+          data,
+          content,
+          embedding,
+          ts,
+          hash,
+          version
+        FROM ${this.config.database}.${this.config.dataTable}
+        WHERE ${conditions.join(' AND ')}
+        ${options?.limit ? `LIMIT ${options.limit}` : ''}
+        ${options?.offset ? `OFFSET ${options.offset}` : ''}
+      `
+
+      const result = await this.client.query({
+        query: searchQuery,
+        query_params: params
+      })
+
+      const rows = await result.json() as ClickHouseRow[]
+      
+      return rows.map(row => {
+        const doc = new BaseDocument(
+          String(row.id),
+          String(row.content || ''),
+          {
+            ...(typeof row.data === 'object' ? row.data as Record<string, unknown> : {}),
+            $id: String(row.id),
+            $type: String(row.type)
+          },
+          {
+            id: String(row.id),
+            type: String(row.type),
+            ns: String(row.ns),
+            host: String(row.host),
+            path: Array.isArray(row.path) ? row.path.map(String) : [],
+            content: String(row.content || ''),
+            data: typeof row.data === 'object' ? row.data as Record<string, unknown> : {},
+            version: Number(row.version),
+            hash: typeof row.hash === 'object' ? row.hash as Record<string, unknown> : {},
+            ts: Number(row.ts)
+          },
+          Array.isArray(row.embedding) ? row.embedding.map(Number) : undefined,
+          [this.path]
+        )
+        return {
+          document: doc,
+          score: 1
+        } as SearchResult<Document>
+      })
+    } catch (error) {
+      throw new Error(`Failed to search documents: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
   }
 
   async vectorSearch(options: VectorSearchOptions & SearchOptions<Document>): Promise<SearchResult<Document>[]> {
-    void this.client
-    void options
-    throw new Error('Method not implemented for vector search operation')
+    if (!options.vector) {
+      throw new Error('Vector is required for vector search')
+    }
+
+    try {
+      const conditions: string[] = ['sign = 1']
+      const params: Record<string, unknown> = {
+        vector: options.vector
+      }
+
+      // Add filter conditions if provided
+      if (options.filter) {
+        if (options.filter.id) {
+          conditions.push('id = {id:String}')
+          params.id = options.filter.id
+        }
+        if (options.filter.metadata) {
+          const metadata = options.filter.metadata
+          // Check if metadata is a FilterOperator
+          if ('$eq' in metadata || '$gt' in metadata || '$lt' in metadata) {
+            if ('type' in metadata) {
+              const typeFilter = metadata.type as FilterOperator<string>
+              if (typeFilter.$eq) {
+                conditions.push('type = {type:String}')
+                params.type = typeFilter.$eq
+              }
+            }
+          } else if ('type' in metadata && metadata.type) {
+            conditions.push('type = {type:String}')
+            params.type = metadata.type
+          }
+        }
+        // Handle JSON-LD properties in data field
+        if (options.filter.data) {
+          const data = options.filter.data as Record<string, unknown>
+          if (data.$type) {
+            conditions.push('JSONExtractString(data, \'$type\') = {dataType:String}')
+            params.dataType = data.$type
+          }
+        }
+      }
+
+      const searchQuery = `
+        SELECT 
+          id,
+          type,
+          ns,
+          host,
+          path,
+          data,
+          content,
+          embedding,
+          ts,
+          hash,
+          version,
+          cosineDistance(embedding, {vector:Array(Float32)}) as score
+        FROM ${this.config.database}.${this.config.dataTable}
+        WHERE ${conditions.join(' AND ')}
+          AND arrayExists(x -> isNotNull(x), embedding)
+        ORDER BY score ASC
+        ${options.limit ? `LIMIT ${options.limit}` : ''}
+        ${options.offset ? `OFFSET ${options.offset}` : ''}
+      `
+
+      const result = await this.client.query({
+        query: searchQuery,
+        query_params: params
+      })
+
+      const rows = await result.json() as (ClickHouseRow & { score: number })[]
+      
+      return rows
+        .filter(row => row.score <= (options.threshold || 1))
+        .map(row => {
+          const doc = new BaseDocument(
+            String(row.id),
+            String(row.content || ''),
+            {
+              ...(typeof row.data === 'object' ? row.data as Record<string, unknown> : {}),
+              $id: String(row.id),
+              $type: String(row.type)
+            },
+            {
+              id: String(row.id),
+              type: String(row.type),
+              ns: String(row.ns),
+              host: String(row.host),
+              path: Array.isArray(row.path) ? row.path.map(String) : [],
+              content: String(row.content || ''),
+              data: typeof row.data === 'object' ? row.data as Record<string, unknown> : {},
+              version: Number(row.version),
+              hash: typeof row.hash === 'object' ? row.hash as Record<string, unknown> : {},
+              ts: Number(row.ts)
+            },
+            Array.isArray(row.embedding) ? row.embedding.map(Number) : undefined,
+            [this.path]
+          )
+          return {
+            document: doc,
+            score: row.score
+          } as SearchResult<Document>
+        })
+    } catch (error) {
+      throw new Error(`Failed to perform vector search: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
   }
 }
 
@@ -480,7 +843,8 @@ class ClickHouseDatabaseProvider implements DatabaseProvider<Document> {
   private readonly config: Config
 
   constructor(client: ClickHouseClient, config: Config) {
-    this.namespace = `clickhouse://${config.url}`
+    const hostUrl = config.host.startsWith('http') ? config.host : `http://${config.host}:${config.port || 8123}`
+    this.namespace = `clickhouse://${hostUrl}`
     this.client = client
     this.config = config
     this.collections = new ClickHouseCollectionProvider('', client, config)
@@ -506,10 +870,11 @@ class ClickHouseDatabaseProvider implements DatabaseProvider<Document> {
 export const createClickHouseClient = async (config: Config): Promise<DatabaseProvider<Document>> => {
   try {
     const client = createClient({
-      host: config.url,
+      host: `http://${config.host}:${config.port}`,
       username: config.username,
       password: config.password,
-      database: config.database
+      database: config.database,
+      clickhouse_settings: config.clickhouse_settings
     })
 
     const provider = new ClickHouseDatabaseProvider(client, config)
