@@ -142,8 +142,8 @@ importers:
         specifier: ^1.0.2
         version: 1.0.3
       '@mdxdb/types':
-        specifier: workspace:*
-        version: link:../types
+        specifier: ^0.1.0
+        version: 0.1.0
       ai:
         specifier: ^2.2.0
         version: 2.2.37(react@18.3.1)(solid-js@1.9.3)(svelte@4.2.19)(vue@3.5.13(typescript@5.5.4))
