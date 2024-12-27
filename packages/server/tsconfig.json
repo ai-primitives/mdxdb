@@ -8,8 +8,8 @@
     "composite": true,
     "moduleResolution": "NodeNext",
     "paths": {
-      "@mdxdb/types": ["../types/dist"],
-      "@mdxdb/types/*": ["../types/dist/*"]
+      "@mdxdb/types": ["../types/src"],
+      "@mdxdb/types/*": ["../types/src/*"]
     }
   },
   "include": ["src/**/*.ts", "test/**/*.ts"],

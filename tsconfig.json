@@ -9,7 +9,11 @@
     "declarationMap": true,
     "composite": true,
     "incremental": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "baseUrl": ".",
+    "paths": {
+      "@mdxdb/*": ["packages/*/src"]
+    }
   },
   "references": [
     { "path": "packages/types" },
@@ -18,5 +22,6 @@
     { "path": "packages/server" },
     { "path": "packages/ai" },
     { "path": "packages/clickhouse" }
-  ]
+  ],
+  "exclude": ["node_modules", "dist"]
 }

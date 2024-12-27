@@ -11,6 +11,30 @@
       "import": "./dist/index.js",
       "require": "./dist/index.js",
       "default": "./dist/index.js"
+    },
+    "./document": {
+      "types": "./dist/document.d.ts",
+      "import": "./dist/document.js",
+      "require": "./dist/document.js",
+      "default": "./dist/document.js"
+    },
+    "./filter": {
+      "types": "./dist/filter.d.ts",
+      "import": "./dist/filter.js",
+      "require": "./dist/filter.js",
+      "default": "./dist/filter.js"
+    },
+    "./mdxld": {
+      "types": "./dist/mdxld.d.ts",
+      "import": "./dist/mdxld.js",
+      "require": "./dist/mdxld.js",
+      "default": "./dist/mdxld.js"
+    },
+    "./types": {
+      "types": "./dist/types.d.ts",
+      "import": "./dist/types.js",
+      "require": "./dist/types.js",
+      "default": "./dist/types.js"
     }
   },
   "scripts": {
