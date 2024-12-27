@@ -2,7 +2,7 @@
   "$schema": "https://turbo.build/schema.json",
   "ui": "tui",
   "globalDependencies": ["tsconfig.json"],
-  "pipeline": {
+  "tasks": {
     "clean": {
       "cache": false
     },
