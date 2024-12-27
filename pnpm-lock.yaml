@@ -71,8 +71,8 @@ importers:
         specifier: ^1.9.1
         version: 1.10.0
       '@mdxdb/types':
-        specifier: ^0.1.0
-        version: 0.1.0
+        specifier: workspace:*
+        version: link:../types
       zod:
         specifier: ^3.24.1
         version: 3.24.1
