@@ -11,36 +11,6 @@
       "import": "./dist/index.js",
       "require": "./dist/index.js",
       "default": "./dist/index.js"
-    },
-    "./document.js": {
-      "types": "./dist/document.d.ts",
-      "import": "./dist/document.js",
-      "require": "./dist/document.js",
-      "default": "./dist/document.js"
-    },
-    "./types.js": {
-      "types": "./dist/types.d.ts",
-      "import": "./dist/types.js",
-      "require": "./dist/types.js",
-      "default": "./dist/types.js"
-    },
-    "./filter.js": {
-      "types": "./dist/filter.d.ts",
-      "import": "./dist/filter.js",
-      "require": "./dist/filter.js",
-      "default": "./dist/filter.js"
-    },
-    "./mdxld.js": {
-      "types": "./dist/mdxld.d.ts",
-      "import": "./dist/mdxld.js",
-      "require": "./dist/mdxld.js",
-      "default": "./dist/mdxld.js"
-    },
-    "./embedding.js": {
-      "types": "./dist/embedding.d.ts",
-      "import": "./dist/embedding.js",
-      "require": "./dist/embedding.js",
-      "default": "./dist/embedding.js"
     }
   },
   "scripts": {

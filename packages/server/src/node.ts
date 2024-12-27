@@ -8,7 +8,8 @@ export const startServer = async (config: ServerConfig = { provider: 'fs' }) => 
   // Initialize provider based on configuration
   if (config.provider === 'clickhouse' && !config.clickhouse) {
     config.clickhouse = await createClickHouseClient({
-      url: 'http://localhost:8123',
+      host: 'localhost',
+      port: 8123,
       database: 'mdxdb',
       username: 'default',
       password: '',
