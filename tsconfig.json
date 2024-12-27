@@ -18,5 +18,6 @@
     { "path": "packages/server" },
     { "path": "packages/ai" },
     { "path": "packages/clickhouse" }
-  ]
+  ],
+  "exclude": ["node_modules", "dist"]
 }

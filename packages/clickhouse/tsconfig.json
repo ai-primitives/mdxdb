@@ -1,18 +1,15 @@
 {
-  "extends": "../../utilities/tsconfig/base.json",
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
     "outDir": "dist",
+    "rootDir": "src",
     "baseUrl": ".",
     "composite": true,
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "paths": {
-      "@mdxdb/types": ["../types/src"],
-      "@mdxdb/types/*": ["../types/src/*"]
-    },
-    "rootDir": "src"
+    "moduleResolution": "NodeNext"
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["dist", "node_modules", "test"],
-  "references": [{ "path": "../types" }]
+  "exclude": ["node_modules", "dist", "test"],
+  "references": [
+    { "path": "../types" }
+  ]
 }

@@ -6,8 +6,10 @@ import type { ExecutionContext } from '@cloudflare/workers-types'
 // Initialize ClickHouse client with worker-specific configuration
 const initializeClickHouseClient = async (env: AppEnv['Bindings']) => {
   const url = env.CLICKHOUSE_URL || 'http://localhost:8123'
+  const [host, port] = url.replace(/^https?:\/\//, '').split(':')
   return await createClickHouseClient({
-    url,
+    host,
+    port: parseInt(port || '8123'),
     database: 'mdxdb',
     username: 'default',
     password: '',

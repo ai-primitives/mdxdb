@@ -1,6 +1,7 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "ui": "tui",
+  "globalDependencies": ["tsconfig.json"],
   "tasks": {
     "clean": {
       "cache": false
@@ -19,7 +20,7 @@
       "outputs": []
     },
     "test": {
-      "dependsOn": ["^test", "build"],
+      "dependsOn": ["^build:types", "build:types"],
       "outputs": ["coverage/**/*"]
     },
     "dev": {
@@ -27,14 +28,12 @@
       "persistent": true
     },
     "build:types": {
-      "dependsOn": ["clean"],
-      "cache": false,
-      "outputs": ["dist/**/*"],
+      "dependsOn": ["^build:types", "clean"],
+      "outputs": ["dist/**/*", "*.tsbuildinfo"],
       "inputs": ["src/**/*", "tsconfig.json", "package.json"]
     },
     "build:packages": {
-      "dependsOn": ["build:types"],
-      "cache": false,
+      "dependsOn": ["^build:types", "build:types"],
       "outputs": ["dist/**/*", "*.tsbuildinfo"]
     }
   }

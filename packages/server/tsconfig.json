@@ -6,11 +6,7 @@
     "typeRoots": ["./src/types", "./node_modules/@types"],
     "baseUrl": ".",
     "composite": true,
-    "moduleResolution": "NodeNext",
-    "paths": {
-      "@mdxdb/types": ["../types/dist"],
-      "@mdxdb/types/*": ["../types/dist/*"]
-    }
+    "moduleResolution": "NodeNext"
   },
   "include": ["src/**/*.ts", "test/**/*.ts"],
   "exclude": ["node_modules", "dist"],

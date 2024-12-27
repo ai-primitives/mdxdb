@@ -1,6 +1,4 @@
-import { BaseDocument, Document } from '@mdxdb/types/document.js'
-import { CollectionProvider, SearchOptions, SearchResult, VectorSearchOptions } from '@mdxdb/types/types.js'
-import { FilterQuery } from '@mdxdb/types/filter.js'
+import { BaseDocument, Document, CollectionProvider, SearchOptions, SearchResult, VectorSearchOptions, FilterQuery } from '@mdxdb/types'
 import { promises as fs } from 'fs'
 import * as nodePath from 'path'
 import { EmbeddingsService } from './embeddings.js'
