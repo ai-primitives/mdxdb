@@ -9,11 +9,7 @@
     "declarationMap": true,
     "composite": true,
     "incremental": true,
-    "esModuleInterop": true,
-    "baseUrl": ".",
-    "paths": {
-      "@mdxdb/*": ["packages/*/src"]
-    }
+    "esModuleInterop": true
   },
   "references": [
     { "path": "packages/types" },

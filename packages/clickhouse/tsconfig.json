@@ -5,11 +5,7 @@
     "rootDir": "src",
     "baseUrl": ".",
     "composite": true,
-    "moduleResolution": "NodeNext",
-    "paths": {
-      "@mdxdb/types": ["../types/src"],
-      "@mdxdb/types/*": ["../types/src/*"]
-    }
+    "moduleResolution": "NodeNext"
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist", "test"],
