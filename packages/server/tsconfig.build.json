@@ -1,8 +1,5 @@
 {
   "extends": "./tsconfig.json",
-  "compilerOptions": {
-    "types": ["node", "@cloudflare/workers-types", "vitest/globals"]
-  },
   "exclude": ["node_modules", "dist", "test"],
   "references": [
     { "path": "../types" },
