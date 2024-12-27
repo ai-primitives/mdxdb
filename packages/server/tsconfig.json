@@ -2,8 +2,6 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "outDir": "dist",
-    "types": ["@cloudflare/workers-types", "vitest/globals", "node"],
-    "typeRoots": ["./src/types", "./node_modules/@types"],
     "baseUrl": ".",
     "composite": true,
     "moduleResolution": "NodeNext"
@@ -11,6 +9,8 @@
   "include": ["src/**/*.ts", "test/**/*.ts"],
   "exclude": ["node_modules", "dist"],
   "references": [
-    { "path": "../types" }
+    { "path": "../types" },
+    { "path": "../fs" },
+    { "path": "../clickhouse" }
   ]
 }
