@@ -1,6 +1,5 @@
 import { createClient, type ClickHouseClient } from '@clickhouse/client-web'
-import { BaseDocument } from '@mdxdb/types'
-import type { DatabaseProvider, Document, CollectionProvider, SearchOptions, FilterQuery, VectorSearchOptions, SearchResult, FilterOperator } from '@mdxdb/types'
+import { BaseDocument, DatabaseProvider, Document, CollectionProvider, SearchOptions, FilterQuery, VectorSearchOptions, SearchResult, FilterOperator } from '@mdxdb/types'
 import { type Config } from './config.js'
 import { checkClickHouseVersion } from './utils.js'
 
