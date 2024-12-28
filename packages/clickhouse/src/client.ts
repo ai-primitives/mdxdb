@@ -884,23 +884,17 @@ class ClickHouseDatabaseProvider implements DatabaseProvider<Document> {
   }
 }
 
-export const createClickHouseClient = async (config: Config): Promise<DatabaseProvider<Document>> => {
-  try {
-    const client = createClient({
-      host: `http://${config.host}:${config.port}`,
-      username: config.username,
-      password: config.password,
-      database: config.database,
-      clickhouse_settings: config.clickhouse_settings
-    })
+export const createClickHouseClient = async (config: Config): Promise<ClickHouseClient> => {
+  const client = createClient({
+    url: `http://${config.host}:${config.port}`,
+    username: config.username,
+    password: config.password,
+    database: config.database,
+    clickhouse_settings: config.clickhouse_settings
+  })
 
-    const provider = new ClickHouseDatabaseProvider(client, config)
-    await provider.connect()
-    return provider
-  } catch (error) {
-    const enhancedError = error instanceof Error
-      ? new Error(`Failed to create ClickHouse client: ${error.message}`)
-      : new Error('Failed to create ClickHouse client: Unknown error')
-    throw enhancedError
-  }
+  // Verify connection and version
+  await checkClickHouseVersion(client)
+
+  return client
 }
